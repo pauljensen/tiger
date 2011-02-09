@@ -7,6 +7,8 @@ properties (Dependent)
     is_atom
     
     is_simple
+    
+    atoms
 end
 
 properties
@@ -43,9 +45,11 @@ methods
         tf = ~isempty(obj.id);
     end
 
-    function [atoms] = get_atoms(obj)
+    function [atoms] = get.atoms(obj)
         if obj.is_junc
-            atoms = [obj.lexpr.get_atoms obj.rexpr.get_atoms];
+            latoms = subsref(obj.lexpr,substruct('.','atoms'));
+            ratoms = subsref(obj.rexpr,substruct('.','atoms'));
+            atoms = [latoms ratoms];
         else
             atoms = {obj.id};
         end
