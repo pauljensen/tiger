@@ -1,0 +1,31 @@
+
+1 not
+2 cond
+3 junc
+4 rule
+
+sub parse:
+   e <- get.expr(0)
+   while ~empty(tokens)
+      t <- pop(tokens)
+      switch t:
+         rparen -> return e
+         op -> e' <- get.expr(level(op))
+               e  <- make.expr(e,op,e')
+         OTW -> ERROR
+   return e
+
+sub get.expr(level)
+   t <- pop(tokens)
+   switch t
+      lparen -> e <- parse
+      unary(op) -> e <- negate(get.expr(level(op)))
+      OTW -> e <- t
+   next <- peek(tokens)
+   if op(next) and level(next) < level
+      pump(tokens)
+      e' <- get.expr(level(next))
+      e  <- make.expr(e,next,e')
+   return e
+
+
