@@ -46,7 +46,7 @@ methods
     end
 
     function [atoms] = get.atoms(obj)
-        if obj.is_junc
+        if ~isempty(obj.lexpr) || ~isempty(obj.rexpr)
             latoms = subsref(obj.lexpr,substruct('.','atoms'));
             ratoms = subsref(obj.rexpr,substruct('.','atoms'));
             atoms = [latoms ratoms];
@@ -77,6 +77,7 @@ methods
     % ------------ manipulation ------------
     
     function demorgan(obj)
+        % TODO invert conditionals
         if obj.negated && obj.is_junc
             obj.AND = ~obj.AND;
             obj.OR  = ~obj.OR;
