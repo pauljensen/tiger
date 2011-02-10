@@ -28,9 +28,6 @@ tiger = rmfield(cobra,{'c','b'});
 
 [m,n] = size(tiger.S);
 
-array2names = @(pre,a) cellfun(@(x) [pre num2str(x)], a, ...
-                                                      'Uniform', false);
-
 if isfield(cobra,'rxns') && ~numbered
     tiger.varnames = cobra.rxns(:)';
 else

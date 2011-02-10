@@ -1,5 +1,11 @@
 function [tiger] = add_rule(tiger,rule)
 
+if isempty(tiger)
+    tiger = create_empty_tiger();
+end
+
+not_types = 'inverted';
+
 tiger.varnames = {};
 tiger.lb = [];
 tiger.ub = [];
@@ -60,9 +66,51 @@ end
 cellfun(@(x) x.demorgan,rules);
 cellfun(@simplify_rule,rules);
 cellfun(@switch_nots,simple_rules);
-simple_rules{:}
 
-1;
+% map the nots and add bounds
+Nnots = length(not_inds);
+tiger.varnames(end+1:end+Nnots) = not_inds;
+tiger.lb(end+1:end+Nnots) = 0;
+if strcmpi(not_types,'binary')
+    tiger.ub(end+1:end+Nnots) = 1;
+else
+    % inverted
+    [~,loc] = ismember(not_vars,tiger.varnames);
+    tiger.ub(end+1:end+Nnots) = tiger.ub(loc);
+end
+
+n_cons_added = sum(cellfun(@number_of_cons,simple_rules)) ...
+                  + length(not_vars);
+n_vars_added = sum(cellfun(@number_of_vars,simple_rules));
+nnZ_added = 3*n_cons_added;  % upper bound
+
+A = spalloc(n_cons_added,length(tiger.varnames)+n_vars_added,nnZ_added);
+ctypes = repmat(' ',n_cons_added,1);
+d = zeros(n_cons_added,1);
+roff = 0;
+voff = length(tiger.varnames);
+
+cellfun(@simple_rule_to_ineq,simple_rules);
+% constrain the nots
+% TODO -- allow other forms of NOT for multilevel variables
+for i = 1 : length(not_vars)
+    [~,loc] = ismember({not_vars{i},not_inds{i}},tiger.varnames);
+    roff = roff + 1;
+    A(roff,loc) = [1 1];
+    ctypes(roff) = '=';
+    d(roff) = tiger.ub(loc(1));
+end
+
+% add new entries to TIGER model
+m = size(tiger.A,1);
+rownames = array2names('ROW',m+1:m+size(A,1));
+tiger.A = [tiger.A; A];
+tiger.d = [tiger.d; d];
+tiger.ctypes = [tiger.ctypes; ctypes];
+tiger.rownames = [tiger.rownames rownames];
+
+% TODO  Update vartypes and obj
+% TODO  support for all conditionals
 
 function [lb,ub] = get_expr_bounds(e)
     if e.is_atom
@@ -139,6 +187,144 @@ function switch_nots(e)
     end
 end
 
+function [tf] = is_multilevel(e)
+    [~,ub] = get_expr_bounds(e);
+    tf = ub > 1;
+end
+
+function [num] = number_of_cons(r)
+    e = r.lexpr;
+    multilevel = is_multilevel(e);
+    if e.is_atom
+        num = 1;
+    elseif e.is_cond
+        num = 2;
+    elseif  multilevel && e.is_junc && r.IFF
+        num = 6;
+    elseif  multilevel && e.is_junc && r.IF
+        if e.AND
+            num = 4;
+        else
+            num = 2;
+        end
+    elseif ~multilevel && e.is_junc && r.IFF
+        num = 2;
+    elseif ~multilevel && e.is_junc && r.IF
+        num = 1;
+    end
+end
+
+function [num] = number_of_vars(r)
+    e = r.lexpr;
+    if is_multilevel(e) && ((r.IFF && e.junc) || (r.IF && e.AND))
+        num = 2;
+    else
+        num = 0;
+    end
+end
+
+function simple_rule_to_ineq(r)
+    e = r.lexpr;
+    I = r.rexpr.id;
+    [~,Iloc] = ismember(I,tiger.varnames);
+    
+    if e.is_atom
+        [~,loc] = ismember(e.id,tiger.varnames);
+        addrow([1 1],'=',1,[loc Iloc]);
+        return;
+    end
+    
+    x = r.lexpr.lexpr.id;
+    y = r.lexpr.rexpr.id;
+    [~,xloc] = ismember(x,tiger.varnames);
+    [~,yloc] = ismember(y,tiger.varnames);
+    locs = [xloc yloc Iloc];
+    
+    multilevel = is_multilevel(r.lexpr);
+    
+    xmax = tiger.ub(xloc);
+    ymax = tiger.ub(yloc);
+    
+    if ~multilevel && e.AND
+        addrow([2 2 -4],'<',3);
+        if r.IFF
+            addrow([2 2 -4],'>',-1);
+        end
+    elseif ~multilevel && e.OR
+        addrow([-1 -1 3],'>',0);
+        if r.IFF
+            addrow([-1 -1 3],'<',2);
+        end
+    elseif e.is_junc
+        if ~r.IFF
+            % add x > y <=> I_aux
+            Iaux = [I '__aux'];
+            Iaux_not = [NOT_PRE Iaux];
+            Iauxloc = voff + 1;
+            Iaux_notloc = voff + 2;
+            voff = voff + 2;
+            tiger.varnames([Iauxloc,Iaux_notloc]) = {Iaux,Iaux_not};
+            tiger.lb([Iauxloc,Iaux_notloc]) = [0 0];
+            tiger.ub([Iauxloc,Iaux_notloc]) = [1 1];
+            
+            aux_rule = expr();
+            aux_rule.IFF = true;
+            aux_rule.lexpr = expr();
+            aux_rule.lexpr.cond_op = '>';
+            aux_rule.lexpr.lexpr = expr();
+            aux_rule.lexpr.lexpr.id = x;
+            aux_rule.lexpr.rexpr = expr();
+            aux_rule.lexpr.rexpr.id = y;
+            aux_rule.rexpr = expr();
+            aux_rule.rexpr.id = Iaux;
+            
+            simple_rule_to_ineq(aux_rule);
+        end
+        if e.AND
+            addrow([1 -xbar -1],'<',0,[xloc Iauxloc Iloc]);
+            addrow([1 -ybar -1],'<',0,[yloc Iaux_notloc Iloc]);
+            if r.IFF
+                addrow([-1  0 1],'<',0);
+                addrow([ 0 -1 1],'<',0);
+            end
+        elseif e.OR
+            addrow([-1  0 1],'>',0);
+            addrow([ 0 -1 0],'>',0);
+            if r.IFF
+                addrow([1 xbar -1],'>',0,[xloc Iaux_notloc Iloc]);
+                addrow([1 ybar -1],'>',0,[yloc Iauxloc Iloc]);
+            end
+        end
+    elseif e.is_cond
+        switch e.cond_op
+            case '>='
+                addrow([ 1 -1 -(xmax+1)],'<',-1);
+                addrow([-1  1  (ymax+1)],'<',ymax+1);
+            case '>'
+                addrow([ 1 -1 -(xmax+1)],'<',0);
+                addrow([-1  1  (ymax+2)],'<',ymax);
+            case '<='
+                addrow([-1  1 -(1-xmax)],'<',-1);
+                addrow([ 1 -1  (1-ymax)],'<',1-ymax);
+            case '<'
+                addrow([-1  1 -(1-xmax)],'<',0);
+                addrow([ 1 -1  (2-ymax)],'<',-ymax);
+            otherwise
+                error('Operator %s not implemented.',e.cond_op);
+        end
+    end
+    
+    function addrow(coefs,ctype,rhs,loc)
+        if nargin < 4
+            loc = locs;
+        end
+        roff = roff + 1;
+        A(roff,loc) = coefs;
+        d(roff) = rhs;
+        ctypes(roff) = ctype;
+    end   
+end
+    
 
 end % function
 
