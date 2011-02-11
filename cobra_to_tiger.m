@@ -40,6 +40,8 @@ else
     tiger.rownames = array2names('row',1:m);
 end
 
+tiger.A = tiger.S;
+
 tiger.obj = cobra.c;
 tiger.ctypes = repmat('=',m,1);
 tiger.vartypes = repmat('c',n,1);

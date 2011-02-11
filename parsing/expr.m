@@ -77,7 +77,6 @@ methods
     % ------------ manipulation ------------
     
     function demorgan(obj)
-        % TODO invert conditionals
         if obj.negated && obj.is_junc
             obj.AND = ~obj.AND;
             obj.OR  = ~obj.OR;
@@ -85,12 +84,28 @@ methods
             
             obj.lexpr.negated = ~obj.lexpr.negated;
             obj.rexpr.negated = ~obj.rexpr.negated;
+        elseif obj.negated && obj.is_cond
+            obj.negated = false;
+            switch obj.cond_op
+                case '='
+                    obj.cond_op = '~=';
+                case '~='
+                    obj.cond_op = '=';
+                case '>='
+                    obj.cond_op = '<';
+                case '<'
+                    obj.cond_op = '>=';
+                case '<='
+                    obj.cond_op = '>';
+                case '>'
+                    obj.cond_op = '<=';
+            end
         end
         
-        if obj.lexpr.is_junc
+        if obj.lexpr.is_junc || obj.lexpr.is_cond
             obj.lexpr.demorgan();
         end
-        if obj.rexpr.is_junc
+        if obj.rexpr.is_junc || obj.rexpr.is_cond
             obj.rexpr.demorgan();
         end
     end

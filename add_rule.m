@@ -13,7 +13,7 @@ tiger.ub = [];
 simple_rules = {};
 
 IND_PRE = 'I';
-IND_WIDTH = 4;  % number of digists for indicator names
+IND_WIDTH = 4;  % number of digits for indicator names
 ind_counter = 0;
 
 NOT_PRE = 'NOT__';
@@ -112,7 +112,10 @@ tiger.rownames = [tiger.rownames rownames];
 % TODO  Update vartypes and obj
 % TODO  support for all conditionals
 
+
 function [lb,ub] = get_expr_bounds(e)
+    % Get upper and lower bounds on an expression
+    % TODO  tighten bounds on AND and OR
     if e.is_atom
         [~,loc] = ismember(e.id,tiger.varnames);
         lb = tiger.lb(loc);
@@ -126,11 +129,22 @@ function [lb,ub] = get_expr_bounds(e)
 end
 
 function [ind_name] = get_next_ind_name()
+    % Get the next indicator name
     ind_counter = ind_counter + 1;
     ind_name = sprintf([IND_PRE '%0*i'], IND_WIDTH, ind_counter);
 end
     
 function [ind_expr] = make_substitution(e)
+    % Returns an indicator to replace the expression 'e'
+    % 'e' is formed into a rule with the indicator.  This rule
+    % is passed to 'simplify_rule' to be added to the list of
+    % simple rules.  The indicator is added to the list of
+    % variable names in the TIGER structure.
+    %
+    % The indicator expression returned is not linked to the
+    % new rule (a copy is made in this function).  The expression
+    % passed in is copied as well, so the expression in the parent
+    % rule can be modified in place.
     ind_name = get_next_ind_name();
     ind_expr = expr();
     ind_expr.id = ind_name;
@@ -149,6 +163,9 @@ function [ind_expr] = make_substitution(e)
 end
     
 function [e] = simplify_expr(e)
+    % Simplifies an expression.  If the left or right subexpressions
+    % are not atoms, they are replaced with an indicator variable.
+    % This function modifies the expression in place.
     if ~e.lexpr.is_atom
         e.lexpr = make_substitution(e.lexpr);
     end
@@ -158,6 +175,13 @@ function [e] = simplify_expr(e)
 end
     
 function simplify_rule(r)
+    % Simplify a rule.  The resulting
+    % rules are of the form:
+    %                atom -> atom
+    %                cond -> atom
+    %       atom AND atom -> atom
+    %       atom OR  atom -> atom
+    % The simple rules are appended to the cell 'simple_rules'.
     if ~r.rexpr.is_atom
         r.rexpr = make_substitution(r.rexpr);
     end
@@ -267,16 +291,7 @@ function simple_rule_to_ineq(r)
             tiger.lb([Iauxloc,Iaux_notloc]) = [0 0];
             tiger.ub([Iauxloc,Iaux_notloc]) = [1 1];
             
-            aux_rule = expr();
-            aux_rule.IFF = true;
-            aux_rule.lexpr = expr();
-            aux_rule.lexpr.cond_op = '>';
-            aux_rule.lexpr.lexpr = expr();
-            aux_rule.lexpr.lexpr.id = x;
-            aux_rule.lexpr.rexpr = expr();
-            aux_rule.lexpr.rexpr.id = y;
-            aux_rule.rexpr = expr();
-            aux_rule.rexpr.id = Iaux;
+            aux_rule = parse_string(sprintf('%s > %s <=> %s',x,y,Iaux));
             
             simple_rule_to_ineq(aux_rule);
         end
