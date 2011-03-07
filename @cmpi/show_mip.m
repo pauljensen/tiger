@@ -28,10 +28,14 @@ default_rownames = arrayfun(@(x) ['ROW_' num2str(x)], 1:nrows, ...
                             'Uniform', false);
                         
 % default ranges and names
-if nargin < 5 || isempty(colnames)
+if isfield(mip,'colnames')
+    colnames = mip.colnames;
+elseif nargin < 5 || isempty(colnames)
     colnames = default_colnames;
 end
-if nargin < 4 || isempty(rownames)
+if isfield(mip,'rownames')
+    rownames = mip.rownames;
+elseif nargin < 4 || isempty(rownames)
     rownames = default_rownames;
 end
 if nargin < 3 || isempty(colidxs)

@@ -76,6 +76,31 @@ methods
     
     % ------------ manipulation ------------
     
+    function iterif(e,test,f)
+        if test(e)
+            f(e);
+        end
+        if ~isempty(e.lexpr)
+            e.lexpr.iterif(test,f);
+        end
+        if ~isempty(e.rexpr)
+            e.rexpr.iterif(test,f);
+        end
+    end
+    
+    function [new_e] = mapif(e,test,f)
+        new_e = e.copy;
+        new_e.iterif(test,f);
+    end
+    
+    function iter(e,f)
+        e.iterif(@(x) true,f);
+    end
+    
+    function [new_e] = map(e,f)
+        new_e = e.mapif(@(x) true,f);
+    end
+    
     function demorgan(obj)
         if obj.negated && obj.is_junc
             obj.AND = ~obj.AND;

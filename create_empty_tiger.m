@@ -9,5 +9,5 @@ tiger.obj = [];
 tiger.varnames = {};
 tiger.rownames = {};
 
-tiger.ctypes = [];
-tiger.vartypes = [];
+tiger.ctypes = '';
+tiger.vartypes = '';

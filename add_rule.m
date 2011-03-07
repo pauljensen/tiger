@@ -1,36 +1,91 @@
-function [tiger] = add_rule(tiger,rule)
+function [tiger] = add_rule(tiger,rule,varargin)
+% ADD_RULE  Add rules to a TIGER model
+%
+%   [TIGER] = ADD_RULE(TIGER,RULE,...params...)
+%
+%   Convert rules to a MILP format and add them to a TIGER model.
+%
+%   Inputs
+%   TIGER   TIGER model structure.  If empty, a new TIGER structure will
+%           be created.
+%   RULE    Rule or cell array of rules to be added.  Rules can be either
+%           a text string or an EXPR object (text strings will be parsed
+%           into EXPR objects).  If multiple rules are to be added to a 
+%           model, it is more efficient to call ADD_RULE once with a cell
+%           array of rules, rather than makeing repeated calls to ADD_RULE
+%           with single rules.
+%
+%   Outputs
+%   TIGER   TIGER model structure with rules added.
+%
+%   Parameters
+%   'default_lb'  Default lower bound for new variables found in the 
+%                 rules.  Default is 0.
+%   'default_ub'  Default upper bound for new variables found in the 
+%                 rules.  Default is 1.
+%   'bounds'      Cell specifing upper and lower bounds for new variables.
+%                 The first entry is a cell of variable names.  The second
+%                 and third entries are vectors containing the lower and
+%                 upper bounds for each variable name.  If a atom name is
+%                 found in the rules that is not listed, the default 
+%                 bounds are used.
+%   'not_type'    Type of NOT indicator to use for multilevel variables.
+%                 Options are
+%                     'inverted'  NOT x =  x_max - x  (default)
+%                     'binary'    NOT x =  1  if x > 0
+%                                          0  otherwise
+%   'ind_prefix'  String denoting the prefix used when creating indicator
+%                 variable names.  Default is 'I'.
+%   'ind_width'   Integer denoting the number of digits used to create
+%                 indicator variable names.  Extra places will be zero-
+%                 padded.  Default is 4.
+%   'not_prefix'  String denoting the prefix used when creating negated
+%                 variable names.  Default is 'NOT__'.
 
+assert(nargin >= 2, 'ADD_RULE requires at least two inputs.');
+
+% if there is no starting model, start with a blank model
 if isempty(tiger)
     tiger = create_empty_tiger();
 end
 
-not_types = 'inverted';
+% check that a TIGER model was given (and convert if COBRA)
+tiger = assert_tiger_model(tiger);
 
-tiger.varnames = {};
-tiger.lb = [];
-tiger.ub = [];
+% begin parameter checking
+p = inputParser;
 
-simple_rules = {};
+p.addParamValue('ind_prefix','I',@ischar);
+ind_width_val = @(x) validateattributes(x,{'numeric'}, ...
+                                        {'scalar','integer','<=',1});
+p.addParamValue('ind_width',4,ind_width_val);
+p.addParamValue('not_prefix','NOT__',@ischar);
 
-IND_PRE = 'I';
-IND_WIDTH = 4;  % number of digits for indicator names
+bound_val = @(x) validateattributes(x,{'numeric'},{'scalar','real'});
+p.addParamValue('default_lb',0,bound_val);
+p.addParamValue('default_ub',1,bound_val);
+
+p.addParamValue('bounds',[]);
+
+valid_not_type = @(x) ismember(x,{'pseudo-binary','inverted'});
+p.addParamValue('not_type','inverted',valid_not_type);
+
+p.parse(varargin{:});
+
+IND_PRE = p.Results.ind_prefix;
+IND_WIDTH = p.Results.ind_width;  % number of digits for indicator names
 ind_counter = 0;
 
-NOT_PRE = 'NOT__';
-not_vars = {};
-not_inds = {};
+NOT_PRE = p.Results.not_prefix;
+not_type = p.Results.not_type;
 
-default_lb = 0;
-default_ub = 1;
+default_lb = p.Results.default_lb;
+default_ub = p.Results.default_ub;
 
-user_bounds = [];
+user_bounds = p.Results.bounds;  % TODO: add support for user bounds
 
-if ~isa(rule,'cell')
-    rules = {rule};
-else
-    rules = rule;
-end
-
+% rule parsing
+rules = assert_cell(rule);
 N = length(rules);
 % parse all strings if necessary
 for i = 1 : N
@@ -50,68 +105,120 @@ end
 % get all atoms in the expression list
 atoms = cellfun(@(x) x.atoms,rules,'Uniform',false);
 atoms = setdiff(unique([atoms{:}]),tiger.varnames);
+add_var(atoms);
 
+% measure the size of the original model
+[orig_m,orig_n] = size(tiger.A);
 
-Natoms = length(atoms);
-tiger.varnames(end+1:end+Natoms) = atoms;
-tiger.lb(end+1:end+Natoms) = default_lb;
-tiger.ub(end+1:end+Natoms) = default_ub;
-
-if ~isempty(user_bounds);
-    [tf,loc] = ismember(user_bounds.names,tiger.varnames);
-    tiger.lb(loc(tf)) = user_bounds.lb(tf);
-    tiger.ub(loc(tf)) = user_bounds.ub(tf);
-end
-
+% move nots down to the atoms
 cellfun(@(x) x.demorgan,rules);
+
+% TODO: pre-allocate A better
+A = tiger.A;
+d = tiger.d;
+ctypes = '';
+roff = 0;  % row offset for adding constraints
+
+% simplify the rules and convert to inequalities
 cellfun(@simplify_rule,rules);
-cellfun(@switch_nots,simple_rules);
 
-% map the nots and add bounds
-Nnots = length(not_inds);
-tiger.varnames(end+1:end+Nnots) = not_inds;
-tiger.lb(end+1:end+Nnots) = 0;
-if strcmpi(not_types,'binary')
-    tiger.ub(end+1:end+Nnots) = 1;
-else
-    % inverted
-    [~,loc] = ismember(not_vars,tiger.varnames);
-    tiger.ub(end+1:end+Nnots) = tiger.ub(loc);
+% add new entries to the TIGER model
+Nvars_added = size(A,2) - orig_n;
+tiger.A = A;
+tiger.d = d;
+tiger.ctypes = ctypes;
+rownames = array2names('ROW',orig_m+(1:size(A,1)));
+tiger.rownames = [tiger.rownames; rownames];
+tiger.obj = [tiger.obj; zeros(Nvars_added,1)];
+
+
+function switch_nots(e)
+    % Create negated variables to remove negated atoms. 
+    e.iterif(@(x) x.is_atom && x.negated,@switch_aux);
+    
+    function switch_aux(e)
+        not_name = [NOT_PRE e.id];
+        add_not_con(e.id,not_name);
+        e.id = not_name;
+        e.negated = false;
+    end
 end
 
-n_cons_added = sum(cellfun(@number_of_cons,simple_rules)) ...
-                  + length(not_vars);
-n_vars_added = sum(cellfun(@number_of_vars,simple_rules));
-nnZ_added = 3*n_cons_added;  % upper bound
-
-A = spalloc(n_cons_added,length(tiger.varnames)+n_vars_added,nnZ_added);
-ctypes = repmat(' ',n_cons_added,1);
-d = zeros(n_cons_added,1);
-roff = 0;
-voff = length(tiger.varnames);
-
-cellfun(@simple_rule_to_ineq,simple_rules);
-% constrain the nots
-% TODO -- allow other forms of NOT for multilevel variables
-for i = 1 : length(not_vars)
-    [~,loc] = ismember({not_vars{i},not_inds{i}},tiger.varnames);
-    roff = roff + 1;
-    A(roff,loc) = [1 1];
-    ctypes(roff) = '=';
-    d(roff) = tiger.ub(loc(1));
+function add_not_con(not_var,not_ind)
+    if strcmpi(not_type,'binary')
+        pseudo_rule = sprintf('%s > 0 <=> %s',not_var,not_ind);
+        simplify_rule(parse_string(pseudo_rule));
+    else
+        [~,var_idx] = ismember(not_var,tiger.varnames);
+        tf = ismember(not_ind,tiger.varnames);
+        if ~tf
+            add_var(not_ind,tiger.lb(var_idx),tiger.ub(var_idx));
+            ind_idx = length(tiger.varnames);
+            roff = roff + 1;
+            A(roff,[var_idx,ind_idx]) = [1 1];
+            d(roff) = tiger.ub(var_idx);
+            ctypes(roff) = '=';
+        end
+    end
 end
 
-% add new entries to TIGER model
-m = size(tiger.A,1);
-rownames = array2names('ROW',m+1:m+size(A,1));
-tiger.A = [tiger.A; A];
-tiger.d = [tiger.d; d];
-tiger.ctypes = [tiger.ctypes; ctypes];
-tiger.rownames = [tiger.rownames rownames];
+function simplify_rule(r)
+    % Simplify a rule.  The resulting
+    % rules are of the form:
+    %                atom -> atom
+    %                cond -> atom
+    %       atom AND atom -> atom
+    %       atom OR  atom -> atom
+    % The simple rules are appended to the cell 'simple_rules'.
+    switch_nots(r);
+    
+    if ~r.rexpr.is_atom
+        r.rexpr = make_substitution(r.rexpr);
+    end
+    if ~r.lexpr.is_simple
+        simplify_expr(r.lexpr);
+    end
+    % convert to ineqs
+    simple_rule_to_ineqs(r);
+end
 
-% TODO  Update vartypes and obj
-% TODO  support for all conditionals
+function [e] = simplify_expr(e)
+    % Simplifies an expression.  If the left or right subexpressions
+    % are not atoms, they are replaced with an indicator variable.
+    % This function modifies the expression in place.
+    if ~e.lexpr.is_atom
+        e.lexpr = make_substitution(e.lexpr);
+    end
+    if ~e.rexpr.is_atom
+        e.rexpr = make_substitution(e.rexpr);
+    end
+end
 
+function [ind_expr] = make_substitution(e)
+    % Returns an indicator to replace the expression 'e'.
+    % 'e' is formed into a rule with the indicator.  This rule
+    % is passed to 'simplify_rule' to be added to the list of
+    % simple rules.  The indicator is added to the list of
+    % variable names in the TIGER structure.
+    %
+    % The indicator expression returned is not linked to the
+    % new rule (a copy is made in this function).  The expression
+    % passed in is copied as well, so the expression in the parent
+    % rule can be modified in place.
+    ind_name = get_next_ind_name();
+    ind_expr = expr();
+    ind_expr.id = ind_name;
+
+    ind_rule = expr();
+    ind_rule.IFF = true;
+    ind_rule.lexpr = e.copy;
+    ind_rule.rexpr = ind_expr.copy;
+    
+    [ind_lb,ind_ub] = get_expr_bounds(e);
+    add_var(ind_Name,ind_lb,ind_ub);
+    
+    simplify_rule(ind_rule);
+end
 
 function [lb,ub] = get_expr_bounds(e)
     % Get upper and lower bounds on an expression
@@ -133,128 +240,64 @@ function [ind_name] = get_next_ind_name()
     ind_counter = ind_counter + 1;
     ind_name = sprintf([IND_PRE '%0*i'], IND_WIDTH, ind_counter);
 end
-    
-function [ind_expr] = make_substitution(e)
-    % Returns an indicator to replace the expression 'e'
-    % 'e' is formed into a rule with the indicator.  This rule
-    % is passed to 'simplify_rule' to be added to the list of
-    % simple rules.  The indicator is added to the list of
-    % variable names in the TIGER structure.
-    %
-    % The indicator expression returned is not linked to the
-    % new rule (a copy is made in this function).  The expression
-    % passed in is copied as well, so the expression in the parent
-    % rule can be modified in place.
-    ind_name = get_next_ind_name();
-    ind_expr = expr();
-    ind_expr.id = ind_name;
 
-    ind_rule = expr();
-    ind_rule.IFF = true;
-    ind_rule.lexpr = e.copy;
-    ind_rule.rexpr = ind_expr.copy;
-    
-    [ind_lb,ind_ub] = get_expr_bounds(e);
-    tiger.varnames{end+1} = ind_name;
-    tiger.lb(end+1) = ind_lb;
-    tiger.ub(end+1) = ind_ub;
-    
-    simplify_rule(ind_rule);
-end
-    
-function [e] = simplify_expr(e)
-    % Simplifies an expression.  If the left or right subexpressions
-    % are not atoms, they are replaced with an indicator variable.
-    % This function modifies the expression in place.
-    if ~e.lexpr.is_atom
-        e.lexpr = make_substitution(e.lexpr);
-    end
-    if ~e.rexpr.is_atom
-        e.rexpr = make_substitution(e.rexpr);
-    end
-end
-    
-function simplify_rule(r)
-    % Simplify a rule.  The resulting
-    % rules are of the form:
-    %                atom -> atom
-    %                cond -> atom
-    %       atom AND atom -> atom
-    %       atom OR  atom -> atom
-    % The simple rules are appended to the cell 'simple_rules'.
-    if ~r.rexpr.is_atom
-        r.rexpr = make_substitution(r.rexpr);
-    end
-    if ~r.lexpr.is_simple
-        r.lexpr = simplify_expr(r.lexpr);
-    end
-    simple_rules{end+1} = r;
-end
-
-function switch_nots(e)
-    if e.is_atom && e.negated
-        not_name = [NOT_PRE e.id];
-        [tf,loc] = ismember(not_name,tiger.varnames);
-        if ~tf
-            not_vars{end+1} = e.id;
-            not_inds{end+1} = not_name;
-        end
-        e.id = not_name;
-        e.negated = false;
-    end
-    
-    if ~isempty(e.lexpr)
-        switch_nots(e.lexpr);
-    end
-    if ~isempty(e.rexpr)
-        switch_nots(e.rexpr);
-    end
-end
-
-function [tf] = is_multilevel(e)
-    [~,ub] = get_expr_bounds(e);
-    tf = ub > 1;
-end
-
-function [num] = number_of_cons(r)
-    e = r.lexpr;
-    multilevel = is_multilevel(e);
-    if e.is_atom
-        num = 1;
-    elseif e.is_cond
-        num = 2;
-    elseif  multilevel && e.is_junc && r.IFF
-        num = 6;
-    elseif  multilevel && e.is_junc && r.IF
-        if e.AND
-            num = 4;
-        else
-            num = 2;
-        end
-    elseif ~multilevel && e.is_junc && r.IFF
-        num = 2;
-    elseif ~multilevel && e.is_junc && r.IF
-        num = 1;
-    end
-end
-
-function [num] = number_of_vars(r)
-    e = r.lexpr;
-    if is_multilevel(e) && ((r.IFF && e.junc) || (r.IF && e.AND))
-        num = 2;
+function add_var(name,lb,ub)
+    % Add a variable to VARNAMES and place correct bounds and vartype.
+    % If LB and UB are not given, default bounds or user-specified bounds
+    % are used.
+    names = assert_cell(name);
+    Nnames = length(names);
+    if nargin < 2 || isempty(lb)
+        lbs = repmat(default_lb,1,Nnames);
     else
-        num = 0;
+        if length(lb) == 1
+            lbs = repmat(lb,1,Nnames);
+        else
+            lbs = lb;
+        end
     end
+    if nargin < 3 || isempty(ub)
+        ubs = repmat(default_ub,1,Nnames);
+    else
+        if length(ub) == 1
+            ubs = repmat(ub,1,Nnames);
+        else
+            ubs = ub;
+        end
+    end
+        
+    % if user specified bounds, change from default
+    if ~isempty(user_bounds)
+        [tf,loc] = ismember(user_bounds.names,names);
+        if any(tf)
+            lbs(loc(tf)) = user_bounds.lb(tf);
+            ubs(loc(tf)) = user_bounds.ub(tf);
+        end
+    end
+    
+    tiger.varnames(end+1:end+Nnames) = names;
+    tiger.lb(end+1:end+Nnames) = lbs;
+    tiger.ub(end+1:end+Nnames) = ubs;
+    
+    vartypes = repmat('b',Nnames,1);
+    vartypes(ubs > 1) = 'i';
+    tiger.vartypes(end+1:end+Nnames) = vartypes;
 end
 
-function simple_rule_to_ineq(r)
+function simple_rule_to_ineqs(r)
     e = r.lexpr;
     I = r.rexpr.id;
     [~,Iloc] = ismember(I,tiger.varnames);
     
     if e.is_atom
         [~,loc] = ismember(e.id,tiger.varnames);
-        addrow([1 1],'=',1,[loc Iloc]);
+        if r.IFF
+            % x <=> I ~> x = I
+            addrow([1 -1],'=',0,[loc Iloc]);
+        else
+            % x => I ~> I >= x
+            addrow([1 -1],'<',0,[loc Iloc]);
+        end
         return;
     end
     
@@ -280,6 +323,7 @@ function simple_rule_to_ineq(r)
             addrow([-1 -1 3],'<',2);
         end
     elseif e.is_junc
+        % multilevel expressions
         if ~r.IFF
             % add x > y <=> I_aux
             Iaux = [I '__aux'];
@@ -339,8 +383,11 @@ function simple_rule_to_ineq(r)
         ctypes(roff) = ctype;
     end   
 end
-    
 
-end % function
+function [tf] = is_multilevel(e)
+    [~,ub] = get_expr_bounds(e);
+    tf = ub > 1;
+end
 
-        
+end % add_rule
+
