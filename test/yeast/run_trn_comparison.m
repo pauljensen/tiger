@@ -11,7 +11,7 @@ minimal_idxs = [    436,     456,     458,   466,     476 ];
 carbon_sources = {'glc','gal','fruc','man','sucr','etoh','glyc','lac','pyr','rib','succ'};
 carbon_idxs    = [  428   425    423   451    481    420    432   446   470   471    480];
 
-ko_genes = {'adr1','cat8','gal4','gcr2','mig2','mth1','nrg1','rgt1','sip4'};
+ko_genes = {'ADR1','CAT8','GAL4','GCR2','MIG2','MTH1','NRG1','RGT1','SIP4'};
 
 %   WT  adr1  cat8  gal4  gcr2  mig1  mig2  mth1  nrg1  rgt1  sip4 
 growth_rates = ...
