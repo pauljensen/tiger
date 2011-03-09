@@ -21,3 +21,8 @@ tic; tiger_base = cobra_to_tiger(cobra); toc
 
 tic; if_trn  = add_rule(tiger_base,if_exprs);  toc
 tic; iff_trn = add_rule(tiger_base,iff_exprs); toc
+
+yeast_if = bind_mets(if_trn);
+yeast_if = bind_var(yeast_if,{'EX_glc(e)'},{'glc[e]'});
+yeast_iff = bind_mets(iff_trn);
+yeast_iff = bind_var(yeast_iff,{'EX_glc(e)'},{'glc[e]'});
