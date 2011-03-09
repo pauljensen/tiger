@@ -6,7 +6,6 @@ end
 
 N = length(genes);
 
-grRatio  = zeros(N,1);
 grRateKO = zeros(N,1);
 
 sol = fba(tiger);

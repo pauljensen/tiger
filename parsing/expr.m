@@ -152,6 +152,32 @@ methods
         end
     end
     
+    function [str] = to_string(obj)
+        if obj.is_atom
+            str = obj.id;
+        elseif obj.AND
+            str = make_cons(' & ');
+        elseif obj.OR
+            str = make_cons(' | ');
+        elseif obj.IF
+            str = make_cons(' => ');
+        elseif obj.IFF
+            str = make_cons(' <=> ');
+        elseif obj.is_cond
+            str = obj.cond_to_str();
+        else
+            str = '';
+        end
+        
+        if obj.negated
+            str = ['~' str];
+        end
+        
+        function [s] = make_cons(sep)
+            s = ['(' obj.lexpr.to_string() sep obj.rexpr.to_string() ')'];
+        end
+    end
+    
     function [str] = cond_to_str(obj)
         str = [obj.lexpr.display_id ' ' ...
                obj.cond_op ' ' ...
