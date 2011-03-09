@@ -326,6 +326,7 @@ function simple_rule_to_ineqs(r)
         % multilevel expressions
         if ~r.IFF
             % add x > y <=> I_aux
+            
             Iaux = [I '__aux'];
             Iaux_not = [NOT_PRE Iaux];
             Iauxloc = voff + 1;
