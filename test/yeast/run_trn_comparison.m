@@ -11,6 +11,8 @@ minimal_idxs = [    436,     456,     458,   466,     476 ];
 carbon_sources = {'glc','gal','fruc','man','sucr','etoh','glyc','lac','pyr','rib','succ'};
 carbon_idxs    = [  428   425    423   451    481    420    432   446   470   471    480];
 
+ko_genes = {'adr1','cat8','gal4','gcr2','mig2','mth1','nrg1','rgt1','sip4'};
+
 %   WT  adr1  cat8  gal4  gcr2  mig1  mig2  mth1  nrg1  rgt1  sip4 
 growth_rates = ...
 [ 0.21  0.21  0.21  0.21  0.17  0.21  0.20  0.21  0.21  0.21  0.21; ... % glu
@@ -44,3 +46,6 @@ for i = 1 : length(carbon_sources)
         uptake_rates(i) = sol.x(source);
     end
 end
+
+
+
