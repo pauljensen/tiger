@@ -1,6 +1,6 @@
 
 load ind750.mat
-changeCobraSolver('gurobi');
+%changeCobraSolver('gurobi');
 
 is_ex_f = @(x) length(x) >= 3 && strcmp(x(1:3),'EX_');
 is_ex = cellfun(is_ex_f,cobra.rxns);
