@@ -7,10 +7,11 @@ milp.b = tiger.d;
 milp.lb = tiger.lb;
 milp.ub = tiger.ub;
 
-milp.ctypes = tiger.ctypes;
-milp.vartypes = tiger.vartypes;
+milp.ctypes = tiger.ctypes';
+milp.vartypes = upper(tiger.vartypes');
 
 milp.sense = 1;
 
 milp.colnames = tiger.varnames;
 milp.rownames = tiger.rownames;
+
