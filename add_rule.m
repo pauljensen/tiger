@@ -116,8 +116,8 @@ cellfun(@(x) x.demorgan,rules);
 % TODO: pre-allocate A better
 A = tiger.A;
 d = tiger.d;
-ctypes = '';
-roff = 0;  % row offset for adding constraints
+ctypes = tiger.ctypes;
+roff = size(A,1);  % row offset for adding constraints
 
 % simplify the rules and convert to inequalities
 cellfun(@simplify_rule,rules);
@@ -127,8 +127,8 @@ Nvars_added = size(A,2) - orig_n;
 tiger.A = A;
 tiger.d = d;
 tiger.ctypes = ctypes;
-rownames = array2names('ROW',orig_m+(1:size(A,1)));
-tiger.rownames = [tiger.rownames; rownames];
+rownames = array2names('ROW',orig_m+1:size(A,1));
+tiger.rownames = [tiger.rownames; rownames'];
 tiger.obj = [tiger.obj; zeros(Nvars_added,1)];
 
 
@@ -215,7 +215,7 @@ function [ind_expr] = make_substitution(e)
     ind_rule.rexpr = ind_expr.copy;
     
     [ind_lb,ind_ub] = get_expr_bounds(e);
-    add_var(ind_Name,ind_lb,ind_ub);
+    add_var(ind_name,ind_lb,ind_ub);
     
     simplify_rule(ind_rule);
 end
@@ -324,6 +324,7 @@ function simple_rule_to_ineqs(r)
         end
     elseif e.is_junc
         % multilevel expressions
+        % XXX NOT DONE ---
         if ~r.IFF
             % add x > y <=> I_aux
             
