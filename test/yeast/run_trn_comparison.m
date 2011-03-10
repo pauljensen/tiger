@@ -73,35 +73,29 @@ load yeast_raw_rules.mat
 load yeast_aliases.mat
 
 N = length(yeast_raw_rules);
-if_rules  = cell(N,1);
-iff_rules = cell(N,1);
+rules  = cell(N,1);
 for i = 1 : N
-    pred = yeast_raw_rules{i,2};
-    if_rules{i}  = [pred(3:end)  ' => ' yeast_raw_rules{i,1}];
-    iff_rules{i} = [pred(3:end) ' <=> ' yeast_raw_rules{i,1}];
+    rules{i}  = [yeast_raw_rules{i,:}];
 end
 
-if_exprs  = cellfun(@parse_string, if_rules,'Uniform',false);
-iff_exprs = cellfun(@parse_string,iff_rules,'Uniform',false);
+rules = cellfilter(@(x) ~isempty(x),rules);
 
-cellfun(@(x) apply_aliases(x,yeast_aliases), if_exprs);
-cellfun(@(x) apply_aliases(x,yeast_aliases),iff_exprs);
+exprs  = cellfun(@parse_string, if_rules,'Uniform',false);
+
+cellfun(@(x) apply_aliases(x,yeast_aliases), exprs);
 
 tic; tiger_base = cobra_to_tiger(cobra); toc
 
-tic; if_trn  = add_rule(tiger_base,if_exprs);  toc
-tic; iff_trn = add_rule(tiger_base,iff_exprs); toc
+tic; trn  = add_rule(tiger_base,exprs);  toc
 
-yeast_if = bind_mets(if_trn);
-yeast_if = bind_var(yeast_if,{'EX_glc(e)'},{'glc[e]'});
-yeast_iff = bind_mets(iff_trn);
-yeast_iff = bind_var(yeast_iff,{'EX_glc(e)'},{'glc[e]'});
+trn = bind_mets(trn);
+trn = bind_var(trn,{'EX_glc(e)'},{'glc[e]'});
 
 %%
 
 tiger_rates = zeros(size(growth_rates));
 for carbon = 1 : length(carbon_sources)
-    tiger = yeast_if;
+    tiger = trn;
     tiger.lb(carbon_idxs) = 0;
     tiger.lb(carbon_idxs(carbon)) = uptake_rates(carbon);
     sol = fba(tiger);
