@@ -14,7 +14,8 @@ minimal_idxs = [    436,     456,     458,   466,     476 ];
 carbon_sources = {'glc','gal','fruc','man','sucr','etoh','glyc','pyr','rib','succ'};
 carbon_idxs    = [  428   425    423   451    481    420    432   470   471    480];
 
-ko_genes = {'ADR1','CAT8','GAL4','MIG1','MIG2','MTH1','NRG1','RGT1','SIP4'};
+ko_names = {   'ADR1',   'CAT8',   'GAL4',   'MIG1',   'MIG2',   'MTH1',   'NRG1',   'RGT1',   'SIP4'};
+ko_genes = {'YDR216W','YMR280C','YPL248C','YGL035C','YGL209W','YDR277C','YDR043C','YKL038W','YJL089W'};
 
 %   WT  adr1  cat8  gal4  mig1  mig2  mth1  nrg1  rgt1  sip4 
 growth_rates = ...
@@ -80,7 +81,7 @@ end
 
 rules = cellfilter(@(x) ~isempty(x),rules);
 
-exprs  = cellfun(@parse_string, if_rules,'Uniform',false);
+exprs  = cellfun(@parse_string,rules,'Uniform',false);
 
 cellfun(@(x) apply_aliases(x,yeast_aliases), exprs);
 

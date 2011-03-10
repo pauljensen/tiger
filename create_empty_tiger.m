@@ -11,3 +11,5 @@ tiger.rownames = {};
 
 tiger.ctypes = '';
 tiger.vartypes = '';
+
+tiger.param.ind = 0;

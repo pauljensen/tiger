@@ -26,6 +26,10 @@ end
 
 tiger = rmfield(cobra,{'c','b'});
 
+% get default params
+empty_tiger = create_empty_tiger();
+tiger.param = empty_tiger.param;
+
 [m,n] = size(tiger.S);
 
 if isfield(cobra,'rxns') && ~numbered

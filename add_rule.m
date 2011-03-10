@@ -74,7 +74,7 @@ p.parse(varargin{:});
 
 IND_PRE = p.Results.ind_prefix;
 IND_WIDTH = p.Results.ind_width;  % number of digits for indicator names
-ind_counter = 0;
+ind_counter = tiger.param.ind;
 
 NOT_PRE = p.Results.not_prefix;
 not_type = p.Results.not_type;
@@ -131,6 +131,7 @@ rownames = array2names('ROW',orig_m+1:size(A,1));
 tiger.rownames = [tiger.rownames; rownames'];
 tiger.obj = [tiger.obj; zeros(Nvars_added,1)];
 
+tiger.param.ind = ind_counter;
 
 function switch_nots(e)
     % Create negated variables to remove negated atoms. 
