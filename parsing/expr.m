@@ -1,31 +1,33 @@
 classdef expr < handle
+% EXPR  Expression objects for describing TIGER rules.
     
 properties (Dependent)
-    is_junc
-    is_cond
-    is_rule
-    is_atom
+    is_junc     % true if EXPR is a junction (AND or OR)
+    is_cond     % true if EXPR is a conditional (<=, <, etc.)
+    is_rule     % true if EXPR is a rule (=> or <=>)
+    is_atom     % true if EXPR is an atom (variable name)
+    is_numeric  % true if EXPR is a numeric constant
     
-    is_simple
+    is_simple   % is a simple rule; does not require substitution
     
-    atoms
+    atoms       % list of all atoms appearing in a rule
 end
 
 properties
-    AND = false
-    OR = false
-    cond_op = ''
-    IFF = false
-    IF  = false
-    lexpr
-    rexpr
+    AND = false   % is an AND junction
+    OR = false    % is an OR junction
+    cond_op = ''  % operator for conditional expressions
+    IFF = false   % is an IFF rule
+    IF  = false   % is an IF rule
+    lexpr         % left-hand-side expression
+    rexpr         % right-hand-side expression
 
-    negated = false
+    negated = false  % true if actual rule preceeded by a NOT
 
-    id = ''
-    display_id
+    id = ''       % atom name
+    display_id    % atom name prefaced by '~' if negated
 
-    NULL = false
+    NULL = false  % not an EXPR (returned by parsing empty strings)
 end
 
 methods
@@ -55,7 +57,15 @@ methods
         end
     end
     
+    function [tf] = get.is_simple(obj)
+        tf =    obj.is_atom ...
+             || obj.is_cond ...
+             || (obj.is_junc && obj.lexpr.is_atom ...
+                             && obj.rexpr.is_atom);
+    end  
+    
     function [new] = copy(obj)
+        % perform a deep copy of the handle
         new = expr();
         props = properties(obj);
         for p = 1 : length(props)
@@ -77,6 +87,9 @@ methods
     % ------------ manipulation ------------
     
     function iterif(e,test,f)
+        % Iterate over every part of the expression, applying function
+        % handle F if function handle TEST is true.  Modifies the 
+        % expression in place.
         if test(e)
             f(e);
         end
@@ -89,19 +102,29 @@ methods
     end
     
     function [new_e] = mapif(e,test,f)
+        % Map function F over each part of the expression where function
+        % handle TEST is true.  Returns a new copy of the expression.
         new_e = e.copy;
         new_e.iterif(test,f);
     end
     
     function iter(e,f)
+        % Apply function handle F to every part of the expression,
+        % modifying the expression in place.
         e.iterif(@(x) true,f);
     end
     
     function [new_e] = map(e,f)
+        % Map function F over each part of the expression, returning a new
+        % copy of the expression.
         new_e = e.mapif(@(x) true,f);
     end
     
     function demorgan(obj)
+        % Apply DeMorgan's rule to the expression:
+        %       NOT (x AND y) -> (NOT x) OR (NOT y)
+        %       NOT (x OR y)  -> (NOT x) AND (NOT y)
+        %       NOT (NOT x)   -> x
         if obj.negated && obj.is_junc
             obj.AND = ~obj.AND;
             obj.OR  = ~obj.OR;
@@ -135,13 +158,6 @@ methods
         end
     end
     
-    function [tf] = get.is_simple(obj)
-        tf =    obj.is_atom ...
-             || obj.is_cond ...
-             || (obj.is_junc && obj.lexpr.is_atom ...
-                             && obj.rexpr.is_atom);
-    end
-    
     % ------------ display routines ------------
     
     function [str] = get.display_id(obj)
@@ -153,6 +169,7 @@ methods
     end
     
     function [str] = to_string(obj)
+        % Format an expression as a one-line string.
         if obj.is_atom
             str = obj.id;
         elseif obj.AND
@@ -179,6 +196,7 @@ methods
     end
     
     function [str] = cond_to_str(obj)
+        % Format a conditional as a one-line string.
         str = [obj.lexpr.display_id ' ' ...
                obj.cond_op ' ' ...
                obj.rexpr.display_id];
@@ -188,6 +206,8 @@ methods
     end
     
     function [frame] = make_textframe(obj,indent,pipe)
+        % Converts an expression (not a rule) into a textframe containing
+        % a tree structure.
         frame = textframe();
         if obj.NULL
             return
@@ -250,6 +270,8 @@ methods
     end
     
     function display(obj)
+        % Show a rule or expression as a true structure, overriding the
+        % builtin display as a structure.
         if obj.is_rule
             l = obj.lexpr.make_textframe();
             r = obj.rexpr.make_textframe();

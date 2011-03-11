@@ -7,7 +7,7 @@ function [tiger] = assert_tiger_model(model)
 %   MODEL to a TIGER model and warns that this procedure is not efficient
 %   for repeated calls to the parent function.
 
-fields = {'A','d','vartypes','ctypes','rownames','varnames','obj'};
+fields = {'A','b','vartypes','ctypes','rownames','varnames','obj'};
 
 if ~all(isfield(model,fields))
     % convert model

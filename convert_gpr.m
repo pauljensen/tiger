@@ -1,4 +1,10 @@
-function [tiger] = convert_gpr(tiger)
+function [tiger] = convert_gpr(tiger,varargin)
+% CONVERT_GPR  Add the GPR rules as constraints to the model.
+%
+%   [TIGER] = CONVERT_GPR(TIGER,...ADD_RULE params...)
+%
+%   Each GPR expression is converted to a rule and added to the model.
+%   Extra parameters will be passed to the ADD_RULE function.
 
 tiger = assert_tiger_model(tiger);
 
@@ -20,5 +26,5 @@ tiger.vartypes = [tiger.vartypes; repmat('b',Nrxns+Ngenes,1)];
 tiger.lb = [tiger.lb; zeros(Nrxns+Ngenes,1)];
 tiger.ub = [tiger.ub;  ones(Nrxns+Ngenes,1)];
 
-tiger = add_rule(tiger,gpr_rules);
+tiger = add_rule(tiger,gpr_rules,varargin);
 tiger = bind_var(tiger,tiger.varnames(rxns),rxn_names);

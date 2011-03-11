@@ -1,4 +1,5 @@
 function [milp] = make_milp(tiger)
+% MAKE_MILP  Convert a TIGER structure to a CMPI MILP.
 
 milp.c = tiger.obj;
 milp.A = tiger.A;

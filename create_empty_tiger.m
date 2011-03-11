@@ -1,7 +1,8 @@
 function [tiger] = create_empty_tiger()
+% CREATE_EMPTY_TIGER  Create an empty TIGER model structure.
 
 tiger.A = [];
-tiger.d = [];
+tiger.b = [];
 tiger.lb = [];
 tiger.ub = [];
 tiger.obj = [];

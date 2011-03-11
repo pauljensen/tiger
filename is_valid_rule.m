@@ -1,4 +1,5 @@
 function [tf] = is_valid_rule(rule)
+% IS_VALID_RULE  Check that an EXPR object is a valid rule
 
 if isa(rule,'cell')
     tf = cellfun(@is_valid_rule,rule);

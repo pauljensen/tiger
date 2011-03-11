@@ -115,7 +115,7 @@ cellfun(@(x) x.demorgan,rules);
 
 % TODO: pre-allocate A better
 A = tiger.A;
-d = tiger.d;
+b = tiger.b;
 ctypes = tiger.ctypes;
 roff = size(A,1);  % row offset for adding constraints
 
@@ -125,7 +125,7 @@ cellfun(@simplify_rule,rules);
 % add new entries to the TIGER model
 Nvars_added = size(A,2) - orig_n;
 tiger.A = A;
-tiger.d = d;
+tiger.b = b;
 tiger.ctypes = ctypes;
 rownames = array2names('ROW',orig_m+1:size(A,1));
 tiger.rownames = [tiger.rownames; rownames'];
@@ -157,7 +157,7 @@ function add_not_con(not_var,not_ind)
             ind_idx = length(tiger.varnames);
             roff = roff + 1;
             A(roff,[var_idx,ind_idx]) = [1 1];
-            d(roff) = tiger.ub(var_idx);
+            b(roff) = tiger.ub(var_idx);
             ctypes(roff) = '=';
         end
     end
@@ -382,7 +382,7 @@ function simple_rule_to_ineqs(r)
         end
         roff = roff + 1;
         A(roff,loc) = coefs;
-        d(roff) = rhs;
+        b(roff) = rhs;
         ctypes(roff) = ctype;
     end   
 end

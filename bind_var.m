@@ -1,4 +1,23 @@
 function [tiger] = bind_var(tiger,vars,inds,varargin)
+% BIND_VAR  Bind variables to a indicator variable
+%
+%   [TIGER] = BIND_VAR(TIGER,VARS,INDS,...params...)
+%
+%   For each variable v in VARS and corresponding indicator I in INDS,
+%   adds constraints such that
+%       LB*I <= v <= UB*I
+%   Thus, if I=0, v must equal 0.  The values LB and UB are given by the
+%   following parameters:
+%       (default)  LB = min(TIGER.lb), i.e. the lowest lower bound in the
+%                  entire model.  UB = max(TIGER.ub), the largest upper
+%                  bound in the model.
+%       'tight'    If true, the upper and lower bounds for v are used.
+%                  This may be more numerically stable, but can add
+%                  complications if the variable bounds are changed later,
+%                  as these changes will not be reflected in the binding
+%                  constraints.
+%       'lb','ub'  Number specifying LB and UB; these are used for every
+%                  variable.
 
 p = inputParser;
 p.addParamValue('tight',false);

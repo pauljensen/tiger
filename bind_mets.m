@@ -1,4 +1,11 @@
 function [tiger] = bind_mets(tiger)
+% BIND_METS  Bind metabolites to exchange reactions.
+%
+%   [TIGER] = BIND_METS(TIGER)
+%
+%   Searches for variable names that match metabolite names.  If found,
+%   adds constraints to the exchange reactions for the metabolite such 
+%   that if the metabolite is taken up, the variable must be 'on'.
 
 m = size(tiger.S,1);
 to_bind = ismember(tiger.rownames(1:m),tiger.varnames);

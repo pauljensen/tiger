@@ -1,4 +1,5 @@
 function [tf] = is_valid_expr(e)
+% IS_VALID_EXPR  Check that an EXPR object is semantically valid
 
 if isa(e,'cell')
     tf = cellfun(@is_valid_expr,e);
