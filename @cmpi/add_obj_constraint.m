@@ -18,7 +18,7 @@ if nargin < 2,  frac = 1.0; end
 
 sol = cmpi.solve_milp(milp);
 
-milp.A = [milp.A; -milp.c(:)'];
+milp.A = [milp.A; -milp.obj(:)'];
 milp.b(end+1) = -frac*sol.val;
 milp.ctypes(end+1) = '<';
 

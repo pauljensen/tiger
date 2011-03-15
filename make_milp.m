@@ -3,7 +3,7 @@ function [milp] = make_milp(tiger)
 
 milp.c = tiger.obj;
 milp.A = tiger.A;
-milp.b = tiger.d;
+milp.b = tiger.b;
 
 milp.lb = tiger.lb;
 milp.ub = tiger.ub;

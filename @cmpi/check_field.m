@@ -7,9 +7,8 @@ function [val] = check_field(field,structure)
 %   returns the value in STRUCTURE.FIELD.  If not definied, returns
 %   the empty array.
 
-    if isfield(structure,field)
-        val = structure.(field);
-    else
-        val = [];
-    end
+if isfield(structure,field)
+    val = structure.(field);
+else
+    val = [];
 end

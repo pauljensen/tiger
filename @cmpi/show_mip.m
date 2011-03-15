@@ -29,7 +29,7 @@ default_rownames = arrayfun(@(x) ['ROW_' num2str(x)], 1:nrows, ...
                         
 % default ranges and names
 if isfield(mip,'colnames')
-    colnames = mip.colnames;
+    colnames = mip.varnames;
 elseif nargin < 5 || isempty(colnames)
     colnames = default_colnames;
 end
@@ -56,7 +56,7 @@ rownames = zip_names(default_rownames,rownames);
 % show objective
 fprintf('\n\n----- Objective -----\n');
 fprintf('z = ');
-show_coef_list(mip.c);
+show_coef_list(mip.obj);
 
 % show constraints
 fprintf('\n\n----- Constraints -----\n');

@@ -12,6 +12,7 @@ classdef cmpi
 properties (Constant)
     % Initial (default) value for CMPI_SOLVER
     init_SOLVER = 'ilog_cplex';
+    init_IND_EPS = 1e-8;
 end
 
 methods (Static)
@@ -103,6 +104,7 @@ methods (Static)
 
     function [opts] = get_options()
         % GET_OPTIONS  Return the default solver options
+        cmpi.assert_init();
         global CMPI_OPTIONS
         opts = CMPI_OPTIONS;
     end
@@ -115,10 +117,18 @@ methods (Static)
 
     function [solver] = get_solver()
         % GET_SOLVER  Get the default solver name
+        cmpi.assert_init();
         global CMPI_SOLVER
         solver = CMPI_SOLVER;
     end
 
+    function [ind_eps] = get_ind_eps()
+        % GET_IND_EPS  Get epsilon for indicator constraints
+        cmpi.assert_init();
+        global CMPI_IND_EPS
+        ind_eps = CMPI_IND_EPS;
+    end
+    
     function init()
         % INIT  Initialze CMPI
         %
@@ -127,10 +137,24 @@ methods (Static)
         
         global CMPI_OPTIONS
         global CMPI_SOLVER
+        global CMPI_IND_EPS
+        global CMPI_INITIALIZED
 
         CMPI_SOLVER = cmpi.init_SOLVER;
+        CMPI_IND_EPS = cmpi.init_IND_EPS;
+        
+        CMPI_INITIALIZED = true;
     end
 
+    function assert_init()
+        % ASSERT_INIT  Assert that CMPI has been initialized
+        global CMPI_INITIALIZED
+        
+        if ~CMPI_INITIALIZED
+            cmpi.init();
+        end
+    end
+    
     % external static methods
     [sol] = solve_milp(milp,solver)
     [tf] = verify_sol(milp,sol,tol)
@@ -139,6 +163,7 @@ methods (Static)
     show_mip(mip,rowidxs,colidxs,rownames,colnames,showvars)
     [opts] = set_cplex_opts(options)
     [flag] = get_cplex_flag(status)
+    [mip] = convert_indicators(mip)
 end
 
 end % class
