@@ -117,6 +117,8 @@ cellfun(@(x) x.demorgan,rules);
 A = tiger.A;
 b = tiger.b;
 ctypes = tiger.ctypes;
+ind = tiger.ind;
+indtypes = tiger.indtypes;
 roff = size(A,1);  % row offset for adding constraints
 
 % simplify the rules and convert to inequalities
@@ -170,7 +172,7 @@ function simplify_rule(r)
     %                cond -> atom
     %       atom AND atom -> atom
     %       atom OR  atom -> atom
-    % The simple rules are appended to the cell 'simple_rules'.
+    % The simple rules are converted to inequalities.
     switch_nots(r);
     
     if ~r.rexpr.is_atom
@@ -325,54 +327,45 @@ function simple_rule_to_ineqs(r)
         end
     elseif e.is_junc
         % multilevel expressions
-        % XXX NOT DONE ---
-        if ~r.IFF
-            % add x > y <=> I_aux
-            
-            Iaux = [I '__aux'];
-            Iaux_not = [NOT_PRE Iaux];
-            Iauxloc = voff + 1;
-            Iaux_notloc = voff + 2;
-            voff = voff + 2;
-            tiger.varnames([Iauxloc,Iaux_notloc]) = {Iaux,Iaux_not};
-            tiger.lb([Iauxloc,Iaux_notloc]) = [0 0];
-            tiger.ub([Iauxloc,Iaux_notloc]) = [1 1];
-            
-            aux_rule = parse_string(sprintf('%s > %s <=> %s',x,y,Iaux));
-            
-            simple_rule_to_ineq(aux_rule);
-        end
         if e.AND
-            addrow([1 -xbar -1],'<',0,[xloc Iauxloc Iloc]);
-            addrow([1 -ybar -1],'<',0,[yloc Iaux_notloc Iloc]);
+            Iaux = get_next_ind_name();
+            simplify_rule(sprintf('%s > %s <=> %s',x,y,Iaux));
+            [~,Iaux_loc] = ismember(Iaux,tiger.varnames);
+            addrow([1 -xmax -1],'<',0,[xloc Iaux_loc Iloc]);
+            addrow([1 -ymax -1],'<',ymax,[yloc Iaux_loc Iloc]);
             if r.IFF
-                addrow([-1  0 1],'<',0);
-                addrow([ 0 -1 1],'<',0);
+                addrow([1 -1],'<',0,[Iloc xloc]);
+                addrow([1 -1],'<',0,[Iloc yloc]);
             end
         elseif e.OR
-            addrow([-1  0 1],'>',0);
-            addrow([ 0 -1 0],'>',0);
+            addrow([1 -1],'>',0,[Iloc xloc]);
+            addrow([1 -1],'>',0,[Iloc yloc]);
             if r.IFF
-                addrow([1 xbar -1],'>',0,[xloc Iaux_notloc Iloc]);
-                addrow([1 ybar -1],'>',0,[yloc Iauxloc Iloc]);
+                Iaux = get_next_ind_name();
+                simplify_rule(sprintf('%s > %s <=> %s',x,y,Iaux));
+                [~,Iaux_loc] = ismember(Iaux,tiger.varnames);
+                addrow([1 -xmax -1],'>',-xmax,[xloc Iaux_loc Iloc]);
+                addrow([1 -ymax -1],'>',0,[yloc Iaux_loc Iloc]);
             end
         end
     elseif e.is_cond
-        switch e.cond_op
-            case '>='
-                addrow([ 1 -1 -(xmax+1)],'<',-1);
-                addrow([-1  1  (ymax+1)],'<',ymax+1);
-            case '>'
-                addrow([ 1 -1 -(xmax+1)],'<',0);
-                addrow([-1  1  (ymax+2)],'<',ymax);
-            case '<='
-                addrow([-1  1 -(1-xmax)],'<',-1);
-                addrow([ 1 -1  (1-ymax)],'<',1-ymax);
-            case '<'
-                addrow([-1  1 -(1-xmax)],'<',0);
-                addrow([ 1 -1  (2-ymax)],'<',-ymax);
-            otherwise
-                error('Operator %s not implemented.',e.cond_op);
+        assert(ismember(e.cond_op,{'<=','=','>='}), ...
+               'Operator %s should have been removed.',e.cond_op);
+        l = e.lexpr.id;
+        [~,lloc] = ismember(l,tiger.varnames);
+        r = e.rexpr.id;
+        [~,rloc] = ismember(r,tiger.varnames);
+        op = e.cond_op;
+        if e.rexpr.is_numeric
+            addrow(1,op(1),r,lloc);
+        else
+            addrow([1 -1],op(1),0,[lloc rloc]);
+        end
+        ind(roff) = Iloc;
+        if r.IFF
+            indtype(roff) = 'b';
+        else
+            indtype(roff) = 'p';
         end
     end
     
@@ -384,6 +377,8 @@ function simple_rule_to_ineqs(r)
         A(roff,loc) = coefs;
         b(roff) = rhs;
         ctypes(roff) = ctype;
+        ind(roff) = 0;
+        indtype(roff) = ' ';
     end   
 end
 

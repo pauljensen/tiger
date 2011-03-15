@@ -54,6 +54,9 @@ tiger.d = cobra.b;
 tiger.gpr = cobra.grRules;
 tiger.genes = cobra.genes;
 
+tiger.ind = zeros(m,1);
+tiger.indtypes = repmat(' ',m,1);
+
 if add_gpr
     tiger = convert_gpr(tiger);
 end

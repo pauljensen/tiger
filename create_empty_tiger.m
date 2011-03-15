@@ -13,4 +13,7 @@ tiger.rownames = {};
 tiger.ctypes = '';
 tiger.vartypes = '';
 
+tiger.ind = [];
+tiger.indtypes = '';
+
 tiger.param.ind = 0;

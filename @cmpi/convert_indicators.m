@@ -1,5 +1,5 @@
 function [mip] = convert_indicators(mip)
-% CONVER_INDICATORS  Convert indicators to MILP constraints
+% CONVERT_INDICATORS  Convert indicators to MILP constraints
 %
 %   [MIP] = CONVERT_INDICATORS(MIP)
 %
