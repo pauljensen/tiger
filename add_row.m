@@ -60,4 +60,5 @@ tiger.ctypes(locs) = ctype;
 tiger.b(locs) = b;
 tiger.rownames(locs) = name;
 tiger.ind(locs) = ind;
-tiger.indtype(locs) = indtype;
+tiger.indtypes(locs) = indtype;
+

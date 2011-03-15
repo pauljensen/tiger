@@ -363,9 +363,9 @@ function simple_rule_to_ineqs(r)
         end
         ind(roff) = Iloc;
         if r.IFF
-            indtype(roff) = 'b';
+            indtypes(roff) = 'b';
         else
-            indtype(roff) = 'p';
+            indtypes(roff) = 'p';
         end
     end
     
@@ -378,7 +378,7 @@ function simple_rule_to_ineqs(r)
         b(roff) = rhs;
         ctypes(roff) = ctype;
         ind(roff) = 0;
-        indtype(roff) = ' ';
+        indtypes(roff) = ' ';
     end   
 end
 

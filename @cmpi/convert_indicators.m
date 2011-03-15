@@ -23,8 +23,8 @@ function [mip] = convert_indicators(mip)
 
 IND_EPS = cmpi.get_ind_eps();
 
-idx_p = find((mip.ind > 0) & (mip.indtype == 'p'));
-idx_b = find((mip.ind > 0) & (mip.indtype == 'b'));
+idx_p = find((mip.ind > 0) & (mip.indtypes == 'p'));
+idx_b = find((mip.ind > 0) & (mip.indtypes == 'b'));
 
 np = length(idx_p);
 nb = length(idx_b);
