@@ -4,6 +4,7 @@ if nargin == 1
     if isa(e1,'token')
         ex = expr();
         ex.id = e1.value;
+        ex.was_quoted = e1.quoted;
     elseif isa(e1,'expr')
         ex = e1;
     else

@@ -6,7 +6,6 @@ properties (Dependent)
     is_cond     % true if EXPR is a conditional (<=, <, etc.)
     is_rule     % true if EXPR is a rule (=> or <=>)
     is_atom     % true if EXPR is an atom (variable name)
-    is_numeric  % true if EXPR is a numeric constant
     
     is_simple   % is a simple rule; does not require substitution
     
@@ -23,6 +22,9 @@ properties
     rexpr         % right-hand-side expression
 
     negated = false  % true if actual rule preceeded by a NOT
+    
+    is_numeric = false  % true if EXPR is a numeric constant
+    was_quoted = false  % true if original id was quoted
 
     id = ''       % atom name
     display_id    % atom name prefaced by '~' if negated

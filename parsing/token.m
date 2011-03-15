@@ -8,9 +8,8 @@ properties
     is_op = false      % true if the token is a valid operator
     is_lparen = false  % true if the token is a left parenthesis '('
     is_rparen = false  % true if the token is a right parenthesis ')'
-end
-
-properties
+    quoted = false     % true if the value was originally quoted
+    
     value   % token string
 end
 
@@ -47,6 +46,8 @@ methods
             disp([indent 'RPAREN']);
         elseif obj.is_op
             disp([indent 'op: ' obj.value]);
+        elseif obj.quoted
+            disp([indent '"' obj.value '"']);
         else
             disp([indent '''' obj.value '''']);
         end

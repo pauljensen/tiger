@@ -78,6 +78,8 @@ function [tok] = make_token(str)
         str = buf.val;
     end
     
+    quoted = false;
+    
     if is_op(str)
         str = op_keys{cellfun(@(x) ismember(str,x),op_vals)};
         tok = token(str,true);
@@ -89,9 +91,12 @@ function [tok] = make_token(str)
         if str(1) == '''' || str(1) == '"'
             % strip the quotes
             str = str(2:end-1);
+            quoted = true;
         end
         tok = token(str);
     end
+    
+    tok.quoted = quoted;
 end
 
 function [tf] = is_op(str)
