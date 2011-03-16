@@ -102,16 +102,14 @@ for i = 1 : N
     end
 end
 
-% get all atoms in the expression list
+% Get all atoms in the expression list.  This is repeated in
+% simplify_rule, but do it on all atoms here for efficiency.
 atoms = cellfun(@(x) x.atoms,rules,'Uniform',false);
 atoms = setdiff(unique([atoms{:}]),tiger.varnames);
 add_var(atoms);
 
 % measure the size of the original model
 [orig_m,orig_n] = size(tiger.A);
-
-% move nots down to the atoms
-cellfun(@(x) x.demorgan,rules);
 
 % TODO: pre-allocate A better
 A = tiger.A;
@@ -130,11 +128,26 @@ tiger.A = A;
 tiger.b = b;
 tiger.ctypes = ctypes;
 rownames = array2names('ROW',orig_m+1:size(A,1));
-tiger.rownames = [tiger.rownames; rownames'];
+tiger.rownames = [tiger.rownames; rownames];
 tiger.obj = [tiger.obj; zeros(Nvars_added,1)];
 
 tiger.param.ind = ind_counter;
 
+function prepare_conditional(cond)
+    % Remove '>', '<', and '~=' operators
+    switch cond.cond_op
+        case '>'
+            cond.cond_op = '<=';
+        case '<'
+            cond.cond_op = '>=';
+        case '~='
+            cond.cond_op = '=';
+        otherwise
+            return;
+    end
+    cond.negated = ~cond.negated;
+end
+            
 function switch_nots(e)
     % Create negated variables to remove negated atoms. 
     e.iterif(@(x) x.is_atom && x.negated,@switch_aux);
@@ -173,6 +186,17 @@ function simplify_rule(r)
     %       atom AND atom -> atom
     %       atom OR  atom -> atom
     % The simple rules are converted to inequalities.
+    
+    atoms = r.atoms;
+    tf = ismember(atoms,tiger.varnames);
+    add_var(atoms(~tf));
+    
+    % move nots down to the atoms
+    r.demorgan();
+    
+    % prepare conditionals
+    r.iterif(@(e) e.is_cond,@prepare_conditional);
+    
     switch_nots(r);
     
     if ~r.rexpr.is_atom
@@ -329,7 +353,8 @@ function simple_rule_to_ineqs(r)
         % multilevel expressions
         if e.AND
             Iaux = get_next_ind_name();
-            simplify_rule(sprintf('%s > %s <=> %s',x,y,Iaux));
+            I_exp = parse_string(sprintf('%s > %s <=> %s',x,y,Iaux));
+            simplify_rule(I_exp);
             [~,Iaux_loc] = ismember(Iaux,tiger.varnames);
             addrow([1 -xmax -1],'<',0,[xloc Iaux_loc Iloc]);
             addrow([1 -ymax -1],'<',ymax,[yloc Iaux_loc Iloc]);
@@ -342,7 +367,8 @@ function simple_rule_to_ineqs(r)
             addrow([1 -1],'>',0,[Iloc yloc]);
             if r.IFF
                 Iaux = get_next_ind_name();
-                simplify_rule(sprintf('%s > %s <=> %s',x,y,Iaux));
+                I_exp = parse_string(sprintf('%s > %s <=> %s',x,y,Iaux));
+                simplify_rule(I_exp);
                 [~,Iaux_loc] = ismember(Iaux,tiger.varnames);
                 addrow([1 -xmax -1],'>',-xmax,[xloc Iaux_loc Iloc]);
                 addrow([1 -ymax -1],'>',0,[yloc Iaux_loc Iloc]);
@@ -351,10 +377,10 @@ function simple_rule_to_ineqs(r)
     elseif e.is_cond
         assert(ismember(e.cond_op,{'<=','=','>='}), ...
                'Operator %s should have been removed.',e.cond_op);
-        l = e.lexpr.id;
-        [~,lloc] = ismember(l,tiger.varnames);
-        r = e.rexpr.id;
-        [~,rloc] = ismember(r,tiger.varnames);
+        lname = e.lexpr.id;
+        [~,lloc] = ismember(lname,tiger.varnames);
+        rname = e.rexpr.id;
+        [~,rloc] = ismember(rname,tiger.varnames);
         op = e.cond_op;
         if e.rexpr.is_numeric
             addrow(1,op(1),r,lloc);

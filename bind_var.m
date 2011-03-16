@@ -43,7 +43,7 @@ N = length(vars);
 n = size(tiger.A,2);
 A = sparse([],[],[],2*N,n,2*n);
 rownames = cell(2*N,1);
-d = zeros(2*N,1);
+b = zeros(2*N,1);
 ctypes = [repmat('<',N,1); repmat('>',N,1)];
 
 for i = 1 : N
@@ -61,7 +61,7 @@ for i = 1 : N
 end
 
 tiger.A = [tiger.A; A];
-tiger.d = [tiger.d; d];
+tiger.b = [tiger.b; b];
 tiger.rownames = [tiger.rownames; rownames];
 tiger.ctypes = [tiger.ctypes; ctypes];
 

@@ -26,5 +26,5 @@ tiger.vartypes = [tiger.vartypes; repmat('b',Nrxns+Ngenes,1)];
 tiger.lb = [tiger.lb; zeros(Nrxns+Ngenes,1)];
 tiger.ub = [tiger.ub;  ones(Nrxns+Ngenes,1)];
 
-tiger = add_rule(tiger,gpr_rules,varargin);
+tiger = add_rule(tiger,gpr_rules,varargin{:});
 tiger = bind_var(tiger,tiger.varnames(rxns),rxn_names);

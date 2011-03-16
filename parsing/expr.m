@@ -53,7 +53,7 @@ methods
         if ~isempty(obj.lexpr) || ~isempty(obj.rexpr)
             latoms = subsref(obj.lexpr,substruct('.','atoms'));
             ratoms = subsref(obj.rexpr,substruct('.','atoms'));
-            atoms = [latoms ratoms];
+            atoms = unique([latoms ratoms]);
         else
             atoms = {obj.id};
         end

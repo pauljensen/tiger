@@ -24,7 +24,7 @@ if nargin < 2 || isempty(add_gpr)
     add_gpr = true;
 end
 
-tiger = rmfield(cobra,{'c','b'});
+tiger = rmfield(cobra,'c');
 
 % get default params
 empty_tiger = create_empty_tiger();
@@ -46,13 +46,12 @@ end
 
 tiger.A = tiger.S;
 
-tiger.obj = cobra.c;
+tiger.obj = cobra.c(:);
 tiger.ctypes = repmat('=',m,1);
 tiger.vartypes = repmat('c',n,1);
-tiger.d = cobra.b;
 
-tiger.gpr = cobra.grRules;
-tiger.genes = cobra.genes;
+tiger.gpr = cobra.grRules(:);
+tiger.genes = cobra.genes(:);
 
 tiger.ind = zeros(m,1);
 tiger.indtypes = repmat(' ',m,1);
