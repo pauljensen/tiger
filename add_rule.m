@@ -127,9 +127,11 @@ Nvars_added = size(A,2) - orig_n;
 tiger.A = A;
 tiger.b = b;
 tiger.ctypes = ctypes;
-rownames = array2names('ROW',orig_m+1:size(A,1));
+rownames = array2names('ROW%i',orig_m+1:size(A,1));
 tiger.rownames = [tiger.rownames; rownames];
 tiger.obj = [tiger.obj; zeros(Nvars_added,1)];
+tiger.ind = ind;
+tiger.indtypes = indtypes;
 
 tiger.param.ind = ind_counter;
 
@@ -149,8 +151,17 @@ function prepare_conditional(cond)
 end
             
 function switch_nots(e)
+    % create indicators for negated conditionals
+    e.iterif(@(x) x.is_cond && x.negated,@cond_aux);
+
     % Create negated variables to remove negated atoms. 
     e.iterif(@(x) x.is_atom && x.negated,@switch_aux);
+    
+    function cond_aux(cond)
+        cond.negated = false;
+        cond = make_substitution(cond);
+        cond.negated = true;
+    end
     
     function switch_aux(e)
         not_name = [NOT_PRE e.id];
@@ -383,7 +394,7 @@ function simple_rule_to_ineqs(r)
         [~,rloc] = ismember(rname,tiger.varnames);
         op = e.cond_op;
         if e.rexpr.is_numeric
-            addrow(1,op(1),r,lloc);
+            addrow(1,op(1),str2double(rname),lloc);
         else
             addrow([1 -1],op(1),0,[lloc rloc]);
         end

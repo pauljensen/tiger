@@ -48,8 +48,8 @@ s_ub = zeros(1,N);
 s_lb = zeros(1,N);
 
 for k = 1 : N
-    Aup = mip.A(i(k),:) .* ub;
-    Adn = mip.A(i(k),:) .* lb;
+    Aup = mip.A(i(k),:) .* mip.ub';
+    Adn = mip.A(i(k),:) .* mip.lb';
     
     s_ub(k) = sum(max(Aup,Adn));
     s_lb(k) = sum(min(Aup,Adn));

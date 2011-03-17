@@ -28,7 +28,7 @@ default_rownames = arrayfun(@(x) ['ROW_' num2str(x)], 1:nrows, ...
                             'Uniform', false);
                         
 % default ranges and names
-if isfield(mip,'colnames')
+if isfield(mip,'varnames')
     colnames = mip.varnames;
 elseif nargin < 5 || isempty(colnames)
     colnames = default_colnames;
@@ -73,6 +73,21 @@ for r = 1 : length(rowidxs)
             fprintf(' = ');
     end
     fprintf('%g\n',mip.b(r));
+end
+
+% show indicators
+if isfield(mip,'ind') && any(mip.ind)
+    fprintf('\n\n----- Indicators -----\n');
+    rows = find(mip.ind);
+    inds = mip.ind(rows);
+    types = mip.indtypes(rows);
+    for i = 1 : length(inds)
+        if types(i) == 'p'
+            fprintf('   %s  => %s\n',rownames{rows(i)},colnames{inds(i)});
+        else
+            fprintf('   %s <=> %s\n',rownames{rows(i)},colnames{inds(i)});
+        end
+    end
 end
 
 if showvars

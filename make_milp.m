@@ -30,6 +30,13 @@ milp.ub = tiger.ub;
 milp.ctypes = tiger.ctypes';
 milp.vartypes = upper(tiger.vartypes');
 
-milp.colnames = tiger.varnames;
+milp.varnames = tiger.varnames;
 milp.rownames = tiger.rownames;
 
+if isfield(tiger,'ind')
+    milp.ind = tiger.ind;
+end
+
+if isfield(tiger,'indtypes')
+    milp.indtypes = tiger.indtypes;
+end

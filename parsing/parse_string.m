@@ -26,16 +26,16 @@ levels = { {'not'}, ...
 unary = {'not'};
 
 strs = assert_cell(str);
-exp = map(@parse_aux,strs);
+exp = map(@parse_single,strs);
 if numeric
     cellfun(@(x) x.iterif(@(e) e.is_cond,@parse_numerics),exp);
 end
 
-if ~isa(str,'cell')
+if ~isa(str,'cell') && ~isempty(exp)
     exp = exp{1};
 end
 
-function [e] = parse_aux(s)
+function [e] = parse_single(s)
     if isempty(s)
         e = expr();
         e.NULL = true;
