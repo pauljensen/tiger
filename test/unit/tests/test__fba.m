@@ -1,7 +1,6 @@
 
 cobra_model
-cmpi.init();
-cmpi.set_solver('gurobi');
+init_test
 
 tiger = cobra_to_tiger(cobra);
 
