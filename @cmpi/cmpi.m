@@ -157,6 +157,8 @@ methods (Static)
     
     % external static methods
     [sol] = solve_milp(milp,solver)
+    [sol] = solve_mip(mip)
+    [val] = check_field(field,structure)
     [tf] = verify_sol(milp,sol,tol)
     [milp] = add_obj_constraint(milp,frac)
     [tf,violators] = check_bounded_rxns(model,sol,tol)
@@ -164,6 +166,7 @@ methods (Static)
     [opts] = set_cplex_opts(options)
     [flag] = get_cplex_flag(status)
     [mip] = convert_indicators(mip)
+    [mip] = convert_miqp(mip)
 end
 
 end % class

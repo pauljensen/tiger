@@ -24,15 +24,16 @@ function [mip] = convert_miqp(mip)
 [m,n] = size(mip.A);
 
 mip.Q = cmpi.check_field('Q',mip);
-Qd = cmpi.check_field('Qd',mip);
-Qc = cmpi.check_field('Qc',mip);
+mip.Q = expand_to(mip.Q,[n n]);
 
-mip.Q = expand_to(mip.Q,n);
-Qd = expand_to(Qd,n);
-if ~isempty(Qc)
-    Qc.w = expand_to(Qc.w,n);
-    Qc.c = expand_to(Qc.c,n);
-end
+Qd = cmpi.check_field('Qd',mip);
+Qd = expand_to(Qd,[n n]);
+
+Qc = cmpi.check_field('Qc',mip);
+Qc.w = cmpi.check_field('w',Qc);
+Qc.c = cmpi.check_field('c',Qc);
+Qc.w = expand_to(Qc.w,n);
+Qc.c = expand_to(Qc.c,n);
 
 % move all nonzero elements in Qd to the lower half
 Qd = tril(Qd) + triu(Qd)'.*double(tril(Qd) == 0);

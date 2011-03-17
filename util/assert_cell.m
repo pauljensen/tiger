@@ -6,7 +6,9 @@ function [c] = assert_cell(str)
 %   Checks that STR is a cell array.  If it is not (i.e., if it is a
 %   single string), then converts it to a cell array of length one.
 
-if ~isa(str,'cell')
+if isempty(str)
+    c = {};
+elseif ~isa(str,'cell')
     c = {str};
 else
     c = str;

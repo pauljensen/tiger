@@ -21,37 +21,38 @@ function [tiger] = add_row(tiger,A,ctype,b,name,ind,indtype)
 loc = m+1;
 
 if nargin < 2 || isempty(A)
-    N = 1;
+    A = [];
 elseif length(A) == 1
-    N = A;
-else
-    N = 1;
+    A = zeros(A,n);
 end
-A = zeros(N,n);
 
-if nargin < 3 || isempty(ctype)
-    ctype = '=';
-end
-ctype = fill_to(ctype,N);
+if nargin < 3 || isempty(ctype), ctype = '='; end
 
-if nargin < 4 || isempty(b)
-    b = 0;
-end
-b = fill_to(b,N);
+if nargin < 4 || isempty(b), b = 0; end
 
 if nargin < 5 || isempty(name)
+    name = {};
+end
+
+if nargin < 6 || isempty(ind), ind = 0; end
+
+if nargin < 7 || isempty(indtype), indtype = ' '; end
+
+N = max([length(name),  ...
+         length(ctype), ...
+         length(b),     ...
+         size(A,1),     ...
+         length(ind),   ...
+         length(indtype)]);
+
+A = expand_to(A,[N n]);
+ctype = fill_to(ctype,N);
+b = fill_to(b,N);
+ind = fill_to(ind,N);
+indtype = fill_to(indtype,N);
+if length(name) < N
     name = array2names('ROW%i',loc:loc+N-1);
 end
-
-if nargin < 6 || isempty(ind)
-    ind = 0;
-end
-ind = fill_to(ind,N);
-
-if nargin < 7 || isempty(indtype)
-    indtype = ' ';
-end
-indtype = fill_to(indtype,N);
 
 locs = loc + (0:N-1);
 

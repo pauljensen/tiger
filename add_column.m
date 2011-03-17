@@ -22,38 +22,39 @@ function [tiger] = add_column(tiger,name,vartype,lb,ub,obj,A)
 loc = n+1;
 
 if nargin < 2 || isempty(name)
-    name = sprintf('VAR%i',loc);
+    name = {};
 elseif isa(name,'double')
-    name = array2names('VAR%i',loc:loc+name-1);
+    name = zeros(1,name);  % holder until filled after calculating N
 end
-name = assert_cell(name);
-N = length(name);
 
-if nargin < 3 || isempty(vartype)
-    vartype = 'b';
+if nargin < 3 || isempty(vartype), vartype = 'b'; end
+
+if nargin < 4 || isempty(lb), lb = 0; end
+
+if nargin < 5 || isempty(ub), ub = 1; end
+
+if nargin < 6 || isempty(obj), obj = 0; end
+
+if nargin < 7 || isempty(A), A = [];  end
+
+N = max([length(name), ...
+         length(lb),   ...
+         length(ub),   ...
+         length(obj),  ...
+         size(A,2),    ...
+         length(vartype)]);
+         
+if length(name) < N
+    % TODO:  add to names instead of replace
+    name = array2names('VAR%i',loc:loc+N-1);
 end
 vartype = fill_to(vartype,N);
-
-if nargin < 4 || isempty(lb)
-    lb = 0;
-end
 lb = fill_to(lb,N);
-
-if nargin < 5 || isempty(ub)
-    ub = 1;
-end
 ub = fill_to(ub,N);
-
-if nargin < 6 || isempty(obj)
-    obj = 0;
-end
 obj = fill_to(obj,N);
+A = expand_to(A,[m N]);
 
-if nargin < 7 || isempty(A)
-    A = zeros(m,N);
-end
-
-locs = loc + (1:N);
+locs = loc : loc + N-1;
 
 tiger.varnames(locs) = name;
 tiger.vartypes(locs) = vartype;

@@ -23,12 +23,19 @@ function [mip] = convert_indicators(mip)
 
 IND_EPS = cmpi.get_ind_eps();
 
+mip.ind = cmpi.check_field('ind',mip);
+mip.indtypes = cmpi.check_field('indtypes',mip);
+
 idx_p = find((mip.ind > 0) & (mip.indtypes == 'p'));
 idx_b = find((mip.ind > 0) & (mip.indtypes == 'b'));
 
 np = length(idx_p);
 nb = length(idx_b);
 N = np + nb;
+
+if N == 0
+    return;
+end
 
 [m,n] = size(mip.A);
 

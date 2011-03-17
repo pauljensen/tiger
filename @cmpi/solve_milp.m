@@ -61,6 +61,7 @@ function [sol] = solve_milp(milp,solver)
 %                           13  Suboptimal solution
 %               output  Other solver-specific output
 
+warning('This function is deprecated.  Use SOLVE_MIP instead.');
 
 if nargin < 2,  solver = cmpi.get_solver(); end
 
