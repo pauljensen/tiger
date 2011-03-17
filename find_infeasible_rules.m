@@ -45,7 +45,7 @@ model = add_rule(tiger,exprs);
 model.obj(:) = 0;
 model.obj(loc) = 1;
 
-sol = cmpi.solve_milp(make_milp(model));
+sol = cmpi.solve_mip(make_milp(model));
 if isempty(sol.x)
     error('Model cannot be made feasible.');
     infeasible = [];
