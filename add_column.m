@@ -63,3 +63,5 @@ tiger.ub(locs) = ub;
 tiger.obj(locs) = obj;
 tiger.A(:,locs) = A;
 
+tiger = check_tiger(tiger);
+

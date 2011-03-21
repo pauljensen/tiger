@@ -135,6 +135,8 @@ tiger.indtypes = indtypes;
 
 tiger.param.ind = ind_counter;
 
+tiger = check_tiger(tiger);
+
 function prepare_conditional(cond)
     % Remove '>', '<', and '~=' operators
     switch cond.cond_op
@@ -269,10 +271,17 @@ end
 function [lb,ub] = get_expr_bounds(e)
     % Get upper and lower bounds on an expression
     % TODO  tighten bounds on AND and OR
-    if e.is_atom
+    if e.is_numeric
+        lb = 0;
+        ub = 0;
+    elseif e.is_atom
         [~,loc] = ismember(e.id,tiger.varnames);
         lb = tiger.lb(loc);
         ub = tiger.ub(loc);
+    elseif e.is_cond
+        % conditionals use binary indicators
+        lb = 0;
+        ub = 1;
     else
         [llb,lub] = get_expr_bounds(e.lexpr);
         [rlb,rub] = get_expr_bounds(e.rexpr);
@@ -347,6 +356,29 @@ function simple_rule_to_ineqs(r)
         return;
     end
     
+    if e.is_cond
+        assert(ismember(e.cond_op,{'<=','=','>='}), ...
+               'Operator %s should have been removed.',e.cond_op);
+        lname = e.lexpr.id;
+        [~,lloc] = ismember(lname,tiger.varnames);
+        rname = e.rexpr.id;
+        [~,rloc] = ismember(rname,tiger.varnames);
+        op = e.cond_op;
+        if e.rexpr.is_numeric
+            addrow(1,op(1),str2double(rname),lloc);
+        else
+            addrow([1 -1],op(1),0,[lloc rloc]);
+        end
+        ind(roff) = Iloc;
+        if r.IFF
+            indtypes(roff) = 'b';
+        else
+            indtypes(roff) = 'p';
+        end
+        
+        return;
+    end
+    
     x = r.lexpr.lexpr.id;
     y = r.lexpr.rexpr.id;
     [~,xloc] = ismember(x,tiger.varnames);
@@ -392,25 +424,6 @@ function simple_rule_to_ineqs(r)
                 addrow([1 -xmax -1],'>',-xmax,[xloc Iaux_loc Iloc]);
                 addrow([1 -ymax -1],'>',0,[yloc Iaux_loc Iloc]);
             end
-        end
-    elseif e.is_cond
-        assert(ismember(e.cond_op,{'<=','=','>='}), ...
-               'Operator %s should have been removed.',e.cond_op);
-        lname = e.lexpr.id;
-        [~,lloc] = ismember(lname,tiger.varnames);
-        rname = e.rexpr.id;
-        [~,rloc] = ismember(rname,tiger.varnames);
-        op = e.cond_op;
-        if e.rexpr.is_numeric
-            addrow(1,op(1),str2double(rname),lloc);
-        else
-            addrow([1 -1],op(1),0,[lloc rloc]);
-        end
-        ind(roff) = Iloc;
-        if r.IFF
-            indtypes(roff) = 'b';
-        else
-            indtypes(roff) = 'p';
         end
     end
     
