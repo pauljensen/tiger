@@ -1,4 +1,12 @@
-function show_flux(tiger,sol,show_cond)
+function show_sol(tiger,sol,show_cond)
+% SHOW_SOL  Show a solution vector
+%
+%   SHOW_SOL(TIGER,SOL,SHOW_COND)
+%
+%   Shows the values for each nonzero variable in the solution structure
+%   SOL.  The optional string SHOW_COND contains a test on the variable
+%   'x' to identify which fluxes should be shown.  The default is
+%   'x ~= 0'.
 
 if nargin < 3
     show_cond = 'x ~= 0';

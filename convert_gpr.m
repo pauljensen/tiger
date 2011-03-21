@@ -6,7 +6,7 @@ function [tiger] = convert_gpr(tiger,varargin)
 %   Each GPR expression is converted to a rule and added to the model.
 %   Extra parameters will be passed to the ADD_RULE function.
 
-tiger = assert_tiger_model(tiger);
+tiger = assert_tiger(tiger);
 
 RXN_PRE = 'RXN__';
 

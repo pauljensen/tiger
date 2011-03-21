@@ -50,7 +50,7 @@ if isempty(tiger)
 end
 
 % check that a TIGER model was given (and convert if COBRA)
-tiger = assert_tiger_model(tiger);
+tiger = assert_tiger(tiger);
 
 % begin parameter checking
 p = inputParser;

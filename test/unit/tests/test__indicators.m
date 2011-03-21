@@ -4,7 +4,9 @@ init_test
 cobra_model
 
 tiger = cobra_to_tiger(cobra);
-fba(tiger)
+sol1 = fba(tiger);
 
-t = add_rule(tiger,'r1 < -0.5 => not g5a');
-sol = fba(t)
+t = add_rule(tiger,'r1 < -0.5 <=> not g5a');
+sol2 = fba(t);
+
+assert(near(sol2.val,0.5),'indicator did not work');

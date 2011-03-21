@@ -1,7 +1,7 @@
-function [tiger] = assert_tiger_model(model)
-% ASSERT_TIGER_MODEL  Assert that a structure is an TIGER model.
+function [tiger] = assert_tiger(model)
+% ASSERT_TIGER  Assert that a structure is an TIGER model.
 %
-%   [TIGER] = ASSERT_TIGER_MODEL(MODEL)
+%   [TIGER] = ASSERT_TIGER(MODEL)
 %
 %   Checks that the structure MODEL is a TIGER model.  If not, converts
 %   MODEL to a TIGER model and warns that this procedure is not efficient
