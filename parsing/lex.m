@@ -27,8 +27,25 @@ tokens = stack();
 
 
 buf = strbuffer();
+in_quote = false;
+quote = '';
 while chars.is_another
     ch = chars.pop();
+    if in_quote
+        if ch == '\'
+            buf.append(chars.pop());
+        else
+            buf.append(ch);
+        end
+        
+        if ch == quote
+            tokens.push(make_token());
+            buf.clear;
+            in_quote = false;
+            quote = '';
+        end
+        continue;
+    end
     switch ch
         case {'(',')'}
             if ~isempty(buf)
@@ -57,6 +74,10 @@ while chars.is_another
                 % this was not a complete operator
                 buf.append(punc.val);
             end
+        case {'''','"'}
+            buf.append(ch);
+            in_quote = true;
+            quote = ch;
         otherwise
             buf.append(ch);
     end

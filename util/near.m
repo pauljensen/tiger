@@ -3,7 +3,7 @@ function [tf] = near(x,y,tol)
 %
 %   [TF] = NEAR(X,Y,TOL)
 %
-%   Tests is |X - Y| <= TOL.  If TOL is not given, the default is 1e-5.
+%   Tests if |X - Y| <= TOL.  If TOL is not given, the default is 1e-5.
 %   If Y is not given, the default is 0.  X and Y can be single numbers,
 %   vectors, or matrices.
 

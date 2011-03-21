@@ -17,7 +17,7 @@ rxns  = find(~cellfun(@isempty,tiger.gpr));
 Nrxns = length(rxns);
 
 rxn_names = map(@(x) [RXN_PRE x],tiger.varnames(rxns));
-gpr_rules = cellzip(@(x,y) [x ' <=> ' y],tiger.gpr(rxns),rxn_names);
+gpr_rules = cellzip(@(x,y) [x ' <=> "' y '"'],tiger.gpr(rxns),rxn_names);
 
 tiger.obj = [tiger.obj; zeros(Nrxns+Ngenes,1)];
 tiger.A = [tiger.A sparse(m,Nrxns+Ngenes)];

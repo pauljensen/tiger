@@ -10,7 +10,7 @@ classdef cmpi
     
 
 properties (Constant)
-    % Initial (default) value for CMPI_SOLVER
+    % Initial (default) values
     init_SOLVER = 'cplex';
     init_IND_EPS = 1e-8;
 end

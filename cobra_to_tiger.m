@@ -1,7 +1,7 @@
-function [tiger] = cobra_to_tiger(cobra,add_gpr,numbered)
+function [tiger] = cobra_to_tiger(cobra,add_gpr,varargin)
 % COBRA_TO_TIGER  Convert a COBRA model to a TIGER model
 %
-%   [TIGER] = COBRA_TO_TIGER(COBRA,CONVERT_GPR)
+%   [TIGER] = COBRA_TO_TIGER(COBRA,CONVERT_GPR,...ADD_RULE params...)
 %
 %   Convert a COBRA model structure to a TIGER model structure.
 %
@@ -9,9 +9,7 @@ function [tiger] = cobra_to_tiger(cobra,add_gpr,numbered)
 %   COBRA        COBRA toolbox model structure
 %   CONVERT_GPR  If true, add the GPR constraints as rules.
 %                (default = true)
-%   NUMBERED     If true, use numbered names ('RXN1' and 'ROW1') instead
-%                of the entries in COBRA.rxns and COBRA.mets.
-%                (default = false)
+%   params       Extra parameters are passed to ADD_RULE.
 %
 %   Outputs
 %   TIGER        TIGER model structure.
@@ -57,7 +55,7 @@ tiger.ind = zeros(m,1);
 tiger.indtypes = repmat(' ',m,1);
 
 if add_gpr
-    tiger = convert_gpr(tiger);
+    tiger = convert_gpr(tiger,varargin{:});
 end
 
 

@@ -41,6 +41,8 @@ function [tiger] = add_rule(tiger,rule,varargin)
 %                 padded.  Default is 4.
 %   'not_prefix'  String denoting the prefix used when creating negated
 %                 variable names.  Default is 'NOT__'.
+%   'numeric'     If true, atoms resembling numeric constants are parsed
+%                 as such.  (default = true)
 
 assert(nargin >= 2, 'ADD_RULE requires at least two inputs.');
 
@@ -70,6 +72,8 @@ p.addParamValue('bounds',[]);
 valid_not_type = @(x) ismember(x,{'pseudo-binary','inverted'});
 p.addParamValue('not_type','inverted',valid_not_type);
 
+p.addParamValue('numeric',true);
+
 p.parse(varargin{:});
 
 IND_PRE = p.Results.ind_prefix;
@@ -84,6 +88,8 @@ default_ub = p.Results.default_ub;
 
 user_bounds = p.Results.bounds;  % TODO: add support for user bounds
 
+parse_numeric = p.Results.numeric;
+
 % rule parsing
 rules = assert_cell(rule);
 N = length(rules);
@@ -91,7 +97,7 @@ N = length(rules);
 for i = 1 : N
     if ~isa(rules{i},'expr')
         if isa(rules{i},'char')
-            rules{i} = parse_string(rules{i});
+            rules{i} = parse_string(rules{i},parse_numeric);
         else
             error('Objects of class %s cannot be parsed.', ...
                   class(rules{i}));
