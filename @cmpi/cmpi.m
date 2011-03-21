@@ -11,7 +11,7 @@ classdef cmpi
 
 properties (Constant)
     % Initial (default) value for CMPI_SOLVER
-    init_SOLVER = 'ilog_cplex';
+    init_SOLVER = 'cplex';
     init_IND_EPS = 1e-8;
 end
 

@@ -151,17 +151,8 @@ function prepare_conditional(cond)
 end
             
 function switch_nots(e)
-    % create indicators for negated conditionals
-    e.iterif(@(x) x.is_cond && x.negated,@cond_aux);
-
     % Create negated variables to remove negated atoms. 
     e.iterif(@(x) x.is_atom && x.negated,@switch_aux);
-    
-    function cond_aux(cond)
-        cond.negated = false;
-        cond = make_substitution(cond);
-        cond.negated = true;
-    end
     
     function switch_aux(e)
         not_name = [NOT_PRE e.id];
@@ -207,23 +198,34 @@ function simplify_rule(r)
     
     % prepare conditionals
     r.iterif(@(e) e.is_cond,@prepare_conditional);
-    
-    switch_nots(r);
-    
+
     if ~r.rexpr.is_atom
         r.rexpr = make_substitution(r.rexpr);
     end
     if ~r.lexpr.is_simple
         simplify_expr(r.lexpr);
     end
+    
+    switch_nots(r);
+        
     % convert to ineqs
     simple_rule_to_ineqs(r);
 end
 
-function [e] = simplify_expr(e)
+function simplify_expr(e)
     % Simplifies an expression.  If the left or right subexpressions
     % are not atoms, they are replaced with an indicator variable.
     % This function modifies the expression in place.
+    if e.is_cond
+        % cannot replace entire expression directly; must copy manually
+        new_ind = make_substitution(e);
+        e.cond_op = '';
+        e.id = new_ind.id;
+        e.negated = new_ind.negated;
+        e.lexpr = [];
+        e.rexpr = [];
+        return;
+    end
     if ~e.lexpr.is_atom
         e.lexpr = make_substitution(e.lexpr);
     end
@@ -251,6 +253,12 @@ function [ind_expr] = make_substitution(e)
     ind_rule.IFF = true;
     ind_rule.lexpr = e.copy;
     ind_rule.rexpr = ind_expr.copy;
+    
+    % leave the negation on the indicator
+    if e.negated
+        ind_expr.negated = true;
+        ind_rule.lexpr.negated = false;
+    end
     
     [ind_lb,ind_ub] = get_expr_bounds(e);
     add_var(ind_name,ind_lb,ind_ub);

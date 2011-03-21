@@ -40,13 +40,14 @@ end
 [m,n] = size(mip.A);
 
 i = [idx_b idx_p];
-j = [1:nb 1:np];
+j = 1:N;
 s = ones(1,N);
 IA = sparse(i,j,s,m,N,N);
 
 s_ub = zeros(1,N);
 s_lb = zeros(1,N);
 
+% find bounds for each slack variable
 for k = 1 : N
     Aup = mip.A(i(k),:) .* mip.ub';
     Adn = mip.A(i(k),:) .* mip.lb';
@@ -57,22 +58,25 @@ end
 mip = add_column(mip,[],'c',s_lb,s_ub,[],IA);
 
 mip = add_row(mip,np+3*nb);
-roff = n;
+roff = m;
 for k = 1 : N
+    % I + s > 0
     roff = roff + 1;
-    mip.A(roff,[mip.ind(i(k)) k]) = [1 1];
+    mip.A(roff,[mip.ind(i(k)) n+k]) = [1 1];
     mip.b(roff) = IND_EPS;
     mip.ctypes(roff) = '>';
 end
 
 for k = 1 : nb
+    % s >= lb(s)*(1 - I)
     roff = roff + 1;
-    mip.A(roff,[mip.ind(idx_b(k)) k]) = [1 s_lb(k)];
+    mip.A(roff,[mip.ind(idx_b(k)) n+k]) = [s_lb(k) 1];
     mip.b(roff) = s_lb(k);
     mip.ctypes(roff) = '>';
     
+    % s <= ub(s)*(1 - I)
     roff = roff + 1;
-    mip.A(roff,[mip.ind(idx_b(k)) k]) = [1 s_ub(k)];
+    mip.A(roff,[mip.ind(idx_b(k)) n+k]) = [s_ub(k) 1];
     mip.b(roff) = s_ub(k);
     mip.ctypes(roff) = '<';
 end

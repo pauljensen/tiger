@@ -35,7 +35,8 @@ Qc.c = cmpi.check_field('c',Qc);
 Qc.w = expand_to(Qc.w,n);
 Qc.c = expand_to(Qc.c,n);
 
-% move all nonzero elements in Qd to the lower half
+% move all nonzero elements in Q and Qd to the lower half
+mip.Q  = tril(mip.Q) + triu(mip.Q)'.*double(tril(mip.Q) == 0);
 Qd = tril(Qd) + triu(Qd)'.*double(tril(Qd) == 0);
 
 [I,J,w] = find(Qd);
@@ -63,5 +64,8 @@ if Nadd > 0
         mip.Q(n+i,n+i) = Qc.w(idxs(i));
     end
 end
+
+% make Q symmetric
+mip.Q = tril(mip.Q) + tril(mip.Q,-1)';
 
     
