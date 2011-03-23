@@ -6,15 +6,19 @@ function show_sol(tiger,sol,show_cond)
 %   Shows the values for each nonzero variable in the solution structure
 %   SOL.  The optional string SHOW_COND contains a test on the variable
 %   'x' to identify which fluxes should be shown.  The default is
-%   'x ~= 0'.
+%   'x ~= 0'.  If SHOW_COND = 'all', all variables are shown.
 
 if nargin < 3
     show_cond = 'x ~= 0';
 end
 
 x = sol.x;
-to_show = find(eval(show_cond));
-
+if strcmpi(show_cond,'all')
+    to_show = 1:length(sol.x);
+else
+    to_show = find(eval(show_cond));
+end
+    
 x(tiger.vartypes ~= 'c') = round(x(tiger.vartypes ~= 'c'));
 
 for i = 1 : length(to_show)

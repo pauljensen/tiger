@@ -20,10 +20,10 @@ end
 
 for i = 1 : length(m_fields)
     assert(length(tiger.(m_fields{i})) == m, ...
-           'field %s is wrong size', m_fields{i});
+           'field %s is wrong size\n', m_fields{i});
 end
 
 for i = 1 : length(n_fields)
     assert(length(tiger.(n_fields{i})) == n, ...
-           'field %s is wrong size', n_fields{i});
+           'field %s is wrong size\n', n_fields{i});
 end
