@@ -1,56 +1,66 @@
-function show_mip(mip,rowidxs,colidxs,rownames,colnames,showvars)
+function show_mip(mip,varargin)
 % SHOW_MIP  Show equations for a MIP structure
 %
-%   SHOW_MIP(MIP,ROWIDXS,COLIDXS,ROWNAMES,COLNAMES,SHOWVARS)
+%   SHOW_MIP(MIP,...params...)
 %
 %   Print algebraic equations for a MIP structure.
 %
 %   Inputs
 %   MIP      CMPI model structure
-%   ROWIDXS  Indexes of rows (constraints) to show.  (Default = all rows)
-%   COLIDXS  Indexes of columns (variables) to show.  (Default = all rows)
-%   ROWNAMES Cell array of names for each row.  Empty values are replaced
-%            with 'ROW_x'.  ROWNAMES may be shorter than the number of
-%            rows; extra 'ROW_x' names are added automatically.
-%   COLNAMES Cell array of name for each column.  Format is the same as
-%            for ROWNAMES.
-%   SHOWVARS If true, show bounds on each variable.  (Default = false)
+%
+%   Parameters
+%   'rowidxs'  Indexes of rows (constraints) to show. (default = all rows)
+%   'varidxs'  Indexes of variables to show. (default = all rows)
+%   'rownames' Cell array of names for each row.  Empty values are 
+%              replaced with 'ROW_x'.  May be shorter than the number of 
+%              rows; extra 'ROW_x' names are added automatically.
+%   'varnames' Cell array of name for each column.  Format is the same as
+%              for 'rownames'.
+%   'showvars' If true, show bounds on each variable.  (default = true)
 
-[nrows,ncols] = size(mip.A);
+[nrows,nvars] = size(mip.A);
 
-if nargin < 6
-    showvars = false;
-end
-
-default_colnames = arrayfun(@(x) ['x(' num2str(x) ')'], 1:ncols, ...
+default_varnames = arrayfun(@(x) ['x(' num2str(x) ')'], 1:nvars, ...
                             'Uniform', false);
 default_rownames = arrayfun(@(x) ['ROW_' num2str(x)], 1:nrows, ...
                             'Uniform', false);
-                        
+
+p = inputParser;
+
+p.addParamValue('rowidxs',1 : nrows);
+p.addParamValue('varidxs',1 : nvars);
+p.addParamValue('rownames',default_rownames);
+p.addParamValue('varnames',default_varnames);
+p.addParamValue('showvars',true);
+
+p.parse(varargin{:});
+
+showvars = p.Results.showvars;
+
 % default ranges and names
 if isfield(mip,'varnames')
-    colnames = mip.varnames;
-elseif nargin < 5 || isempty(colnames)
-    colnames = default_colnames;
+    varnames = mip.varnames;
+else
+    varnames = p.Results.varnames;
 end
 if isfield(mip,'rownames')
     rownames = mip.rownames;
-elseif nargin < 4 || isempty(rownames)
-    rownames = default_rownames;
-end
-if nargin < 3 || isempty(colidxs)
-    colidxs = 1 : ncols;
-elseif isa(colidxs,'logical')
-    colidxs = find(colidxs);
-end
-if nargin < 2 || isempty(rowidxs)
-    rowidxs = 1 : nrows;
-elseif isa(rowidxs,'logical')
-    rowidxs = find(rowidxs);
+else
+    rownames = p.Results.rownames;
 end
 
+varidxs = p.Results.varidxs;
+if isa(varidxs,'logical')
+    varidxs = find(varidxs);
+end
+
+rowidxs = p.Results.rowidxs;
+if isa(rowidxs,'logical')
+    rowidxs = find(rowidxs);
+end                     
+
 % expand the names if an incomplete list was given
-colnames = zip_names(default_colnames,colnames);
+varnames = zip_names(default_varnames,varnames);
 rownames = zip_names(default_rownames,rownames);
 
 % show objective
@@ -83,22 +93,22 @@ if isfield(mip,'ind') && any(mip.ind)
     types = mip.indtypes(rows);
     for i = 1 : length(inds)
         if types(i) == 'p'
-            fprintf('   %s  => %s\n',rownames{rows(i)},colnames{inds(i)});
+            fprintf('   %s  => %s\n',rownames{rows(i)},varnames{inds(i)});
         else
-            fprintf('   %s <=> %s\n',rownames{rows(i)},colnames{inds(i)});
+            fprintf('   %s <=> %s\n',rownames{rows(i)},varnames{inds(i)});
         end
     end
 end
 
 if showvars
     % show variable bounds
-    maxlength = max( cellfun(@(x) length(x), colnames) );
+    maxlength = max(cellfun(@(x) length(x), varnames));
     fmt = ['%' num2str(maxlength + 2) 's'];
     fprintf('\n\n----- Variable bounds -----\n');
-    for i = 1 : length(colidxs)
-        fprintf(fmt,[colnames{colidxs(i)} ':']);
-        fprintf('  %s',mip.vartypes(colidxs(i)));
-        fprintf('  [%g,%g]\n', [mip.lb(colidxs(i)) mip.ub(colidxs(i))]);
+    for i = 1 : length(varidxs)
+        fprintf(fmt,[varnames{varidxs(i)} ':']);
+        fprintf('  %s',mip.vartypes(varidxs(i)));
+        fprintf('  [%g,%g]\n', [mip.lb(varidxs(i)) mip.ub(varidxs(i))]);
     end
 end
 
@@ -113,7 +123,7 @@ function [zipped] = zip_names(default,given)
 end
     
 function show_coef_list(constraint)
-    nonzeros = find(constraint(colidxs));
+    nonzeros = find(constraint(varidxs));
     for j = 1 : length(nonzeros)
         col = nonzeros(j);
         coef = constraint(col);
@@ -133,7 +143,7 @@ function show_coef_list(constraint)
         if abs(coef) ~= 1
             coef_str = [coef_str num2str(abs(coef)) '*'];
         end
-        fprintf('%s%s',coef_str,colnames{col});
+        fprintf('%s%s',coef_str,varnames{col});
     end
 end
 

@@ -148,14 +148,30 @@ function prepare_conditional(cond)
     switch cond.cond_op
         case '>'
             cond.cond_op = '<=';
+            cond.negated = ~cond.negated;
         case '<'
             cond.cond_op = '>=';
+            cond.negated = ~cond.negated;
         case '~='
             cond.cond_op = '=';
-        otherwise
-            return;
+            cond.negated = ~cond.negated;
     end
-    cond.negated = ~cond.negated;
+    
+    if strcmp(cond.cond_op,'=')
+        % switch (a = b) to (a >= b) AND (a <= b) to avoid indicators
+        % on equality constraints
+        lexpr = cond.copy;
+        lexpr.cond_op = '>=';
+        rexpr = cond.copy;
+        rexpr.cond_op = '<=';
+        
+        cond.cond_op = '';
+        cond.AND = true;
+        cond.lexpr = lexpr;
+        cond.rexpr = rexpr;
+        
+        cond.demorgan();
+    end
 end
             
 function switch_nots(e)
@@ -394,7 +410,12 @@ function simple_rule_to_ineqs(r)
     multilevel = is_multilevel(r.lexpr);
     
     xmax = tiger.ub(xloc);
+    xmin = tiger.lb(xloc);
     ymax = tiger.ub(yloc);
+    ymin = tiger.lb(yloc);
+    
+    xrange = xmax - xmin;
+    yrange = ymax - ymin;
     
     if ~multilevel && e.AND
         addrow([2 2 -4],'<',3);
@@ -413,8 +434,8 @@ function simple_rule_to_ineqs(r)
             I_exp = parse_string(sprintf('%s > %s <=> %s',x,y,Iaux));
             simplify_rule(I_exp);
             [~,Iaux_loc] = ismember(Iaux,tiger.varnames);
-            addrow([1 -xmax -1],'<',0,[xloc Iaux_loc Iloc]);
-            addrow([1 -ymax -1],'<',ymax,[yloc Iaux_loc Iloc]);
+            addrow([1  xrange -1],'<',     0,[xloc Iaux_loc Iloc]);
+            addrow([1 -yrange -1],'<',yrange,[yloc Iaux_loc Iloc]);
             if r.IFF
                 addrow([1 -1],'<',0,[Iloc xloc]);
                 addrow([1 -1],'<',0,[Iloc yloc]);
@@ -427,8 +448,8 @@ function simple_rule_to_ineqs(r)
                 I_exp = parse_string(sprintf('%s > %s <=> %s',x,y,Iaux));
                 simplify_rule(I_exp);
                 [~,Iaux_loc] = ismember(Iaux,tiger.varnames);
-                addrow([1 -xmax -1],'>',-xmax,[xloc Iaux_loc Iloc]);
-                addrow([1 -ymax -1],'>',0,[yloc Iaux_loc Iloc]);
+                addrow([1 -xrange -1],'>',-xrange,[xloc Iaux_loc Iloc]);
+                addrow([1  yrange -1],'>',      0,[yloc Iaux_loc Iloc]);
             end
         end
     end
@@ -446,9 +467,19 @@ function simple_rule_to_ineqs(r)
     end   
 end
 
+function [tf] = is_binary(e)
+    if e.is_atom
+        [~,loc] = ismember(e.id,tiger.varnames);
+        tf = tiger.vartypes(loc) == 'b';
+    elseif e.is_cond
+        tf = true;
+    elseif e.is_junc
+        tf = is_binary(e.lexpr) && is_binary(e.rexpr);
+    end
+end
+
 function [tf] = is_multilevel(e)
-    [~,ub] = get_expr_bounds(e);
-    tf = ub > 1;
+    tf = ~is_binary(e);
 end
 
 end % add_rule

@@ -1,6 +1,8 @@
 function [sol] = solve_tiger(tiger,sense)
 % SOLVE_TIGER  Solve a TIGER model.
 %
+%   [SOL] = SOLVE_TIGER(TIGER,SENSE)
+%
 %   Solve a TIGER model structure and return a CMPI solution structure.  
 %   SENSE can be either 'min' for minimization (default) or 'max' for 
 %   maximization.

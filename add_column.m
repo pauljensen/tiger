@@ -2,7 +2,7 @@ function [tiger] = add_column(tiger,name,vartype,lb,ub,obj,A)
 % ADD_COLUMN  Add a column to a TIGER model structure
 %
 %   [TIGER] = ADD_COLUMN(TIGER,N)
-%   [TIGER] = ADD_COLUMN(TIGER,NAME,CTYPE,LB,UB,OBJ,A)
+%   [TIGER] = ADD_COLUMN(TIGER,NAME,VARTYPE,LB,UB,OBJ,A)
 %
 %   Add a column to an existing structure, updating the corresponding
 %   vectors.  The following default values are used:

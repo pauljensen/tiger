@@ -12,6 +12,11 @@ if nargin < 3
     show_cond = 'x ~= 0';
 end
 
+if isempty(sol.x)
+    fprintf('No solution -- sol.x is empty.\n');
+    return;
+end
+
 x = sol.x;
 if strcmpi(show_cond,'all')
     to_show = 1:length(sol.x);

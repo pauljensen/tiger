@@ -37,6 +37,17 @@ if N == 0
     return;
 end
 
+% ctypes '=' and '<' should have been removed in add_rule
+if any(mip.ctypes([idx_p idx_b]) == '=')
+    warning('Indicators Ax = b not supported.');
+end
+
+% switch Ax <= b to -Ax >= -b
+leq_rows = intersect(find(mip.ctypes == '<'),[idx_p idx_b]);
+mip.A(leq_rows,:) = -mip.A(leq_rows,:);
+mip.b(leq_rows) = -mip.b(leq_rows);
+mip.ctypes(leq_rows) = '>';
+    
 [m,n] = size(mip.A);
 
 i = [idx_b idx_p];
@@ -51,13 +62,13 @@ s_lb = zeros(1,N);
 for k = 1 : N
     Aup = mip.A(i(k),:) .* mip.ub';
     Adn = mip.A(i(k),:) .* mip.lb';
-    
-    s_ub(k) = sum(max(Aup,Adn));
-    s_lb(k) = sum(min(Aup,Adn));
+
+    s_ub(k) = mip.b(i(k)) - sum(min(Aup,Adn));
+    s_lb(k) = mip.b(i(k)) - sum(max(Aup,Adn));
 end
 mip = add_column(mip,[],'c',s_lb,s_ub,[],IA);
 
-mip = add_row(mip,np+3*nb);
+mip = add_row(mip,np+2*nb);
 roff = m;
 for k = 1 : N
     % I + s > 0
@@ -68,12 +79,6 @@ for k = 1 : N
 end
 
 for k = 1 : nb
-    % s >= lb(s)*(1 - I)
-    roff = roff + 1;
-    mip.A(roff,[mip.ind(idx_b(k)) n+k]) = [s_lb(k) 1];
-    mip.b(roff) = s_lb(k);
-    mip.ctypes(roff) = '>';
-    
     % s <= ub(s)*(1 - I)
     roff = roff + 1;
     mip.A(roff,[mip.ind(idx_b(k)) n+k]) = [s_ub(k) 1];
