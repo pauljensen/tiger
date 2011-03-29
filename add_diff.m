@@ -1,4 +1,15 @@
 function [tiger,diff_vars] = add_diff(tiger,var1,var2)
+% ADD_DIFF  Add difference variables toa  TIGER model
+%
+%   [TIGER,DIFF_VARS] = ADD_DIFF(TIGER,VAR1,VAR2)
+%
+%   Add a difference variable DIFF_VARS = |VAR1 - VAR2|.  If VAR1 and VAR2
+%   are binary, DIFF_VARS = VAR1 xor VAR2.  Otherwise, a multilevel OR is
+%   used.
+%
+%   VAR1 and VAR2 are variable ids.  DIFF_VARS returns a cell of names for
+%   the difference variables created.  The format is 'diff__x_y' for
+%   variables 'x' and 'y'.
 
 assert(length(var1) == length(var2), ...
        'var1 and var2 must have same length');

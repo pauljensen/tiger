@@ -1,5 +1,5 @@
 function [states,sol,mip_error,models] = ...
-                        diffadj(milp,vars,d,w,I,bounds,objs,fracs,method)
+                        diffadj(milp,vars,d,w,I,bounds,objs,fracs)
 % DIFFADJ  Formulate and solve the differential adjustment problem
 %
 %   [STATES,SOL] = DIFFADJ(MILP,VARS,W,D,I,BOUNDS,OBJS,FRACS,METHOD)
@@ -27,15 +27,12 @@ function [states,sol,mip_error,models] = ...
 %               BOUNDS{i}.ub
 %           If empty, the bounds in MILP are used.
 %   OBJS    Cell array of objective coefficients for each condition.  If
-%           empty, MILP.c is used.
+%           empty, MILP.obj is used.
 %   FRACS   Fractions of optimal growth that must be possible in each
 %           condition:
-%               c'x >= FRACS(i)*c'x_max
+%               obj'x >= FRACS(i)*obj'x_max
 %           If only a single number is given, it is used for every
 %           condition.  If empty, the default is 0.3.
-%   METHOD  Method used for solving the problem.  Options are:
-%               'qp'   Mixed-Integer Quadratic (default)
-%               'milp' Mixed-Integer Linear
 %
 %   Outputs
 %   STATES     A |variables| x |conditions| matrix of states (levels) for
@@ -60,31 +57,23 @@ if nargin < 8 || isempty(fracs)
     fracs = 0.3;
 end
 
-if nargin < 9 || isempty(method)
-    method = 'qp';
-end
-
-switch lower(method)
-    case {'qp','miqp'}
-        qp = true;
-    case {'lp','milp'}
-        qp = false;
-    otherwise
-        error('unknown method: %s',method);
-end
-
 [nvars,ntrans] = size(w);
 ncond = ntrans + 1;
 
 % check interaction matrix
+if isempty(I)
+    % no matrix given; assume 1 -> 2, 2 -> 3, ...
+    I = zeros(ncond);
+    for i = 1 : trans
+        I(i,i+1) = i;
+    end
+end
 assert(all(size(I) == [ncond,ncond]), 'I not square or wrong size');
 assert(length(find(I)) == ntrans, 'I does not match w and d');
 assert(all(ismember(1:ntrans,I(:))), 'I is missing transition indices');
 
 % fill out fracs
-if length(fracs) == 1
-    fracs = repmat(fracs,1,ncond);
-end
+fracs = fill_to(fracs,ncond,0.3);
 
 % fill out bounds
 if length(bounds) <= 1
@@ -117,20 +106,12 @@ milps = cell(1,ncond);
 obj_vals = zeros(1,ncond);
 for i = 1 : ncond
     milps{i} = milp;
-    milps{i}.c(1:length(objs{i})) = objs{i};
+    milps{i}.obj = objs{i};
     milps{i}.lb = bounds{i}.lb;
     milps{i}.ub = bounds{i}.ub;
     
-    sol = cmpi.solve_milp(milps{i});
-    if ~cmpi.is_acceptable_exit(sol)
-        error('Error optimizing condition %i',i);
-    end
+    [milps{i},sol] = add_growth_constraint(milps{i},fracs(i));
     obj_vals(i) = sol.val;
-    
-    % add growth constraint
-    milps{i}.A(end+1,:) = milps{i}.c(:)';
-    milps{i}.b(end+1) = fracs(i)*obj_vals(i);
-    milps{i}.ctypes(end+1) = '>';
 end
 
 % number of elements to hold constant

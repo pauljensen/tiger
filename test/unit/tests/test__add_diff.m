@@ -1,6 +1,8 @@
 
 
 tiger = create_empty_tiger();
+
+% TODO  find out why this is infeasible
 % tiger = add_column(tiger,{'x','y','z','w'},'cbib',[0,0,0,1],[6.3,1,3,1]);
 % tiger = add_diff(tiger,{'x','y','z','w'},{'y','x','x','y'});
 

@@ -1,4 +1,4 @@
-function [tiger] = add_growth_constraint(tiger,val,varargin)
+function [tiger,sol] = add_growth_constraint(tiger,val,varargin)
 % ADD_GROWTH_CONSTRAINT  Add minimum growth constraint to a model.
 %
 %   [TIGER] = ADD_GROWTH_CONSTRAINT(TIGER,VAL,...params...)
@@ -10,6 +10,10 @@ function [tiger] = add_growth_constraint(tiger,val,varargin)
 %   TIGER   TIGER model structure.
 %   VAL     Constraining value (see the 'valtype' parameter for details).
 %
+%   Outputs
+%   TIGER   TIGER model with growth constraint added.
+%   SOL     CMPI solution object.
+%
 %   Parameters
 %   'ctype'     Character indicating the type of constraint to add:
 %                   '>'  -->  v_obj >= VAL  (default)
@@ -19,6 +23,10 @@ function [tiger] = add_growth_constraint(tiger,val,varargin)
 %               run to determine the maximum value.  If set to 'abs', the
 %               argument VAL is interpreted as an actual flux value to be
 %               acheived.
+
+if nargin < 2
+    error('two inputs required');
+end
 
 p = inputParser;
 p.addParamValue('ctype','>');

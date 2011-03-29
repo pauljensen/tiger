@@ -74,11 +74,11 @@ if ~issparse(mip.A)
     mip.A = sparse(mip.A);
 end
 
-if ~isfield(mip,'sense')
+if ~isfield(mip,'sense') || isempty(mip.sense)
     mip.sense = 1;
 end
 
-if ~isfield(mip,'options')
+if ~isfield(mip,'options') || isempty(mip.options)
     mip.options = cmpi.get_options();
 end
 
@@ -87,7 +87,7 @@ N = size(mip.A,2);
 
 mip = cmpi.convert_indicators(mip);
 
-qp =    isfield(mip,'Q')  && ~isempty(mip.Q)  ...
+qp =    isfield(mip,'Q')  && ~isempty(mip.Q) && ~all(mip.Q(:) == 0)  ...
      || isfield(mip,'Qd') && ~isempty(mip.Qd) ...
      || isfield(mip,'Qc') && ~isempty(mip.Qc);
    

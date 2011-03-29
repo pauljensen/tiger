@@ -167,6 +167,8 @@ methods (Static)
     [flag] = get_cplex_flag(status)
     [mip] = convert_indicators(mip)
     [mip] = convert_miqp(mip)
+    [milp] = tile_milp(varargin)
+    [mip] = check_mip(mip)
 end
 
 end % class
