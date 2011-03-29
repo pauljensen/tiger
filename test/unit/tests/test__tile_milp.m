@@ -13,7 +13,8 @@ sol2 = fba(t2);
 t3 = tiger;
 t3 = set_var(t3,'r1',-0.4);
 t3.obj = -1*t3.obj;
-sol3 = fba(t3);
+t3.sense = -1;
+sol3 = cmpi.solve_mip(t3);
 
 n = size(tiger.A,2);
 

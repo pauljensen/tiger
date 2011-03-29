@@ -1,0 +1,36 @@
+>Model Creation and Modification
+create_empty_tiger
+parse_string
+add_rule
+set_var
+set_fieldval
+add_row
+add_column
+add_diff
+bind_var
+convert_ids
+
+>COBRA Model Conversion
+cobra_to_tiger
+convert_gpr
+bind_mets
+
+>Flux Balance Analysis
+fba
+single_gene_ko
+add_growth_constraint
+
+>Model Solution
+solve_tiger
+find_infeasible_rules
+
+>Model Verification
+show_tiger
+show_sol
+check_tiger
+is_valid_rule
+
+>Data Integration
+made
+
+

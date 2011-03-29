@@ -1,4 +1,15 @@
 function [milp] = tile_milp(varargin)
+% TILE_MILP  Combine several MILPs into a single structure
+%
+%   [MILP] = TILE_MILP(MILP1,MILP2,...)
+%
+%   Combines N MILP problem structures into a single structure.  The
+%   resulting A matrix is a block-diagonal tiling of the individual A
+%   matrices.
+%
+%   Variable names for each problem are appended with '[i]'.  For example,
+%   if three structures were given, each with a variable 'x', the 
+%   resulting variable names would be 'x[1]', 'x[2]', and 'x[3]'.
 
 % format string used for creating model-specific variable names
 VARNAME_FMT = '%s[%i]';
