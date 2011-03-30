@@ -4,7 +4,7 @@ function [tiger,sol] = add_growth_constraint(tiger,val,varargin)
 %   [TIGER] = ADD_GROWTH_CONSTRAINT(TIGER,VAL,...params...)
 %
 %   Adds a constraint that requires a minimum flux through the objective
-%   reaction.  Clears the current objective.
+%   reaction.
 %
 %   Inputs
 %   TIGER   TIGER model structure.
@@ -36,9 +36,9 @@ p.parse(varargin{:});
 switch p.Results.valtype
     case 'frac'
         sol = fba(tiger);
-        if sol.val > 1e-8
-            warning('FBA objective near zero.');
-        end
+%         if sol.val > 1e-8
+%             warning('FBA objective near zero.');
+%         end
         value = val*sol.val;
     case 'abs'
         value = val;
@@ -48,4 +48,4 @@ tiger.A(end+1,:) = tiger.obj';
 tiger.b(end+1) = value;
 tiger.ctypes(end+1) = p.Results.ctype;
 tiger.rownames{end+1} = 'GROWTH';
-tiger.obj(:) = 0;
+

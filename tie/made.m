@@ -1,5 +1,5 @@
 function [gene_states,genes,sol,models] = ...
-                               made(model,fold_change,pvals,frac,varargin)
+                               made(tiger,fold_change,pvals,varargin)
 % MADE  Metabolic Adjustment by Differential Expression
 %
 %   [GENE_STATES,GENES,SOL,MODELS] = 
@@ -9,27 +9,21 @@ function [gene_states,genes,sol,models] = ...
 %   algorithm [Jensen & Papin (2011), Bioinformatics].
 %
 %   Inputs
-%   MODEL       ELF model.  COBRA models will be converted to ELF models
-%               with a warning.
+%   MODEL       TIGER model.  COBRA models will be converted to TIGER 
+%               models with a warning.
 %   FOLD_CHANGE Measured fold change from expression data.  Columns
 %               correspond to conditions, rows correspond to genes.
 %   PVALS       P-values for changes.  Format is the same as for
 %               FOLD_CHANGE.
-%   FRAC        (optional) Fraction of metabolic objective required
-%               in the resulting model (v_obj >= frac*v_obj_max).
-%               Default is 0.3.  FRAC can also be a vector giving a
-%               separate fraction for each condition.
 %
 %   Parameters
 %   'gene_names' Cell array of names for genes in expression dataset.
 %                These correspond to the rows in FOLD_CHANGE and PVALS.
-%                If none is given, the rows correspond to ELF.genes.
-%   'method'     Method for formulating the MIP problem.  Choices are:
-%                    'milp'  Linear programming (default)
-%                    'miqp'  Quadratic programming
-%                The method changes how constant variables are measured.
-%                Linear method uses delta variables (delta = x XOR y).
-%                Quadratic method uses (x - y)^2.
+%                If none is given, the rows correspond to TIGER.genes.
+%   'obj_frac'   Fraction of metabolic objective required in the resulting 
+%                model (v_obj >= frac*v_obj_max). Default is 0.3.  Input 
+%                can also be a vector giving a separate fraction for each 
+%                condition.
 %   'weighting'  Method to convert PVALS to weights.  Options include:
 %                   'log'     w(p) = -log(p)
 %                   'linear'  w(p) = 1 - p
@@ -57,6 +51,8 @@ function [gene_states,genes,sol,models] = ...
 %   'remove_rev' Remove reversibility constraints from the model before
 %                converting to a MIP.  May improve performance if activity
 %                cycles are not a concern.  (Default = false)
+%   'verbose'    If true (default), a results table is printed.  Otherwise,
+%                MADE is silent.
 %
 %   Outputs
 %   GENE_STATES Binary expression states calculated by MADE.  Columns
@@ -72,8 +68,8 @@ function [gene_states,genes,sol,models] = ...
 % test inputs
 assert(nargin >= 3, 'MADE requires at least three inputs.');
 
-% make sure the input was an ELF model
-model = assert_elf_model(model);
+% make sure the input was an TIGER model
+tiger = assert_tiger(tiger);
 
 ntrans = size(fold_change,2);   % number of transitions
 ncond  = ntrans + 1;            % number of conditions
@@ -83,18 +79,12 @@ save_models = (nargout >= 4);
 assert(all(size(pvals) == size(fold_change)), ...
        'FOLD_CHANGE and PVALS must have the same dimensions');
 
-% default frac setting
-if nargin < 4 || isempty(frac),  frac = 0.3; end
-% set frac for each condition
-if length(frac) == 1
-    fracs = repmat(frac,1,ncond);
-end
-
 % parse input param/value pairs
 p = inputParser;
 
-valid_methods = {'miqp','milp'};
-p.addParamValue('method','milp',@(x) ismember(x,valid_methods));
+p.addParamValue('gene_names',tiger.genes);
+
+p.addParamValue('obj_frac',0.3);
 
 valid_weights = {'log','linear','unit'};
 p.addParamValue('weighting','log',@(x) ismember(x,valid_weights));
@@ -107,25 +97,29 @@ pvalidate = @(x) validateattributes(x,'numeric', ...
 p.addParamValue('p_thresh',0.5,pvalidate);
 p.addParamValue('p_eps',1e-10,pvalidate);
 
-p.addParamValue('gene_names',[]);
-
 p.addParamValue('interaction_matrix',[]);
 
 p.addParamValue('remove_rev',false);
 
+p.addParamValue('verbose',true);
+
 p.parse(varargin{:});
 
 % find the genes to match
-if isempty(p.Results.gene_names)
-    genes = model.genes;
-    igenes = 1:length(genes);
-else
-    [genes,igenes,igene_names] = intersect(model.genes, ...
-                                           p.Results.gene_names);
-    fold_change = fold_change(igene_names,:);
-    pvals = pvals(igene_names,:);
-end
+genes = p.Results.gene_names;
+[tf,gene_locs] = ismember(genes,tiger.varnames);
+genes = genes(tf);
+gene_locs = gene_locs(tf);
+fold_change = fold_change(tf,:);
+pvals = pvals(tf,:);
+
 ngenes = length(genes);
+
+% set frac for each condition
+frac = p.Results.obj_frac;
+if length(frac) == 1
+    fracs = repmat(frac,1,ncond);
+end
 
 p_thresh = p.Results.p_thresh;
 p_eps = p.Results.p_eps;
@@ -155,37 +149,26 @@ bounds = p.Results.bounds;
 objs = p.Results.objs;
 
 I = p.Results.interaction_matrix;
-if isempty(I)
-    % build sequential interaction matrix (1 -> 2, 2 -> 3, ...)
-    I = zeros(ncond);
-    for i = 1 : ntrans
-        I(i,i+1) = i;
-    end
-end
 
 % create the MILP
-if p.Results.remove_rev
-    milp = elf_to_milp(model,true,false);
-else
-    milp = elf_to_milp(model,true,true);
-end
+% if p.Results.remove_rev
+%     milp = elf_to_milp(model,true,false);
+% else
+%     milp = elf_to_milp(model,true,true);
+% end
 
-% var indexes are offset by nrxns
-vars = igenes + size(model.S,2);
-
-method = p.Results.method;
 % run without growth to determine theoretical matches
 [ unc_states, ~ ,unc_error] ...
-    = diffadj(milp,vars,d,w,I,bounds,objs,  0  ,method);
+    = diffadj(tiger,gene_locs,d,w,I,bounds,objs,0);
 % run actual MADE
 [gene_states,sol,con_error,milps] ...
-    = diffadj(milp,vars,d,w,I,bounds,objs,fracs,method);
+    = diffadj(tiger,gene_locs,d,w,I,bounds,objs,fracs);
 
 if unc_error
     fprintf('Error:  Unconstrained model was infeasible.\n\n');
 elseif con_error
     fprintf('Error:  The model was infeasible.\n\n');
-else
+elseif p.Results.verbose
     % verify solutions
     verification_error = any(~sol.verified);
     if save_models
@@ -236,7 +219,7 @@ else
         cons = count( d(:,i) ==  0 );
         cons_matched = count( d(:,i) ==  0 & D(:,i) ==  0 );
         
-        [cond1,cond2] = ind2sub(size(I),find(I(:) == i));
+        [cond1,cond2] = ind2sub(size(sol.I),find(sol.I(:) == i));
         fprintf(' %2i ->%2i   | %4i / %4i   %4i / %4i   %4i / %4i\n', ...
                 cond1, cond2, incs, incs_matched, ...
                               decs, decs_matched, ...

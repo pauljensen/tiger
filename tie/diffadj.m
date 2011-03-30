@@ -41,6 +41,8 @@ function [states,sol,mip_error,models] = ...
 %                  'obj_vals' Objective values through original models
 %                  'adj_vals' Objective values through adjusted models
 %                  'verified' True if obj_val(i) >= FRAC(i)*c'x_max
+%                  'mip'      Full MIP structure
+%                  'I'        Interaction matrix
 %   MIP_ERROR  True if an error was encourtered during the optimization.
 %   MODELS     Models with STATES applied to VARS.
 
@@ -76,30 +78,27 @@ assert(all(ismember(1:ntrans,I(:))), 'I is missing transition indices');
 fracs = fill_to(fracs,ncond,0.3);
 
 % fill out bounds
-if length(bounds) <= 1
-    for i = 1 : ncond
-        if isempty(bounds)
-            bounds{i}.lb = milp.lb;
-            bounds{i}.ub = milp.ub;
-        else
-            % one provided; replicate it
-            bounds{i}.lb = bounds{1}.lb;
-            bounds{i}.ub = bounds{1}.ub;
-        end
+if isempty(bounds)
+    bounds.lb = milp.lb;
+    bounds.ub = milp.ub;
+end
+bounds = assert_cell(bounds);
+if length(bounds) == 1
+    for i = 2 : ncond
+        bounds{i} = bounds{1};
     end
 end
 
 % fill out objs
-if length(objs) <= 1
-    for i = 1 : ncond
-        if isempty(objs)
-            objs{i} = milp.obj;
-        else
-            % one provided; replicate it
-            objs{i} = objs{1};
-        end
+if isempty(objs)
+    objs = milp.obj;
+end
+objs = assert_cell(objs);
+if length(objs) == 1
+    for i = 2 : ncond
+        objs{i} = objs{1};
     end
-end     
+end
     
 % make MILPs for each condition
 milps = cell(1,ncond);
@@ -158,6 +157,7 @@ mip.obj(con_idxs) = con_objs;
 
 sol = cmpi.solve_mip(mip);
 sol.mip = mip;
+sol.I = I;
 
 mip_error = ~cmpi.is_acceptable_exit(sol);
 if ~mip_error
@@ -195,11 +195,5 @@ else
     models = {};
 end
 
-                
+true;
 
-
-
-
-
-
-    

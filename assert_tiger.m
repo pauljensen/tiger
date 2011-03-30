@@ -15,8 +15,7 @@ if ~all(isfield(model,fields))
     fprintf('be converted.  For repeated calls to this function, it\n');
     fprintf('is more efficient to convert beforehand.\n');
     
-    % convert without adding GPR
-    tiger = cobra_to_tiger(model,false);
+    tiger = cobra_to_tiger(model);
 else
     tiger = model;
 end
