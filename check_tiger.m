@@ -5,7 +5,7 @@ function [tiger] = check_tiger(tiger)
 %   and orientation.
 
 col_fields = {'b','lb','ub','obj','varnames','rownames', ...
-              'vartypes'};
+              'vartypes','ctypes','ind','indtypes'};
 
 [m,n] = size(tiger.A);
 

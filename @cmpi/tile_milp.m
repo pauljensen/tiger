@@ -61,6 +61,8 @@ celliter(@concat_fields,field_names);
 
 milp.options = milps{1}.options;
 
+% start over the indicator counter
+milp.param.ind = 0;
 
 function concat_fields(name)
     fields = map(@(x) x.(name),milps);

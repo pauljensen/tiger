@@ -61,10 +61,10 @@ end
 ncond = ntrans + 1;
 
 % check interaction matrix
-if isempty(I)
+if nargin < 5 || isempty(I)
     % no matrix given; assume 1 -> 2, 2 -> 3, ...
     I = zeros(ncond);
-    for i = 1 : trans
+    for i = 1 : ntrans
         I(i,i+1) = i;
     end
 end
@@ -93,7 +93,7 @@ end
 if length(objs) <= 1
     for i = 1 : ncond
         if isempty(objs)
-            objs{i} = milp.c;
+            objs{i} = milp.obj;
         else
             % one provided; replicate it
             objs{i} = objs{1};
@@ -114,51 +114,17 @@ for i = 1 : ncond
     obj_vals(i) = sol.val;
 end
 
-% number of elements to hold constant
-n_con = length(find(d(:) ==  0));
-% number of variables and constraints added to create delta variables
-if qp
-    n_cols_per_con = 1;
-    n_rows_per_con = 1;
-else
-    n_cols_per_con = 3;
-    n_rows_per_con = 6;
-end
-
-% initialize the MIP structure
-[rowsA,colsA] = size(milps{1}.A);
-n_miprows = ncond*rowsA + n_rows_per_con*n_con;
-n_mipcols = ncond*colsA + n_cols_per_con*n_con;
-mip.A = sparse(n_miprows,n_mipcols);
-mip.lb = zeros(n_mipcols,1);
-mip.ub = zeros(n_mipcols,1);
-mip.b = zeros(n_miprows,1);
-mip.c = zeros(n_mipcols,1);
-mip.vartypes = repmat('C',1,n_mipcols);
-mip.ctypes = repmat('=',1,n_miprows);
-mip.sense = 1; % minimize
-if qp
-    mip.Q = sparse(n_mipcols,n_mipcols);
-end
-
-% populate the MIPs for each condition
-coff = 0;
-roff = 0;
-for i = 1 : ncond
-    mip.A(roff+1:roff+rowsA,coff+1:coff+colsA) = milps{i}.A;
-    mip.lb(coff+1:coff+colsA) = milps{i}.lb;
-    mip.ub(coff+1:coff+colsA) = milps{i}.ub;
-    mip.b(roff+1:roff+rowsA) = milps{i}.b;
-    mip.vartypes(coff+1:coff+colsA) = milps{i}.vartypes;
-    mip.ctypes(roff+1:roff+rowsA) = milps{i}.ctypes;
-    
-    roff = roff + rowsA;
-    coff = coff + colsA;
-end
+colsA = size(milp.A,2);
+mip = cmpi.tile_milp(milps{:});
 
 % compute the index of variable V in condition C
 idxof = @(v,c) colsA*(c-1) + v;
 
+n_con = count(d(:) == 0);
+con_idx1 = zeros(1,n_con);
+con_idx2 = zeros(1,n_con);
+con_objs = zeros(1,n_con);
+con_offset = 0;
 % create the objective function
 for t = 1 : ntrans
     % find the interacting conditions
@@ -169,33 +135,28 @@ for t = 1 : ntrans
         switch d(v,t)
             case {1}
                 % increasing
-                mip.c(idx1) = mip.c(idx1) + w(v,t);
-                mip.c(idx2) = mip.c(idx2) - w(v,t);
+                mip.obj(idx1) = mip.obj(idx1) + w(v,t);
+                mip.obj(idx2) = mip.obj(idx2) - w(v,t);
             case {-1}
                 % decreasing
-                mip.c(idx1) = mip.c(idx1) - w(v,t);
-                mip.c(idx2) = mip.c(idx2) + w(v,t);
+                mip.obj(idx1) = mip.obj(idx1) - w(v,t);
+                mip.obj(idx2) = mip.obj(idx2) + w(v,t);
             case {0}
                 % constant
-                diff_idx = coff + 1;
-                if qp
-                    mip.Q(diff_idx,diff_idx) = w(v,t);
-                    add_qp_diff_cons(idx1,idx2,diff_idx);
-                else
-                    mip.c(diff_idx) = w(v,t);
-                    add_ip_diff_cons(idx1,idx2,diff_idx);
-                end
-                coff = coff + n_cols_per_con;
-                roff = roff + n_rows_per_con;
+                con_offset = con_offset + 1;
+                con_idx1(con_offset) = idx1;
+                con_idx2(con_offset) = idx2;
+                con_objs(con_offset) = w(v,t);
         end
     end
 end
 
-if qp
-    sol = cmpi.solve_miqp(mip);
-else
-    sol = cmpi.solve_milp(mip);
-end
+% create constant variables
+[mip,con_vars] = add_diff(mip,con_idx1,con_idx2);
+[~,con_idxs] = convert_ids(mip.varnames,con_vars);
+mip.obj(con_idxs) = con_objs;
+
+sol = cmpi.solve_mip(mip);
 sol.mip = mip;
 
 mip_error = ~cmpi.is_acceptable_exit(sol);
@@ -208,7 +169,7 @@ if ~mip_error
     end
 
     % round binary variables
-    [~,bins] = intersect(vars,find(mip.vartypes == 'B'));
+    [~,bins] = intersect(vars,find(mip.vartypes == 'b'));
     states(bins,:) = round(states(bins,:));
     
     % verify solutions
@@ -222,7 +183,7 @@ if ~mip_error
         models{i}.ub(vars) = states(:,i);
         
         % run FBA to verify the solution
-        kosol = cmpi.solve_milp(models{i});
+        kosol = fba(models{i});
         sol.verified(i) = cmpi.is_acceptable_exit(kosol);
         if ~isempty(kosol.val)
             sol.adj_vals(i) = kosol.val;
@@ -234,49 +195,6 @@ else
     models = {};
 end
 
-% ------------------------------------------------------------------------
-
-function add_qp_diff_cons(i1,i2,di)
-    % add constraints for di = x(i1) - x(i2)
-    % TODO:  use off-diagonal entries in Q to eliminate constraint
-    mip.A(roff+1,[i1 i2 di]) = [1 -1 -1];
-    mip.b(roff+1) = 0;
-    mip.ctypes(roff+1) = '=';
-    mip.vartypes(coff+1) = mip.vartypes(i1);
-    switch mip.vartypes(i1)
-        case {'B'}
-            mip.ub(coff+1) = 1;
-        case {'C'}
-            max_flux = 2*max( abs([mip.ub([i1 i2]) mip.lb([i1 i2])]) );
-            mip.ub(coff+1) =  max_flux;
-            mip.lb(coff+1) = -max_flux;
-    end
-end
-
-function add_ip_diff_cons(i1,i2,di)
-    % add constraints for di = x(i1) XOR x(i2)
-    % TODO:  enable MILPs for continuous differences
-    I1 = di + 1; % indicator variable 1
-    I2 = di + 2; % indicator variable 2
-    mip.A(roff+1,[I1 I2 di]) = [2 2 -4];
-    mip.b(roff+1) = 3;
-    mip.A(roff+2,[I1 I2 di]) = [-2 -2 4];
-    mip.b(roff+2) = 1;
-    mip.A(roff+3,[i1 i2 I1]) = [-1 -1 -3];
-    mip.b(roff+3) = -2;
-    mip.A(roff+4,[i1 i2 I1]) = [1 1 3];
-    mip.b(roff+4) = 4;
-    mip.A(roff+5,[i1 i2 I2]) = [1 1 -3];
-    mip.b(roff+5) = 0;
-    mip.A(roff+6,[i1 i2 I2]) = [-1 -1 3];
-    mip.b(roff+6) = 2;
-    
-    mip.vartypes(coff+1:coff+3) = 'BBB';
-    mip.ctypes(roff+1:roff+6) = '<<<<<<';
-    mip.ub(coff+1:coff+3) = 1;
-end
-
-end % function
                 
 
 

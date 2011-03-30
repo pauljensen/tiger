@@ -4,7 +4,7 @@ function [filled] = fill_to(x,N,default,dim)
 %   [FILLED] = FILL_TO(X,N,DEFAULT,DIM)
 %
 %   If X has only one element, replicate it to have N elements.  If X is
-%   empty, use DEFAULT (DEFAULT = 0 if not specified.  Vector orientation
+%   empty, use DEFAULT (DEFAULT = 0 if not specified).  Vector orientation
 %   is determined by DIM:  1 (default) -> column, 2 -> row.
 
 if nargin < 4 || isempty(dim)

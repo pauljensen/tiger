@@ -12,7 +12,7 @@ function [tiger,sol] = add_growth_constraint(tiger,val,varargin)
 %
 %   Outputs
 %   TIGER   TIGER model with growth constraint added.
-%   SOL     CMPI solution object.
+%   SOL     CMPI solution object from the FBA calculation.
 %
 %   Parameters
 %   'ctype'     Character indicating the type of constraint to add:
@@ -36,7 +36,9 @@ p.parse(varargin{:});
 switch p.Results.valtype
     case 'frac'
         sol = fba(tiger);
-        assert(sol.val > 1e-8, 'FBA objective near zero.');
+        if sol.val > 1e-8
+            warning('FBA objective near zero.');
+        end
         value = val*sol.val;
     case 'abs'
         value = val;
