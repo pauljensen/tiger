@@ -45,26 +45,6 @@ imh805_rates = ...
   0.04  0.04  0.02  0.04  0.04  0.04  0.04  0.04  0.04  0.04  ];
   
 
-% uptake_rates = zeros(size(carbon_idxs));
-% 
-% obj = find(cobra.c);
-% m = cobra;
-% m.S(end+1,:) = cobra.c;
-% m.b(end+1) = 0;
-% for i = 1 : length(carbon_sources)
-%     m.lb(is_ex) = 0;
-%     m.lb(minimal_idxs) = -1000;
-%     source = carbon_idxs(i);
-%     m.c(:) = 0;
-%     m.c(source) = 1;
-%     m.lb(source) = -100;
-%     m.b(end) = growth_rates(i,1);
-%     sol = optimizeCbModel(m);
-%     if ~isempty(sol.x)
-%         uptake_rates(i) = sol.x(source);
-%     end
-% end
-
 %%
 cobra.lb(is_ex) = 0;
 cobra.lb(minimal_idxs) = -1000;

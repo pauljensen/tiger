@@ -4,10 +4,13 @@ function [tiger] = bind_var(tiger,vars,inds,varargin)
 %   [TIGER] = BIND_VAR(TIGER,VARS,INDS,...params...)
 %
 %   For each variable v in VARS and corresponding indicator I in INDS,
-%   adds constraints such that
-%       LB*I <= v <= UB*I
-%   Thus, if I=0, v must equal 0.  The values LB and UB are given by the
-%   following parameters:
+%   adds constraints such that v=0 if I=0.
+%
+%   If parameter 'iff' is true, the binding is such that v=0 if and only
+%   if I=0.  ('iff' is false by default.)
+%
+%   The bounds used when adding these rules are determined by the
+%   parameters:
 %       (default)  LB = min(TIGER.lb), i.e. the lowest lower bound in the
 %                  entire model.  UB = max(TIGER.ub), the largest upper
 %                  bound in the model.
@@ -20,6 +23,7 @@ function [tiger] = bind_var(tiger,vars,inds,varargin)
 %                  variable.
 
 p = inputParser;
+p.addParamValue('iff',false);
 p.addParamValue('tight',false);
 p.addParamValue('lb',[]);
 p.addParamValue('ub',[]);
@@ -35,33 +39,44 @@ if isempty(default_ub)
     default_ub = max(tiger.ub);
 end
 
-[~,vars,~] = convert_ids(tiger.varnames,vars);
-[~,inds,~] = convert_ids(tiger.varnames,inds);
+assert(length(vars) == length(inds), ...
+       'VARS and INDS must have the same length.');
 
-N = length(vars);
+% make sure we have names
+[vars,var_idxs] = convert_ids(tiger.varnames,vars);
+[inds,ind_idxs] = convert_ids(tiger.varnames,inds);
 
-n = size(tiger.A,2);
-A = sparse([],[],[],2*N,n,2*n);
-rownames = cell(2*N,1);
-b = zeros(2*N,1);
-ctypes = [repmat('<',N,1); repmat('>',N,1)];
+if p.Results.iff
+    rules = cellzip(@(x,y) sprintf('%s ~= 0 <=> %s',x,y),vars,inds);
 
-for i = 1 : N
-    if tight
-        ub = tiger.ub(vars(i));
-        lb = tiger.lb(vars(i));
+    if ~tight
+        prev_lb = tiger.lb;
+        prev_ub = tiger.ub;
+        tiger.lb(var_idxs) = default_lb;
+        tiger.ub(var_idxs) = default_ub;
+
+        tiger = add_rule(tiger,rules);
+
+        tiger.lb(1:length(prev_lb)) = prev_lb;
+        tiger.ub(1:length(prev_ub)) = prev_ub;
     else
-        lb = default_lb;
-        ub = default_ub;
+        tiger = add_rule(tiger,rules);
     end
-    A(  i,[vars(i) inds(i)]) = [1 -ub];
-    A(i+N,[vars(i) inds(i)]) = [1 -lb];
-    rownames{i} = sprintf('BIND%i',i);
-    rownames{i+N} = rownames{i};
+else
+    N = length(var_idxs);
+    A = zeros(2*N,size(tiger.A,2));
+    ctypes = repmat(' ',2*N,1);
+    for i = 1 : N
+        if tight
+            A(  i,[var_idxs(i) ind_idxs(i)]) = [1 -tiger.ub(var_idxs(i))];
+            A(i+N,[var_idxs(i) ind_idxs(i)]) = [1 -tiger.lb(var_idxs(i))];
+        else
+            A(  i,[var_idxs(i) ind_idxs(i)]) = [1 -default_ub];
+            A(i+N,[var_idxs(i) ind_idxs(i)]) = [1 -default_lb];
+        end
+        ctypes(  i) = '<';
+        ctypes(i+N) = '>';
+    end
+    
+    tiger = add_row(tiger,A,ctypes);
 end
-
-tiger.A = [tiger.A; A];
-tiger.b = [tiger.b; b];
-tiger.rownames = [tiger.rownames; rownames];
-tiger.ctypes = [tiger.ctypes; ctypes];
-

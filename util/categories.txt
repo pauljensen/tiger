@@ -1,5 +1,6 @@
 >Model Creation and Modification
 create_empty_tiger
+assert_tiger
 parse_string
 add_rule
 set_var
