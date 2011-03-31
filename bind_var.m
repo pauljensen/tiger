@@ -47,7 +47,7 @@ assert(length(vars) == length(inds), ...
 [inds,ind_idxs] = convert_ids(tiger.varnames,inds);
 
 if p.Results.iff
-    rules = cellzip(@(x,y) sprintf('%s ~= 0 <=> %s',x,y),vars,inds);
+    rules = cellzip(@(x,y) sprintf('"%s" ~= 0 <=> "%s"',x,y),vars,inds);
 
     if ~tight
         prev_lb = tiger.lb;

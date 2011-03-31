@@ -44,8 +44,10 @@ switch p.Results.valtype
         value = val;
 end
 
-tiger.A(end+1,:) = tiger.obj';
-tiger.b(end+1) = value;
-tiger.ctypes(end+1) = p.Results.ctype;
-tiger.rownames{end+1} = 'GROWTH';
+tiger = add_row(tiger,1);
+
+tiger.A(end,:) = tiger.obj';
+tiger.b(end) = value;
+tiger.ctypes(end) = p.Results.ctype;
+tiger.rownames{end} = 'GROWTH';
 

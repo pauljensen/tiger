@@ -1,9 +1,10 @@
 
 load ind750.mat
+load yeast_trn_iff.mat
 changeCobraSolver('cplex');
 
 is_ex_f = @(x) length(x) >= 3 && strcmp(x(1:3),'EX_');
-is_ex = cellfun(is_ex_f,cobra.rxns);
+ex_idxs = find(cellfun(is_ex_f,cobra.rxns));
 
 minimal_mets = {'h2o(e)','nh4(e)','o2(e)','pi(e)','so4(e)'};
 minimal_idxs = [    436,     456,     458,   466,     476 ];
@@ -46,55 +47,26 @@ imh805_rates = ...
   
 
 %%
-cobra.lb(is_ex) = 0;
-cobra.lb(minimal_idxs) = -1000;
-
-
-load yeast_raw_rules.mat
-load yeast_aliases.mat
-
-N = length(yeast_raw_rules);
-rules  = cell(N,1);
-for i = 1 : N
-    rules{i}  = [yeast_raw_rules{i,:}];
-end
-
-rules = cellfilter(@(x) ~isempty(x),rules);
-
-exprs  = cellfun(@parse_string,rules,'Uniform',false);
-
-cellfun(@(x) apply_aliases(x,yeast_aliases), exprs);
-
-tic; tiger_base = cobra_to_tiger(cobra); toc
-
-tic; trn  = add_rule(tiger_base,exprs);  toc
-
-trn = bind_mets(trn);
-trn = bind_var(trn,{'EX_glc(e)'},{'glc[e]'});
-
-%%
 
 uptake_rates = zeros(size(carbon_idxs));
 
-obj = find(cobra.c);
-m = cobra;
-m.S(end+1,:) = cobra.c;
-m.b(end+1) = 0;
+trn_con = add_growth_constraint(trn,0,'valtype','abs','ctype','=');
+
 for i = 1 : length(carbon_sources)
-    m.lb(is_ex) = 0;
-    m.lb(minimal_idxs) = -1000;
+    trn_con.lb(ex_idxs) = 0;
+    trn_con.lb(minimal_idxs) = -1000;
     source = carbon_idxs(i);
-    m.c(:) = 0;
-    m.c(source) = 1;
-    m.lb(source) = -100;
-    m.b(end) = growth_rates(i,1);
-    sol = optimizeCbModel(m);
+    trn_con.obj(:) = 0;
+    trn_con.obj(source) = -1;
+    trn_con.lb(source) = -100;
+    trn_con.b(end) = growth_rates(i,1);
+    sol = solve_tiger(trn_con);
     if ~isempty(sol.x)
         uptake_rates(i) = sol.x(source);
     end
 end
 
-
+%%
 tiger_rates = zeros(size(growth_rates));
 for carbon = 1 : length(carbon_sources)
     tiger = trn;
@@ -108,7 +80,9 @@ for carbon = 1 : length(carbon_sources)
             disp(['knocking out ' ko_genes{i} ' in ' carbon_sources{carbon}])
             tiger.ub(loc) = 0;
             sol = fba(tiger);
-            tiger_rates(carbon,1+i) = sol.val;
+            if ~isempty(sol.val)
+                tiger_rates(carbon,1+i) = sol.val;
+            end
         else
             tiger_rates(carbon,1+i) = -1;
         end

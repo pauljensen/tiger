@@ -1,4 +1,4 @@
-function [infeasible,side] = find_infeasible_rules(tiger,rules)
+function [infeasible,side] = find_infeasible_rules(tiger,rules,indicators)
 % FIND_INFEASIBLE_RULES  Determine which rules make a model infeasible.
 %
 %   [INFEASIBLE,SIDE] = FIND_INFEASIBLE_RULES(TIGER,RULES)
@@ -20,13 +20,17 @@ function [infeasible,side] = find_infeasible_rules(tiger,rules)
 %               infeasible.  'l' corresponds to the left side, 'r' is the
 %               right side.
 
+if nargin < 3 || isempty(indicators)
+    indicators = false;
+end
+
 N = length(rules);
 exprs = cell(1,N);
 for i = 1 : N
     if isa(rules{i},'char')
         exprs{i} = parse_string(rules{i});
     else
-        exprs{i} = rules{i};
+        exprs{i} = rules{i}.copy;
     end
 end
 
@@ -41,6 +45,16 @@ for i = 1 : N
 end
 
 model = add_rule(tiger,exprs);
+
+% indicators
+if indicators
+    ind_rows = find(model.ind);
+    ind_inds = model.ind(ind_rows);
+    and_vars = array2names('inf_ind_AND[%i]',ind_inds);
+    or_vars  = array2names('inf_ind_OR[%i]',ind_inds);
+    sub_vars = arary2names('inf_ind_SUB[%i]',ind_inds);
+end 
+
 [~,loc] = ismember(s_names,model.varnames);
 model.obj(:) = 0;
 model.obj(loc) = 1;

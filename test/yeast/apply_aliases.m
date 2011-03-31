@@ -1,4 +1,11 @@
 function apply_aliases(ex,aliases)
+% APPLY_ALIASES  Change atom aliases to the same name
+%
+%   [EX] = APPLY_ALIASES(EX,ALIASES)
+%
+%   ALIASES is a N x 2 cell of aliases, where the first column is the
+%   alias, and the second column is the name that should be substituted
+%   for the alias.
 
 tf = ismember(aliases(:,1),ex.atoms);
 aliases = aliases(tf,:);
