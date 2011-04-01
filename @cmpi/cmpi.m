@@ -169,6 +169,7 @@ methods (Static)
     [mip] = convert_miqp(mip)
     [milp] = tile_milp(varargin)
     [mip] = check_mip(mip)
+    [sols] = solve_multiple_mips(mip,alts,varargin)
 end
 
 end % class

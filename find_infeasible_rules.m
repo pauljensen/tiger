@@ -1,4 +1,4 @@
-function [infeasible,side] = find_infeasible_rules(tiger,rules,indicators)
+function [infeasible,side] = find_infeasible_rules(tiger,rules)
 % FIND_INFEASIBLE_RULES  Determine which rules make a model infeasible.
 %
 %   [INFEASIBLE,SIDE] = FIND_INFEASIBLE_RULES(TIGER,RULES)
