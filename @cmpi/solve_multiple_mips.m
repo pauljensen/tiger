@@ -39,6 +39,7 @@ sols.x = zeros(N,Niter);
 sols.val = zeros(1,Niter);
 sols.output = cell(1,Niter);
 sols.flag = zeros(1,Niter);
+sols.time = zeros(1,Niter);
 
 if ~p.Results.restart
     solver = 'CMPI__NO_RESTART';
@@ -48,6 +49,7 @@ switch solver
     case 'cplex'
         % start acceleration
         cplex = Cplex();
+        cplex.DisplayFunc = [];
         if mip.sense == 1
             cplex.Model.sense = 'minimize';
         else
@@ -57,7 +59,7 @@ switch solver
         mip.A(mip.ctypes == '>',:) = -mip.A(mip.ctypes == '>',:);
         mip.b(mip.ctypes == '>') = -mip.b(mip.ctypes == '>');
         cplex.Model.A = mip.A;
-        cplex.Model.ctype = mip.vartypes;
+        cplex.Model.ctype = upper(mip.vartypes);
         cplex.Model.lb = mip.lb(:);
         cplex.Model.ub = mip.ub(:);
         cplex.Model.rhs = mip.b(:);
@@ -65,16 +67,28 @@ switch solver
         lhs(mip.ctypes == '=') = mip.b(mip.ctypes == '=');
         cplex.Model.lhs = lhs;
         
+        [~,cplex] = cmpi.set_cplex_opts(mip.options,cplex);
+        if isfield(mip.options,'Display')
+            if strcmpi(mip.options.Display,'off')
+                cplex.DisplayFunc = [];
+            end
+        end
+        
         for i = 1 : Niter
             for f = 1 : length(fields)
                 cplex.Model.(fields{f}) = alts.(fields{f})(:,i);
             end
+            start_time = tic;
             cplex.solve();
+            total_time = toc(start_time);
             sol.x = cplex.Solution.x;
-            sol.flag = get_cplex_flag(cplex.Solution.status);
+            sol.flag = cmpi.get_cplex_flag(cplex.Solution.status);
             sol.val = cplex.Solution.objval;
             sol.output = cplex.Solution.statusstring;
-            record_sol(sol);
+            record_sol(sol,i);
+            if length(cplex.MipStart) > 1
+                cplex.MipStart = cplex.MipStart(end);
+            end
         end
         
     otherwise
@@ -83,7 +97,10 @@ switch solver
             for f = 1 : length(fields)
                 mip.(fields{f}) = alts.(fields{f})(:,i);
             end
-            record_sol(cmpi.solve_mip(mip),i);
+            start_time = tic;
+            sol = cmpi.solve_mip(mip);
+            total_time = toc(start_time);
+            record_sol(sol,i);
         end
 end
 
@@ -94,6 +111,7 @@ function record_sol(s,j)
     sols.val(j) = s.val;
     sols.output{j} = s.output;
     sols.flag(j) = s.flag;
+    sols.time(j) = total_time;
 end
 
 end
