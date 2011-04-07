@@ -1,11 +1,18 @@
-function [names,idxs,logic] = convert_ids(all_names,ids)
+function [names,idxs,logic] = convert_ids(all_names,ids,type)
 % CONVERT_IDS  Create name, indices, and logical indices from an array
 %
 %   [NAMES,IDXS,LOGIC] = CONVERT_IDS(ALL_NAMES,IDS)
+%   [IDS] = CONVERT_IDS(ALL_NAMES,IDS,TYPE)
 %
 %   Creates a cell of names (NAMES), linear indices (IDXS), and logical
 %   indices (LOGIC) for the values IDS in the cell ALL_NAMES.  IDS can be 
 %   any of the forms previously mentioned.
+%
+%   If three inputs are given, then only a single value is returned.  The
+%   type of id returned is determined by type:
+%       'name'    -> NAMES
+%       'index'   -> IDXS
+%       'logical' -> LOGIC
 %
 %   Example:
 %       all_names = {'a','b','c','d'};
@@ -27,4 +34,16 @@ else
     names = ids;
     logic = ismember(all_names,names);
     [~,idxs] = ismember(names,all_names);
+end
+
+if nargin == 3
+    assert(nargout == 1,'only one output allowed when TYPE is given');
+    switch validatestring(type,{'name','index','logical'})
+        case 'name'
+            names = names;
+        case 'index'
+            names = idxs;
+        case 'logical'
+            names = logic;
+    end
 end

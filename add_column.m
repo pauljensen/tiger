@@ -1,8 +1,8 @@
-function [tiger] = add_column(tiger,name,vartype,lb,ub,obj,A)
+function [tiger,varname] = add_column(tiger,name,vartype,lb,ub,obj,A)
 % ADD_COLUMN  Add a column to a TIGER model structure
 %
-%   [TIGER] = ADD_COLUMN(TIGER,N)
-%   [TIGER] = ADD_COLUMN(TIGER,NAME,VARTYPE,LB,UB,OBJ,A)
+%   [TIGER,VARNAME] = ADD_COLUMN(TIGER,N)
+%   [TIGER,VARNAME] = ADD_COLUMN(TIGER,NAME,VARTYPE,LB,UB,OBJ,A)
 %
 %   Add a column to an existing structure, updating the corresponding
 %   vectors.  The following default values are used:
@@ -17,6 +17,8 @@ function [tiger] = add_column(tiger,name,vartype,lb,ub,obj,A)
 %   values.  More than one name can be given; if only a single value is
 %   given for the other arguments, it will be repeated for all new 
 %   columns.
+%
+%   The return value VARNAME is the name(s) of the columns added.
 
 [m,n] = size(tiger.A);
 loc = n+1;
@@ -64,4 +66,8 @@ tiger.obj(locs) = obj;
 tiger.A(:,locs) = A;
 
 tiger = check_tiger(tiger);
+
+if nargout > 1
+    varname = name;
+end
 

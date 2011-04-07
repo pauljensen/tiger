@@ -15,7 +15,11 @@ if ~all(isfield(model,fields))
     fprintf('be converted.  For repeated calls to this function, it\n');
     fprintf('is more efficient to convert beforehand.\n');
     
-    tiger = cobra_to_tiger(model);
+    if isempty(model)
+        tiger = create_empty_tiger();
+    else
+        tiger = cobra_to_tiger(model);
+    end
 else
     tiger = model;
 end

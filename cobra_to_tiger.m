@@ -14,10 +14,6 @@ function [tiger] = cobra_to_tiger(cobra,add_gpr,varargin)
 %   Outputs
 %   TIGER        TIGER model structure.
 
-if nargin < 3
-    numbered = false;
-end
-
 if nargin < 2 || isempty(add_gpr)
     add_gpr = true;
 end
@@ -30,13 +26,13 @@ tiger.param = empty_tiger.param;
 
 [m,n] = size(tiger.S);
 
-if isfield(cobra,'rxns') && ~numbered
+if isfield(cobra,'rxns')
     tiger.varnames = cobra.rxns(:);
 else
     tiger.varnames = array2names('rxn',1:n)';
 end
 
-if isfield(cobra,'mets') && ~numbered
+if isfield(cobra,'mets')
     tiger.rownames = cobra.mets(:);
 else
     tiger.rownames = array2names('row',1:m)';
