@@ -5,22 +5,25 @@ if nargin > 1
     opts = [];
     
     if isfield(options,'MaxTime')
-        cplex.Param.timelimit = options.MaxTime;
+        cplex.Param.timelimit.Cur = options.MaxTime;
     end
     if isfield(options,'MaxIter')
-        cplex.mip.limits.solutions = options.MaxIter;
+        cplex.mip.limits.solutions.Cur = options.MaxIter;
     end
     if isfield(options,'MaxNodes')
-        cplex.Param.mip.limits.nodes = options.MaxNodes;
+        cplex.Param.mip.limits.nodes.Cur = options.MaxNodes;
     end
     if isfield(options,'FeasTol')
-        cplex.Param.simplex.tolerances.feasibility = options.FeasTol;
+        cplex.Param.simplex.tolerances.feasibility.Cur = options.FeasTol;
     end
     if isfield(options,'IntFeasTol')
-        cplex.Param.mip.tolerances.integrality = options.IntFeasTol;
+        cplex.Param.mip.tolerances.integrality.Cur = options.IntFeasTol;
     end
     if isfield(options,'OptTol')
-        cplex.Param.mip.tolerances.mipgap = options.OptTol;
+        cplex.Param.mip.tolerances.mipgap.Cur = options.OptTol;
+    end
+    if isfield(options,'AbsOptTol')
+        cplex.Param.mip.tolerances.absmipgap.Cur = options.AbsOptTol;
     end
 else
     cplex = [];
@@ -31,7 +34,7 @@ else
     setifdef('MaxNodes','MaxNodes');
     setifdef('FeasTol','EpRHS');
     setifdef('IntFeasTol','TolXInteger');
-    setifdef('OptTol','TolFun');
+    setifdef('OptTol','EpGap');
     setifdef('Display','Diagnostics');
     if isfield(options,'Display') && strcmpi(options.Display,'on')
         opts.Display = 'iter';

@@ -1,15 +1,15 @@
 function [gene_states,genes,sol,models] = ...
-                               made(tiger,fold_change,pvals,varargin)
+                                    made(tiger,fold_change,pvals,varargin)
 % MADE  Metabolic Adjustment by Differential Expression
 %
 %   [GENE_STATES,GENES,SOL,MODELS] = 
-%       MADE(MODEL,FOLD_CHANGE,PVALS,FRAC,...parameters...)
+%       MADE(TIGER,FOLD_CHANGE,PVALS,...parameters...)
 %
 %   Integrate gene expression data with metabolic models using the MADE
 %   algorithm [Jensen & Papin (2011), Bioinformatics].
 %
 %   Inputs
-%   MODEL       TIGER model.  COBRA models will be converted to TIGER 
+%   TIGER       TIGER model.  COBRA models will be converted to TIGER 
 %               models with a warning.
 %   FOLD_CHANGE Measured fold change from expression data.  Columns
 %               correspond to conditions, rows correspond to genes.

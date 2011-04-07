@@ -55,7 +55,18 @@ tiger.ind = zeros(m,1);
 tiger.indtypes = repmat(' ',m,1);
 
 if add_gpr
+    % reset bounds
+    orig_N = size(cobra.S,2);
+    orig_lb = tiger.lb;
+    orig_ub = tiger.ub;
+
+    tiger.lb(:) = min(tiger.lb);
+    tiger.ub(:) = max(tiger.ub);
+    
     tiger = convert_gpr(tiger,varargin{:});
+    
+    tiger.lb(1:orig_N) = orig_lb;
+    tiger.ub(1:orig_N) = orig_ub;
 end
 
 

@@ -61,9 +61,10 @@ model.obj(loc) = 1;
 
 sol = cmpi.solve_mip(make_milp(model));
 if isempty(sol.x)
-    error('Model cannot be made feasible.');
+    warning('Model cannot be made feasible.');
     infeasible = [];
     side = '';
+    return;
 end
 
 state = logical(round(sol.x(loc)));
