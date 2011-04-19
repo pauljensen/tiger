@@ -174,10 +174,10 @@ elseif p.Results.verbose
     if save_models
         models = cell(1,ncond);
         for i = 1 : ncond
-            models{i} = model;
-            models{i}.lb = milps{i}.lb;
-            models{i}.ub = milps{i}.ub;
-            models{i}.c  = milps{i}.c;
+            models{i} = tiger;
+            models{i}.lb   = milps{i}.lb;
+            models{i}.ub   = milps{i}.ub;
+            models{i}.obj  = milps{i}.obj;
         end
     end
     
