@@ -32,6 +32,8 @@ if nargin < 4 || isempty(b), b = 0; end
 
 if nargin < 5 || isempty(name)
     name = {};
+elseif isa(name,'char')
+    name = {name};
 end
 
 if nargin < 6 || isempty(ind), ind = 0; end

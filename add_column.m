@@ -27,6 +27,8 @@ if nargin < 2 || isempty(name)
     name = {};
 elseif isa(name,'double')
     name = zeros(1,name);  % holder until filled after calculating N
+elseif isa(name,'char')
+    name = {name};
 end
 
 if nargin < 3 || isempty(vartype), vartype = 'b'; end
@@ -46,7 +48,7 @@ N = max([length(name), ...
          size(A,2),    ...
          length(vartype)]);
          
-if length(name) < N
+if length(name) < N || isa(name,'double')
     % TODO:  add to names instead of replace
     name = array2names('VAR%i',loc:loc+N-1);
 end
