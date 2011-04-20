@@ -1,65 +1,54 @@
-function [and_lists] = make_dnf(ex)
+function [and_lists] = make_dnf(ex,names_only)
 
-ex_list = {ex};
+if nargin < 2
+    names_only = false;
+end
 
-while true
-    new_list = {};
-    N = length(ex_list);
-    for i = 1 : N
-        exi = ex_list{i};
-        if has_or(exi)
-            new_list{end+1} = split_by_or(exi,'left');
-            new_list{end+1} = split_by_or(exi,'right');
-        else
-            new_list{end+1} = exi;
+ex_list = {ex.copy};
+
+while any(cellfun(@has_or,ex_list))
+    for i = 1 : length(ex_list)
+        if has_or(ex_list{i})
+            ex_list{end+1} = split_by_or(ex_list{i},'right');
+            ex_list{i}     = split_by_or(ex_list{i},'left');
         end
-    end
-    ex_list = new_list;
-    
-    if ~any(cellfun(@(x) has_or(x), ex_list))
-        break;
     end
 end
 
-and_lists = cellfun(@(x) x.get_atoms, ex_list, 'UniformOutput', false);
+and_lists = map(@get_atoms,ex_list);
+
+if names_only
+    and_lists = map(@(x) map(@(e) e.id,x),and_lists);
+end
 
 
 function [tf] = has_or(ex)
-    tf = ex.is_junction ...
+    tf = ex.is_junc ...
             && (ex.OR || has_or(ex.lexpr) || has_or(ex.rexpr));
-
         
 function [sub_ex] = split_by_or(ex,dir)
-    if nargin < 2,  dir = 'left'; end
-    
     if ~has_or(ex)
-        sub_ex = ex;
+        sub_ex = ex.copy;
     elseif ex.OR
         switch dir
             case 'left'
-                sub_ex = ex.lexpr;
+                sub_ex = ex.lexpr.copy;
             case 'right'
-                sub_ex = ex.rexpr;
+                sub_ex = ex.rexpr.copy;
         end
-    else  % AND
-        sub_ex = ex;
+    else % AND
+        sub_ex = ex.copy;
         if has_or(ex.lexpr)
-            switch dir
-                case 'left'
-                    sub_ex.lexpr = split_by_or(ex.lexpr,'left');
-                case 'right'
-                    sub_ex.lexpr = split_by_or(ex.lexpr,'right');
-            end
+            sub_ex.lexpr = split_by_or(ex.lexpr,dir);
         else
-            switch dir
-                case 'left'
-                    sub_ex.rexpr = split_by_or(ex.rexpr,'left');
-                case 'right'
-                    sub_ex.rexpr = split_by_or(ex.rexpr,'right');
-            end
+            sub_ex.rexpr = split_by_or(ex.rexpr,dir);
         end
     end
 
-
-
-                
+function [atoms] = get_atoms(ex)
+    if ~ex.is_junc
+        atoms = {ex.copy};
+    else
+        atoms = [get_atoms(ex.lexpr), get_atoms(ex.rexpr)];
+    end
+    
