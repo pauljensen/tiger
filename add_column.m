@@ -67,9 +67,23 @@ tiger.ub(locs) = ub;
 tiger.obj(locs) = obj;
 tiger.A(:,locs) = A;
 
+% expand the Q, Qd, and Qc fields
+if isfield(tiger,'Q') && ~isempty(tiger.Q)
+    tiger.Q(n+N,n+N) = 0;
+end
+if isfield(tiger,'Qd') && ~isempty(tiger.Qd)
+    tiger.Qd(n+N,n+N) = 0;
+end
+if isfield(tiger,'Qc') && ~isempty(tiger.Qc)
+    tiger.Qc.w(n+N) = 0;
+    tiger.Qc.c(n+N) = 0;
+end 
+
 tiger = check_tiger(tiger);
 
 if nargout > 1
     varname = name;
 end
+
+
 

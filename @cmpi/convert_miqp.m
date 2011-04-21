@@ -21,47 +21,45 @@ function [mip] = convert_miqp(mip)
 %             Qc.w(i)*(x(i) - Qc.c(i))^2, i.e., the weighted least-square
 %             distance between x(i) and a constant c(i).
 
+has_Q  = ~isempty(cmpi.check_field('Q',mip));
+has_Qd = ~isempty(cmpi.check_field('Qd',mip));
+has_Qc = ~isempty(cmpi.check_field('Qc',mip));
+
+assert(sum([has_Q has_Qd has_Qc]) <= 1, ...
+       'only one of Q, Qd, and Qc can be specified');
+
 [m,n] = size(mip.A);
-
-mip.Q = cmpi.check_field('Q',mip);
-mip.Q = expand_to(mip.Q,[n n]);
-
-Qd = cmpi.check_field('Qd',mip);
-Qd = expand_to(Qd,[n n]);
-
-Qc = cmpi.check_field('Qc',mip);
-Qc.w = cmpi.check_field('w',Qc);
-Qc.c = cmpi.check_field('c',Qc);
-Qc.w = expand_to(Qc.w,n);
-Qc.c = expand_to(Qc.c,n);
-
-% move all nonzero elements in Q and Qd to the lower half
-mip.Q  = tril(mip.Q) + triu(mip.Q)'.*double(tril(mip.Q) == 0);
-Qd = tril(Qd) + triu(Qd)'.*double(tril(Qd) == 0);
-
-[I,J,w] = find(Qd);
-Nadd = length(w);
-if Nadd > 0
-    mip = add_column(mip,Nadd);
+ 
+if has_Q
+    % move all nonzero elements in Q to the lower half
+    mip.Q  = tril(mip.Q) + triu(mip.Q)'.*double(tril(mip.Q) == 0);
+elseif has_Qd
+    % move all nonzero elements in Q to the lower half
+    Qd = mip.Qd;
+    Qd = tril(Qd) + triu(Qd)'.*double(tril(Qd) == 0);
+    
+    mip.Q = spalloc(n,n,nnz(Qd));
+    [I,J,w] = find(Qd);
+    Nadd = length(w);
+    mip = add_column(mip,Nadd,'c');
     mip = add_row(mip,Nadd);
-    mip.Q = expand_to(mip.Q,n+Nadd);
     for i = 1 : Nadd
         mip.A(m+i,[I(i) J(i) n+i]) = [1 -1 1];
         mip.Q(n+i,n+i) = w(i);
     end
-end
-
-[m,n] = size(mip.A);
-idxs = find(Qc.w);
-Nadd = length(idxs);
-if Nadd > 0
-    mip = add_column(mip,Nadd);
+elseif has_Qc
+    mip.Q = spalloc(n,n,nnz(mip.Qc.w));
+    Nadd = count(mip.Qc.w);
+    mip = add_column(mip,Nadd,'c');
     mip = add_row(mip,Nadd);
-    mip.Q = expand_to(mip.Q,n+Nadd);
-    for i = 1 : Nadd
-        mip.A(m+i,[idxs(i) n+i]) = [1 -1];
-        mip.b(m+i) = Qc.c(idxs(i));
-        mip.Q(n+i,n+i) = Qc.w(idxs(i));
+    rowidx = m;
+    for i = 1 : length(mip.Qc.w)
+        if mip.Qc.w(i) ~= 0
+            rowidx = rowidx + 1;
+            mip.A(rowidx,[n+i i]) = [1 -1];
+            mip.b(rowidx) = -mip.Qc.c(i);
+            mip.Q(n+i,n+i) = mip.Qc.w(i);
+        end
     end
 end
 
