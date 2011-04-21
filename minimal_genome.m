@@ -1,4 +1,13 @@
 function [genes,sol] = minimal_genome(tiger,varargin)
+% MINIMAL_GENOME  Calculate a minimal genome
+%
+%   [GENES,SOL] = MINIMAL_GENOME(TIGER,...params...)
+%
+%   Computes GENES, a list of the minimum number of genes (in TIGER.genes)
+%   that are necessary for a functioning model.  The "params" are passed
+%   to ADD_GROWTH_CONSTRAINT to define the conditions for functionality.
+%
+%   SOL is the solution structure from CMPI.
 
 tiger = add_growth_constraint(tiger,varargin{:});
 

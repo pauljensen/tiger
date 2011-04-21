@@ -1,6 +1,6 @@
 function [elf] = cobra_to_elf(cobra)
 
-make_gene_inds = true;
+make_gene_inds = false;
 
 elf = cobra_to_tiger(cobra,false);
 genes = elf.genes;
@@ -11,16 +11,20 @@ nmets = size(elf.A,1);
 elf = make_irreversible_rxns(elf);
 nrxns = size(elf.A,2);
 
-act_of = @(x) ['ACT_' x];
-act_names = map(act_of,genes);
 act_bound = max(max(abs(elf.lb),abs(elf.ub)));
 
-% define gene indicators and activities
-elf = add_column(elf,genes,'b');
-elf = add_column(elf,act_names,'c',0,act_bound);
+% define gene activities
+elf = add_column(elf,genes,'c',0,act_bound);
 elf.A(size(cobra.S,1)+(1:ngenes),end-ngenes+1:end) = eye(ngenes);
-elf = bind_var(elf,act_names,genes);
 
+% define binary gene indicators
+if make_gene_inds
+    elf.indof = @(x) ['I_' x];
+    gene_inds = map(elf.indof,genes);
+    elf = add_column(elf,gene_inds,'b');
+    elf = bind_var(elf,genes,gene_inds);
+end
+    
 % at this point, only irreversible reactions have GPRs
 
 gpr = elf.gpr;

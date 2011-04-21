@@ -1,5 +1,13 @@
 function show_tiger(tiger,varargin)
 % SHOW_TIGER  Show a TIGER model as a MIP
+%
+%   SHOW_TIGER(TIGER,...params...)
+%
+%   Displays a TIGER model in equation form.  The following parameters can
+%   be given:
+%       'bounds'  Show the bounds and type for each variable.
+%       'rxns'    Treat continuous variables as "reactions" and display 
+%                 the chemical reaction.
 
 showvars = ismember('bounds',varargin);
 showrxns = ismember('rxns',varargin);
