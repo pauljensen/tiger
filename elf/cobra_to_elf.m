@@ -94,15 +94,20 @@ function [tiger] = make_irreversible_rxns(tiger)
             tiger.A(end,[i f r]) = [-1 1 -1];
             
             % add indicator to avoid flux loops
-            ind = f + 2;
-            tiger = add_column(tiger,[tiger.varnames{i} '_REV_IND']);
-            tiger = add_row(tiger,[],'<<',[],'ELF_REV_CON');
-            tiger.A(end-1,[f ind]) = [1 -tiger.ub(f)];
-            tiger.A(end  ,[r ind]) = [1  tiger.ub(r)];
-            tiger.b(end) = tiger.ub(r);
+            f_ind = f + 2;
+            r_ind = f + 3;
+            ind_names = {[tiger.varnames{i} '_FOR_IND'], ...
+                         [tiger.varnames{i} '_REV_IND']};
+            tiger = add_column(tiger,ind_names);
+            tiger = add_row(tiger,[],'<<=',[],'ELF_REV_CON%i');
+            tiger.A(end-2,[f f_ind]) = [1 -tiger.ub(f)];
+            tiger.A(end-1,[r r_ind]) = [1 -tiger.ub(r)];
+            tiger.A(end,[f_ind r_ind]) = [1 1];
+            tiger.b(end) = 1;
             
             % hack TODO: move indicators to end of reaction list
-            tiger.gpr{ind} = '';
+            tiger.gpr{f_ind} = '';
+            tiger.gpr{r_ind} = '';
         end
     end
 end

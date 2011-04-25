@@ -1,3 +1,3 @@
-function [substrs] = splitstr(str,regex)
+function [parts] = splitstr(str,regex)
 
-substrs = regexp(str,regex,'split');
+parts = regexp(str,regex,'split');

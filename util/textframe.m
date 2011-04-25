@@ -29,6 +29,7 @@ methods
         if nargin == 0
             lines = {};
         end
+        lines = assert_cell(lines);
         obj.lines = lines(:);
     end
     

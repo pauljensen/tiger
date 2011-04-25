@@ -46,6 +46,10 @@ elseif has_Qd
     for i = 1 : Nadd
         mip.A(m+i,[I(i) J(i) n+i]) = [1 -1 1];
         mip.Q(n+i,n+i) = w(i);
+        lb = min(mip.lb([I(i) J(i)]));
+        ub = max(mip.ub([I(i) J(i)]));
+        mip.lb(n+i) = -(ub - lb);
+        mip.ub(n+i) = ub - lb;
     end
 elseif has_Qc
     mip.Q = spalloc(n,n,nnz(mip.Qc.w));
@@ -53,12 +57,17 @@ elseif has_Qc
     mip = add_column(mip,Nadd,'c');
     mip = add_row(mip,Nadd);
     rowidx = m;
+    colidx = 0;
     for i = 1 : length(mip.Qc.w)
         if mip.Qc.w(i) ~= 0
             rowidx = rowidx + 1;
-            mip.A(rowidx,[n+i i]) = [1 -1];
+            colidx = colidx + 1;
+            mip.A(rowidx,[n+colidx i]) = [1 -1];
             mip.b(rowidx) = -mip.Qc.c(i);
-            mip.Q(n+i,n+i) = mip.Qc.w(i);
+            mip.Q(n+colidx,n+colidx) = mip.Qc.w(i);
+            bound = mip.ub(i) - mip.lb(i);
+            mip.ub(n+colidx) =  bound;
+            mip.lb(n+colidx) = -bound;
         end
     end
 end

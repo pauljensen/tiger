@@ -53,7 +53,11 @@ b = fill_to(b,N);
 ind = fill_to(ind,N);
 indtype = fill_to(indtype,N);
 if length(name) < N
-    name = array2names('ROW%i',loc:loc+N-1);
+    if length(name) == 1
+        name = array2names(name{1},loc:loc+N-1);
+    else
+        name = array2names('ROW%i',loc:loc+N-1);
+    end
 end
 
 locs = loc + (0:N-1);
