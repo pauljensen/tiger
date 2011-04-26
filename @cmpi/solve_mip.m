@@ -87,10 +87,8 @@ N = size(mip.A,2);
 
 mip = cmpi.convert_indicators(mip);
 
-qp =    isfield(mip,'Q')  && ~isempty(mip.Q) && ~all(mip.Q(:) == 0)  ...
-     || isfield(mip,'Qd') && ~isempty(mip.Qd) ...
-     || isfield(mip,'Qc') && ~isempty(mip.Qc);
-   
+qp = ~isempty(cmpi.miqp_type(mip));
+
 if qp
     mip = cmpi.convert_miqp(mip);
 end

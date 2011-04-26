@@ -168,8 +168,10 @@ methods (Static)
     [mip] = convert_indicators(mip)
     [mip] = convert_miqp(mip)
     [milp] = tile_milp(varargin)
+    [mip] = tile_mip(varargin)
     [mip] = check_mip(mip)
     [sols] = solve_multiple_mips(mip,alts,varargin)
+    [qtype] = miqp_type(mip)
 end
 
 end % class

@@ -59,6 +59,8 @@ if nargin < 8 || isempty(fracs)
     fracs = 0.3;
 end
 
+vars = convert_ids(milp.varnames,vars,'index');
+
 [nvars,ntrans] = size(w);
 ncond = ntrans + 1;
 

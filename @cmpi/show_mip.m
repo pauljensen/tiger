@@ -63,6 +63,35 @@ end
 varnames = zip_names(default_varnames,varnames);
 rownames = zip_names(default_rownames,rownames);
 
+% show quadratic
+qptype = cmpi.miqp_type(mip);
+if ~isempty(qptype)
+    fprintf('\n\n----- Quadratic Objective -----\n');
+    switch qptype
+        case 'Q'
+            fprintf('Q:  ');
+            [I,J] = find(mip.Q);
+            for i = 1 : length(I)
+                if I(i) == J(i)
+                    rxnstr = [varnames{I(i)} '^2'];
+                else
+                    rxnstr = [varnames{I(i)} '*' varnames{J(i)}];
+                end
+
+                coef = mip.Q(I(i),J(i));
+                if coef == 1
+                    fprintf('%s ',rxnstr);
+                elseif coef < 0 && i > 1
+                    fprintf('- %f %s ',abs(coef),rxnstr);
+                elseif coef > 0 && i > 1
+                    fprintf('+ %f %s ',coef,rxnstr);
+                else
+                    fprintf('%f %s ',coef,rxnstr);
+                end
+            end
+    end         
+end
+    
 % show objective
 fprintf('\n\n----- Objective -----\n');
 fprintf('z = ');
@@ -127,25 +156,29 @@ function show_coef_list(constraint)
     for j = 1 : length(nonzeros)
         col = nonzeros(j);
         coef = constraint(col);
-        if coef < 0
-            if j > 1
-                coef_str = ' - ';
-            else
-                coef_str = '-';
-            end
-        else
-            if j > 1
-                coef_str = ' + ';
-            else
-                coef_str = '';
-            end
-        end
-        if abs(coef) ~= 1
-            coef_str = [coef_str num2str(abs(coef)) '*'];
-        end
-        fprintf('%s%s',coef_str,varnames{col});
+        print_coef_name_pair(coef,varnames{col},j==1);
     end
 end
+
+function print_coef_name_pair(coef,name,first)
+    if coef < 0 && first
+        sign = '-';
+    elseif coef < 0 && ~first
+        sign = ' - ';
+    elseif first
+        sign = '';
+    else
+        sign = ' + ';
+    end
+    
+    if abs(coef) == 1
+        numstr = '';
+    else
+        numstr = num2str(abs(coef));
+    end
+    
+    fprintf('%s%s%s',sign,numstr,name);
+end      
 
 end
     

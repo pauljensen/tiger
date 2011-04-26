@@ -1,10 +1,18 @@
-function [sol] = mea(elf,actnorm)
+function [sol] = mea(elf,actnorm,norun,obj_frac)
 
-if nargin < 2
+if nargin < 4 || isempty(obj_frac)
+    obj_frac = 0.99;
+end
+
+if nargin < 3 || isempty(norun)
+    norun = false;
+end
+
+if nargin < 2 || isempty(actnorm)
     actnorm = 'euclid';
 end
 
-elf = add_growth_constraint(elf,0.99);
+elf = add_growth_constraint(elf,obj_frac);
 elf.obj(:) = 0;
 nA = size(elf.A,2);
 idxs = convert_ids(elf.varnames,elf.genes,'index');
@@ -23,4 +31,9 @@ switch actnorm
         elf.obj(idxs) = 1;
 end
 
-sol = cmpi.solve_mip(elf);
+if norun
+    sol = elf;
+else
+    sol = cmpi.solve_mip(elf);
+end
+    
