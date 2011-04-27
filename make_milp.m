@@ -33,10 +33,18 @@ milp.vartypes = upper(tiger.vartypes');
 milp.varnames = tiger.varnames;
 milp.rownames = tiger.rownames;
 
-if isfield(tiger,'ind')
-    milp.ind = tiger.ind;
+copy_if('ind');
+copy_if('indtypes');
+
+copy_if('Q');
+copy_if('Qd');
+copy_if('Qc');
+
+
+function copy_if(field)
+    if isfield(tiger,field)
+        milp.(field) = tiger.(field);
+    end
 end
 
-if isfield(tiger,'indtypes')
-    milp.indtypes = tiger.indtypes;
 end

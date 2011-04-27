@@ -67,41 +67,62 @@ rownames = zip_names(default_rownames,rownames);
 qptype = cmpi.miqp_type(mip);
 if ~isempty(qptype)
     fprintf('\n\n----- Quadratic Objective -----\n');
+    pb = printbuffer();
+    pb.start_wrap;
     switch qptype
         case 'Q'
             fprintf('Q:  ');
             [I,J] = find(mip.Q);
             for i = 1 : length(I)
                 if I(i) == J(i)
-                    rxnstr = [varnames{I(i)} '^2'];
+                    rxn_name = [mip.varnames{I(i)} '^2'];
                 else
-                    rxnstr = [varnames{I(i)} '*' varnames{J(i)}];
+                    rxn_name = [mip.varanems{I(i)} '*' ...
+                                mip.varnames{J(i)}];
                 end
-
-                coef = mip.Q(I(i),J(i));
-                if coef == 1
-                    fprintf('%s ',rxnstr);
-                elseif coef < 0 && i > 1
-                    fprintf('- %f %s ',abs(coef),rxnstr);
-                elseif coef > 0 && i > 1
-                    fprintf('+ %f %s ',coef,rxnstr);
-                else
-                    fprintf('%f %s ',coef,rxnstr);
-                end
+                pb.printf(make_coef_name_pair(mip.Q(I(i),J(i)), ...
+                                              rxn_name, ...
+                                              i == 1));
             end
-    end         
+        case 'Qd'
+            fprintf('Qd:  ');
+            [I,J] = find(mip.Qd);
+            for i = 1 : length(I)
+                rxn_name = sprintf('(%s - %s)^2',mip.varnames{I(i)}, ...
+                                                 mip.varnames{J(i)});
+                pb.printf(make_coef_name_pair(mip.Qd(I(i),J(i)), ...
+                                              rxn_name, ...
+                                              i == 1));
+            end
+        case 'Qc'
+            I = find(mip.Qc.w);
+            for i = 1 : length(I)
+                rxn_name = sprintf('(%s - %s)^2',mip.varnames{I(i)}, ...
+                                                 num2str(mip.Qc.c(I(i))));
+                pb.printf(make_coef_name_pair(mip.Qc.w(I(i)), ...
+                                              rxn_name, ...
+                                              i == 1));
+            end
+            
+    end
+    pb.stop_wrap;
 end
     
 % show objective
 fprintf('\n\n----- Objective -----\n');
-fprintf('z = ');
+pb = printbuffer;
+pb.start_wrap;
+pb.printf('obj:  ');
 show_coef_list(mip.obj);
+pb.stop_wrap;
 
 % show constraints
 fprintf('\n\n----- Constraints -----\n');
 for r = 1 : length(rowidxs)
     row = rowidxs(r);
-    fprintf('%s:  ',rownames{row});
+    pb = printbuffer;
+    pb.start_wrap;
+    pb.printf('%s:  ',rownames{row});
     show_coef_list(mip.A(row,:));
     switch mip.ctypes(r)
         case '<'
@@ -112,6 +133,7 @@ for r = 1 : length(rowidxs)
             fprintf(' = ');
     end
     fprintf('%g\n',mip.b(r));
+    pb.stop_wrap;
 end
 
 % show indicators
@@ -156,11 +178,11 @@ function show_coef_list(constraint)
     for j = 1 : length(nonzeros)
         col = nonzeros(j);
         coef = constraint(col);
-        print_coef_name_pair(coef,varnames{col},j==1);
+        pb.printf(make_coef_name_pair(coef,varnames{col},j==1));
     end
 end
 
-function print_coef_name_pair(coef,name,first)
+function [str] = make_coef_name_pair(coef,name,first)
     if coef < 0 && first
         sign = '-';
     elseif coef < 0 && ~first
@@ -174,10 +196,10 @@ function print_coef_name_pair(coef,name,first)
     if abs(coef) == 1
         numstr = '';
     else
-        numstr = num2str(abs(coef));
+        numstr = [num2str(abs(coef)) '*'];
     end
     
-    fprintf('%s%s%s',sign,numstr,name);
+    str = sprintf('%s%s%s',sign,numstr,name);
 end      
 
 end
