@@ -30,7 +30,8 @@ end
 ns = cellfun(@(x) size(x.A,2),mips);
 offsets = cumsum(ns) - ns(1);
 for i = 1 : N
-    mips{i}.ind = mips{i}.ind + offsets(i);
+    nonzero = mips{i}.ind > 0;
+    mips{i}.ind(nonzero) = mips{i}.ind(nonzero) + offsets(i);
 end
 
 As = map(@(x) x.A,mips);
@@ -65,18 +66,21 @@ mip.options = mips{1}.options;
 mip.param.ind = 0;
 
 % convert the quadratic terms
-switch miqp_type(mips{1})
-    case 'Q'
-        Qs = map(@(x) x.Q,mips);
-        mip.Q = blkdiag(Qs{:});
-    case 'Qd'
-        Qds = map(@(x) x.Qd,mips);
-        mip.Qd = blkdiag(Qds{:});
-    case 'Qc'
-        Qcws = map(@(x) x.Qc.w(:),mips);
-        Qccs = map(@(x) x.Qc.c(:),mips);
-        mip.Qc.w = vertcat(Qcws{:});
-        mip.Qc.c = vertcat(Qccs{:});
+qptype = cmpi.miqp_type(mips{1});
+if ~isempty(qptype)
+    switch cmpi.miqp_type(mips{1})
+        case 'Q'
+            Qs = map(@(x) x.Q,mips);
+            mip.Q = blkdiag(Qs{:});
+        case 'Qd'
+            Qds = map(@(x) x.Qd,mips);
+            mip.Qd = blkdiag(Qds{:});
+        case 'Qc'
+            Qcws = map(@(x) x.Qc.w(:),mips);
+            Qccs = map(@(x) x.Qc.c(:),mips);
+            mip.Qc.w = vertcat(Qcws{:});
+            mip.Qc.c = vertcat(Qccs{:});
+    end
 end
         
 
