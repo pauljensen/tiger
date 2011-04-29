@@ -18,11 +18,11 @@ fold_change = fold_change(tf,:);
 
 ngenes = length(genes);
 
-mip = mea(elf,[],true,obj_frac);
+mip = mea(elf,[],true,0);
 mip.Q = (1-alpha) .* mip.Q;
 weights = alpha*(fold_change - 1);
 
-[~,sol] = diffadj(mip,genes,d,-weights,[],bounds,[],0);
+[~,sol] = diffadj(mip,genes,d,-weights,[],bounds,[],obj_frac);
 
 if ~isempty(sol.x)
     fluxes = cell(1,ntrans+1);
