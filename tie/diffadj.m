@@ -1,8 +1,8 @@
 function [states,sol,mip_error,models] = ...
-                        diffadj(milp,vars,d,w,I,bounds,objs,fracs)
+                        diffadj(milp,vars,d,w,I,bounds,objs,fracs,verify)
 % DIFFADJ  Formulate and solve the differential adjustment problem
 %
-%   [STATES,SOL] = DIFFADJ(MILP,VARS,W,D,I,BOUNDS,OBJS,FRACS,METHOD)
+%   [STATES,SOL] = DIFFADJ(MILP,VARS,D,W,I,BOUNDS,OBJS,FRACS,METHOD)
 %
 %   Attempts to match changes between different conditions while
 %   retaining functional models.
@@ -33,6 +33,8 @@ function [states,sol,mip_error,models] = ...
 %               obj'x >= FRACS(i)*obj'x_max
 %           If only a single number is given, it is used for every
 %           condition.  If empty, the default is 0.3.
+%   VERIFY  If true (default), resulting models are run to verify the 
+%           minimum objective flux.
 %
 %   Outputs
 %   STATES     A |variables| x |conditions| matrix of states (levels) for
@@ -57,6 +59,10 @@ end
 
 if nargin < 8 || isempty(fracs)
     fracs = 0.3;
+end
+
+if nargin < 9 || isempty(verify)
+    verify = false;
 end
 
 vars = convert_ids(milp.varnames,vars,'index');
@@ -111,12 +117,16 @@ for i = 1 : ncond
     milps{i}.lb = bounds{i}.lb;
     milps{i}.ub = bounds{i}.ub;
     
-    [milps{i},sol] = add_growth_constraint(milps{i},fracs(i));
-    obj_vals(i) = sol.val;
+    if fracs(i) > 0
+        [milps{i},sol] = add_growth_constraint(milps{i},fracs(i));
+        obj_vals(i) = sol.val;
+    else
+        obj_vals(i) = 0;
+    end
 end
 
 colsA = size(milp.A,2);
-mip = cmpi.tile_milp(milps{:});
+mip = cmpi.tile_mip(milps{:});
 
 % compute the index of variable V in condition C
 idxof = @(v,c) colsA*(c-1) + v;
@@ -175,20 +185,22 @@ if ~mip_error
     states(bins,:) = round(states(bins,:));
     
     % verify solutions
-    sol.verified = false(1,ncond);
-    sol.adj_vals = zeros(1,ncond);
-    sol.obj_vals = obj_vals;
-    for i = 1 : ncond
-        % copy models and apply gene states
-        models{i} = milps{i};
-        models{i}.lb(vars) = states(:,i);
-        models{i}.ub(vars) = states(:,i);
-        
-        % run FBA to verify the solution
-        kosol = fba(models{i});
-        sol.verified(i) = cmpi.is_acceptable_exit(kosol);
-        if ~isempty(kosol.val)
-            sol.adj_vals(i) = kosol.val;
+    if verify
+        sol.verified = false(1,ncond);
+        sol.adj_vals = zeros(1,ncond);
+        sol.obj_vals = obj_vals;
+        for i = 1 : ncond
+            % copy models and apply gene states
+            models{i} = milps{i};
+            models{i}.lb(vars) = states(:,i);
+            models{i}.ub(vars) = states(:,i);
+
+            % run FBA to verify the solution
+            kosol = fba(models{i});
+            sol.verified(i) = cmpi.is_acceptable_exit(kosol);
+            if ~isempty(kosol.val)
+                sol.adj_vals(i) = kosol.val;
+            end
         end
     end
 else

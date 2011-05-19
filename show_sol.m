@@ -35,6 +35,8 @@ end
     
 x(tiger.vartypes ~= 'c') = round(x(tiger.vartypes ~= 'c'));
 
+fprintf('\n\n');
+
 for i = 1 : length(to_show)
     if tiger.vartypes(to_show(i)) == 'c'
         fmt = '%10s:  %+08f\n';

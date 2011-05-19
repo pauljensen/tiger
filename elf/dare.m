@@ -1,4 +1,8 @@
-function [fluxes] = dare(elf,fold_change,gene_names,alpha,obj_frac)
+function [fluxes] = dare(elf,fold_change,gene_names,alpha,obj_frac,bounds)
+
+if nargin < 6 || isempty(bounds)
+    bounds = [];
+end
 
 [ngenes,ntrans] = size(fold_change);
 assert(ngenes == length(gene_names), ...
@@ -14,11 +18,11 @@ fold_change = fold_change(tf,:);
 
 ngenes = length(genes);
 
-mip = mea(elf,[],true,obj_frac);
+mip = mea(elf,[],true,0);
 mip.Q = (1-alpha) .* mip.Q;
 weights = alpha*(fold_change - 1);
 
-[~,sol] = diffadj(mip,genes,-weights,d,[],[],[],0);
+[~,sol] = diffadj(mip,genes,d,-weights,[],bounds,[],obj_frac);
 
 if ~isempty(sol.x)
     fluxes = cell(1,ntrans+1);
