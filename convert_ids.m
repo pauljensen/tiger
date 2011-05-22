@@ -29,7 +29,7 @@ if isa(ids,'logical')
 elseif isa(ids,'double')
     idxs  = ids;
     logic = ismember(1:length(all_names),idxs);
-    names = all_names(logic);
+    names = all_names(idxs);
 else
     names = ids;
     logic = ismember(all_names,names);
