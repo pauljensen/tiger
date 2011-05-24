@@ -27,7 +27,7 @@ RGM = model.rxnGeneMat;
 rules = model.rules;
 
 % number of genes in each reaction
-N = sum(R,2);
+N = sum(RGM,2);
 
 C = zeros(nrxns,ngenes);
 
