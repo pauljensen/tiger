@@ -9,22 +9,35 @@ properties
     margin = '  ';
     barchar = '=';
     reprint = false;
+    display = true;
 end
 
 methods
-    function [obj] = statusbar(Ntotal)
+    function [obj] = statusbar(Ntotal,display)
         obj.N = Ntotal;
+        
+        if nargin == 2
+            obj.display = display;
+        end
     end
     
     function start(obj,msg)
-        if nargin < 2 || isempty(msg)
-            msg = 'Status';
+        if ~obj.display
+            return;
         end
         
-        fprintf('\n%s:\n%s',msg,obj.getbar(0));
+        if nargin < 2 || isempty(msg)
+            fprintf('\n%s',obj.getbar(0));
+        else
+            fprintf('\n%s:\n%s',msg,obj.getbar(0));
+        end
     end
     
     function update(obj,n)
+        if ~obj.display
+            return;
+        end
+        
         bar = obj.getbar(n);
         if obj.reprint
             fprintf('\n');

@@ -15,21 +15,23 @@ if nargin < 2
     genes = tiger.genes;
 end
 
-[genes,~,~] = convert_ids(genes);
+idxs = convert_ids(tiger.varnames,genes,'index');
 
 N = length(genes);
+statbar = statusbar(N);
 
 grRateKO = zeros(N,1);
 
 sol = fba(tiger);
 grRateWT = sol.val;
 
-[~,loc] = ismember(genes,tiger.varnames);
+statbar.start('Single Gene Deletion status');
 for i = 1 : N
     m = tiger;
-    m.ub(loc(i)) = 0;
+    m.ub(idxs(i)) = 0;
     sol = fba(m);
     grRateKO(i) = sol.val;
+    statbar.update(i);
 end
 
 grRatio = grRateKO / grRateWT;

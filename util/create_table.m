@@ -1,23 +1,20 @@
-function [table] = create_table(data,col_headings,row_headings,varargin)
+function [table] = create_table(data,varargin)
+
+[m,n] = size(data);
 
 p = inputParser;
 p.addParamValue('spacer','  ');
 p.addParamValue('numfmt','%f');
+p.addParamValue('columnlabels',array2names('%i',1:n));
+p.addParamValue('rowlabels',array2names('%i',1:m));
 p.parse(varargin{:});
 
 spacer = p.Results.spacer;
 numfmt = p.Results.numfmt;
+col_headings = p.Results.columnlabels;
+row_headings = p.Results.rowlabels;
 
-[m,n] = size(data);
-
-if nargin < 4
-    spacer = '  ';
-end
-if nargin < 3 || isempty(row_headings)
-    row_headings = array2names('%i',1:m);
-end
-
-if isa(data,'double')
+if ~isa(data,'cell')
     X = cell(m,n);
     for i = 1 : m
         for j = 1 : n
