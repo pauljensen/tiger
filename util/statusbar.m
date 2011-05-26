@@ -7,14 +7,13 @@ properties
     
     show_N = true;
     show_percent = true;
-    show_elapsed_time = false;
-    show_estimated_time = false;
+    show_time = true;
     
     n_before_estimate = 3;
     
     start_tic = [];
     
-    margin = ' ';
+    margin = '  ';
     barchar = '=';
     
     reprint = false;
@@ -58,24 +57,15 @@ methods
         obj.last_update = n;
         
         bar = obj.getbar(n);
-        timebar = obj.get_timebar(n);
         
-        if ~obj.reprint && n > 0
-            if ~isempty(timebar)
-                fprintf(repmat('\b',1,length(timebar)+1));
+        if n > 0
+            if ~obj.reprint
+                fprintf(repmat('\b',1,length(bar)));
+            else
+                fprintf('\n');
             end
-            fprintf(repmat('\b',1,length(bar)));
-        end
-        
-        if obj.reprint
-            fprintf('\n');
         end
         fprintf('%s',bar);
-        
-        if ~isempty(timebar)
-            fprintf('\n%s',timebar);
-        end
-        
         
         if n >= obj.N
             fprintf('\n');
@@ -94,7 +84,14 @@ methods
             trailer = sprintf('%s (%5.1f%%)',trailer,frac*100);
         end
         
-        barwidth = obj.width - 2*length(obj.margin) - length(trailer) - 2;
+        if obj.show_time
+            timebar = obj.get_timebar(n);
+        else
+            timebar = '';
+        end
+        
+        barwidth = obj.width - 2*length(obj.margin) - length(trailer) ...
+                      - length(timebar) - 2;
         filled = ceil(frac*barwidth);
         if filled == barwidth && n == obj.N
             indbar = repmat(obj.barchar,1,barwidth);
@@ -105,44 +102,24 @@ methods
                       repmat(' ',1,barwidth - filled)];
         end
         
-        bar = [obj.margin '[' indbar ']' trailer obj.margin];
+        if ~isempty(timebar)
+            timebar = [timebar ' '];
+        end
+        bar = [obj.margin timebar '[' indbar ']' trailer obj.margin];
     end
     
     function [bar] = get_timebar(obj,n)
-        bar1 = '';
-        bar2 = '';
-        
-        if obj.show_elapsed_time
-            bar1 = sprintf('Elapsed time: %s', ...
-                           statusbar.make_timestr(toc(obj.start_tic)));
-        end
-        
-        if obj.show_estimated_time
-            if n < obj.n_before_estimate
-                timestr = '--:--:--';
-            else
-                elapsed = toc(obj.start_tic);
-                estimate = (obj.N - n) * elapsed / n + (n < obj.N);
-                timestr = statusbar.make_timestr(estimate);
-            end
-            
-            bar2 = sprintf('Remaining time: %s',timestr);
-        end
-        
-        if isempty(bar1) && isempty(bar2)
-            bar = '';
-        elseif isempty(bar1)
-            bar = bar2;
-        elseif isempty(bar2)
-            bar = bar1;
+        if n < obj.n_before_estimate
+            timestr = '--:--:--';
         else
-            bar = [bar1 '  ' bar2];
+            elapsed = toc(obj.start_tic);
+            estimate = (obj.N - n) * elapsed / n + (n < obj.N);
+            timestr = statusbar.make_timestr(estimate);
         end
         
-        if ~isempty(bar)
-            lpad = floor((obj.width - length(bar)) / 2);
-            bar = [repmat(' ',1,lpad) bar];
-        end
+        bar = sprintf('E%s R%s', ...
+                      statusbar.make_timestr(toc(obj.start_tic)), ...
+                      timestr);
     end
 end
 
