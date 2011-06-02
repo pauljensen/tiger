@@ -95,7 +95,7 @@ end
 
 switch solver
     case 'gurobi'
-        opts = mip.options;
+        opts = cmpi.set_gurobi_opts(mip.options);
         if qp
             [opts.QP.qrow,opts.QP.qcol,opts.QP.qval] = find(mip.Q);
             opts.QP.qrow = int32(opts.QP.qrow(:)');

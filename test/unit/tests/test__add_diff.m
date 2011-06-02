@@ -1,4 +1,5 @@
 
+init_test();
 
 tiger = create_empty_tiger();
 

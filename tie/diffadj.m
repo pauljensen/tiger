@@ -62,7 +62,7 @@ if nargin < 8 || isempty(fracs)
 end
 
 if nargin < 9 || isempty(verify)
-    verify = false;
+    verify = true;
 end
 
 vars = convert_ids(milp.varnames,vars,'index');
@@ -184,17 +184,19 @@ if ~mip_error
     [~,bins] = intersect(vars,find(mip.vartypes == 'b'));
     states(bins,:) = round(states(bins,:));
     
+    for i = 1 : ncond
+        % copy models and apply gene states
+        models{i} = milps{i};
+        models{i}.lb(vars) = states(:,i);
+        models{i}.ub(vars) = states(:,i);
+    end
+    
     % verify solutions
     if verify
         sol.verified = false(1,ncond);
         sol.adj_vals = zeros(1,ncond);
         sol.obj_vals = obj_vals;
         for i = 1 : ncond
-            % copy models and apply gene states
-            models{i} = milps{i};
-            models{i}.lb(vars) = states(:,i);
-            models{i}.ub(vars) = states(:,i);
-
             % run FBA to verify the solution
             kosol = fba(models{i});
             sol.verified(i) = cmpi.is_acceptable_exit(kosol);

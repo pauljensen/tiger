@@ -6,7 +6,7 @@ classdef cmpi
 %
 %   CMPI represents a mathematical program as a structure with various
 %   fields.  A description of these fields can be found in the 
-%   documentation for the SOLVE_MILP function (help solve_milp).
+%   documentation for the SOLVE_MIP function (help solve_mip).
     
 
 properties (Constant)
@@ -156,7 +156,6 @@ methods (Static)
     end
     
     % external static methods
-    [sol] = solve_milp(milp,solver)
     [sol] = solve_mip(mip)
     [val] = check_field(field,structure)
     [tf] = verify_sol(milp,sol,tol)
@@ -164,6 +163,7 @@ methods (Static)
     [tf,violators] = check_bounded_rxns(model,sol,tol)
     show_mip(mip,rowidxs,colidxs,rownames,colnames,showvars)
     [opts,cplex] = set_cplex_opts(options,cplex)
+    [opts] = set_gurobi_opts(options)
     [flag] = get_cplex_flag(status)
     [mip] = convert_indicators(mip)
     [mip] = convert_miqp(mip)
