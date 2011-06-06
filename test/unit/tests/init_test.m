@@ -1,3 +1,3 @@
 
 cmpi.init();
-cmpi.set_solver('gurobi');
+cmpi.set_solver('cplex');

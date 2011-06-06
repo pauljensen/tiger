@@ -70,17 +70,7 @@ vars = convert_ids(milp.varnames,vars,'index');
 [nvars,ntrans] = size(w);
 ncond = ntrans + 1;
 
-% check interaction matrix
-if nargin < 5 || isempty(I)
-    % no matrix given; assume 1 -> 2, 2 -> 3, ...
-    I = zeros(ncond);
-    for i = 1 : ntrans
-        I(i,i+1) = i;
-    end
-end
-assert(all(size(I) == [ncond,ncond]), 'I not square or wrong size');
-assert(length(find(I)) == ntrans, 'I does not match w and d');
-assert(all(ismember(1:ntrans,I(:))), 'I is missing transition indices');
+I = check_transition_matrix(I,ncond,ntrans);
 
 % fill out fracs
 fracs = fill_to(fracs,ncond,0.3);
@@ -169,7 +159,7 @@ mip.obj(con_idxs) = con_objs;
 
 sol = cmpi.solve_mip(mip);
 sol.mip = mip;
-sol.I = I;
+sol.T = I;
 
 mip_error = ~cmpi.is_acceptable_exit(sol);
 if ~mip_error
@@ -211,5 +201,5 @@ else
     models = {};
 end
 
-true;
+
 

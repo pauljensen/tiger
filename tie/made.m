@@ -1,5 +1,4 @@
-function [gene_states,genes,sol,models] = ...
-                                    made(tiger,fold_change,pvals,varargin)
+function [sol] = made(tiger,fold_change,pvals,varargin)
 % MADE  Metabolic Adjustment by Differential Expression
 %
 %   [GENE_STATES,GENES,SOL,MODELS] = 
@@ -28,6 +27,8 @@ function [gene_states,genes,sol,models] = ...
 %                   'log'     w(p) = -log(p)
 %                   'linear'  w(p) = 1 - p
 %                   'unit'    w(p) = 1
+%                   'none'    No transformation -- PVALS are weights and
+%                             FOLD_CHANGE is a direction matrix
 %   'bounds'     Structure array of condition-specific bounds.  For
 %                example, BOUNDS{i}.lb and BOUNDS{i}.ub are the lower
 %                and upper bounds for the ith condition.  If not
@@ -43,14 +44,20 @@ function [gene_states,genes,sol,models] = ...
 %   'p_eps'      P-values below P_EPS are considered equal to P_EPS.  This
 %                is used with log weighting to avoid taking the logarithm
 %                of very small P-values.  The default is 1e-10.
-%   'interaction_matrix'   A matrix (I) describing the interaction between
-%                conditions.  If I(i,j) = k, then the kth column in
+%   'transition_matrix'   A matrix (T) describing the interaction between
+%                conditions.  If T(i,j) = k, then the kth column in
 %                FOLD_CHANGE describes the change in expression between
 %                condition i to condition j.  If not given, FOLD_CHANGE
 %                assumes 1 -> 2, 2 -> 3, ..., n-1 -> n.
 %   'remove_rev' Remove reversibility constraints from the model before
 %                converting to a MIP.  May improve performance if activity
 %                cycles are not a concern.  (Default = false)
+%   'theoretical_match'  Calculate the theoretical matches possible and
+%                adjust the match statistics.  (Default = true)
+%   'log_fold_change'  If true, onsider FOLD_CHANGE to be log fold change.
+%                (Default = false)
+%   'return_models'  If true, the models for each condition are returned.
+%                (Default = true)
 %   'verbose'    If true (default), a results table is printed.  Otherwise,
 %                MADE is silent.
 %
@@ -64,6 +71,7 @@ function [gene_states,genes,sol,models] = ...
 %   MODELS      Cell of Cobra model structures with bounds set to
 %               the results of applying GENE_STATES expression levels.
 
+% TODO  don't compute theoretical matches when opt_match is off
 
 % test inputs
 assert(nargin >= 3, 'MADE requires at least three inputs.');
@@ -73,8 +81,6 @@ tiger = assert_tiger(tiger);
 
 ntrans = size(fold_change,2);   % number of transitions
 ncond  = ntrans + 1;            % number of conditions
-
-save_models = (nargout >= 4);
 
 assert(all(size(pvals) == size(fold_change)), ...
        'FOLD_CHANGE and PVALS must have the same dimensions');
@@ -86,7 +92,7 @@ p.addParamValue('gene_names',tiger.genes);
 
 p.addParamValue('obj_frac',0.3);
 
-valid_weights = {'log','linear','unit'};
+valid_weights = {'log','linear','unit','none'};
 p.addParamValue('weighting','log',@(x) ismember(x,valid_weights));
 
 p.addParamValue('bounds',[]);
@@ -97,13 +103,19 @@ pvalidate = @(x) validateattributes(x,'numeric', ...
 p.addParamValue('p_thresh',0.5,pvalidate);
 p.addParamValue('p_eps',1e-10,pvalidate);
 
-p.addParamValue('interaction_matrix',[]);
-
+p.addParamValue('transition_matrix',[]);
 p.addParamValue('remove_rev',false);
+p.addParamValue('theoretical_match',true);
+p.addParamValue('log_fold_change',true);
+p.addParamValue('return_models',true);
 
 p.addParamValue('verbose',true);
 
 p.parse(varargin{:});
+
+verbose = p.Results.verbose;
+
+find_theor = p.Results.theoretical_match;
 
 % find the genes to match
 genes = p.Results.gene_names;
@@ -124,121 +136,122 @@ end
 p_thresh = p.Results.p_thresh;
 p_eps = p.Results.p_eps;
 
-d = zeros(ngenes,ntrans);
-P = pvals;
+if strcmpi(p.Results.weighting,'none')
+    % fold_change is a direction matrix, pvals are weights
+    d = fold_change;
+    w = pvals;
+else
+    d = zeros(ngenes,ntrans);
+    P = pvals;
 
-% convert significant fold changes to differences
-d(fold_change <  1.0 & pvals <= p_thresh) = -1;
-d(fold_change >= 1.0 & pvals <= p_thresh) =  1;
+    if p.Results.log_fold_change
+        % correct for log fold change
+        fold_change = fold_change + 1;
+    end
+    
+    % convert significant fold changes to differences
+    d(fold_change <  1.0 & pvals <= p_thresh) = -1;
+    d(fold_change >= 1.0 & pvals <= p_thresh) =  1;
 
-% shift p-values above p_thresh onto [0, 1-p_thresh]
-P(pvals > p_thresh) = 1 - pvals(pvals > p_thresh);
+    % shift p-values above p_thresh onto [0, 1-p_thresh]
+    P(pvals > p_thresh) = 1 - pvals(pvals > p_thresh);
 
-% convert p-values to weights
-switch lower(p.Results.weighting)
-    case 'log'
-        P(P < p_eps) = p_eps;  % avoid taking log of zero
-        w = -log(P);
-    case 'linear'
-        w = 1 - P;
-    case 'unit'
-        w = ones(size(P));
+    % convert p-values to weights
+    switch lower(p.Results.weighting)
+        case 'log'
+            P(P < p_eps) = p_eps;  % avoid taking log of zero
+            w = -log(P);
+        case 'linear'
+            w = 1 - P;
+        case 'unit'
+            w = ones(size(P));
+    end
 end
 
 bounds = p.Results.bounds;
 objs = p.Results.objs;
 
-I = p.Results.interaction_matrix;
+T = check_transition_matrix(p.Results.transition_matrix,ncond,ntrans);
 
-% create the MILP
-% if p.Results.remove_rev
-%     milp = elf_to_milp(model,true,false);
-% else
-%     milp = elf_to_milp(model,true,true);
-% end
+% determine theoretical matches
+if find_theor
+    if verbose, fprintf('Finding optimal matches...'); end
+    opt_states = zeros(ngenes,ncond);
+    opt_matched = zeros(ngenes,1);
+    for i = 1 : ngenes
+        [opt_states(i,:),~,opt_matched(i)] ...
+            = find_optimal_states(d(i,:),T,w(i,:));
+    end
+    if verbose, fprintf('done\n'); end
+end
 
-% run without growth to determine theoretical matches
-[ unc_states, ~ ,unc_error] ...
-    = diffadj(tiger,gene_locs,d,w,I,bounds,objs,0);
-% run actual MADE
-[gene_states,sol,con_error,milps] ...
-    = diffadj(tiger,gene_locs,d,w,I,bounds,objs,fracs);
+% run MADE
+[gene_states,diffadj_sol,diffadj_error,milps] ...
+    = diffadj(tiger,gene_locs,d,w,T,bounds,objs,fracs);
 
-if unc_error
-    fprintf('Error:  Unconstrained model was infeasible.\n\n');
-elseif con_error
+if diffadj_error
     fprintf('Error:  The model was infeasible.\n\n');
-elseif p.Results.verbose
-    % verify solutions
-    verification_error = any(~sol.verified);
-    if save_models
-        models = cell(1,ncond);
-        for i = 1 : ncond
-            models{i} = tiger;
-            models{i}.lb   = milps{i}.lb;
-            models{i}.ub   = milps{i}.ub;
-            models{i}.obj  = milps{i}.obj;
-        end
-    end
-    
-    ratio = sol.adj_vals ./ sol.obj_vals;
-    
-    fprintf(['\n\nMADE:  ', ...
-             'Metabolic Adjustment by Differential Expression\n']);
-    fprintf('------------------------------------------------------\n\n');
-    
-    fprintf('%i genes found in model with %i conditions.\n\n', ...
-            ngenes, ncond);
-    
-    fprintf('FBA results:\n');
-    if verification_error
-        fprintf('    *** Warning: At least one condition does ***\n');
-        fprintf('    ***  not meet the objective constraint.  ***\n');
-    end
-    fprintf('Condition    Max Obj Flux    Adj Obj Flux    Ratio\n');
-    for i = 1 : ncond
-        fprintf('    %i         %10f      %10f      %3.2f\n',...
-                i, sol.obj_vals(i), sol.adj_vals(i), ratio(i) );
-    end
-    
-    count = @(x) length(find(x));
-
-    T = round( unc_states(:,2:end) -  unc_states(:,1:end-1));
-    D = round(gene_states(:,2:end) - gene_states(:,1:end-1));
-    
-    fprintf('\nGene counts:\n');
-    fprintf('           |  Increasing    Decreasing      Constant\n');
-    fprintf('Transition | Data /  Fit   Data /  Fit   Data /  Fit\n');
-    for i = 1 : ntrans
-        incs = count( d(:,i) ==  1 );
-        incs_matched = count( d(:,i) ==  1 & D(:,i) ==  1 );
-        
-        decs = count( d(:,i) == -1 );
-        decs_matched = count( d(:,i) == -1 & D(:,i) == -1 );
-        
-        cons = count( d(:,i) ==  0 );
-        cons_matched = count( d(:,i) ==  0 & D(:,i) ==  0 );
-        
-        [cond1,cond2] = ind2sub(size(sol.I),find(sol.I(:) == i));
-        fprintf(' %2i ->%2i   | %4i / %4i   %4i / %4i   %4i / %4i\n', ...
-                cond1, cond2, incs, incs_matched, ...
-                              decs, decs_matched, ...
-                              cons, cons_matched );
-    end
-    
-    matches = count( D - d == 0 );
-    all_matches = numel(D);
-    theor_matches = count( T - d == 0 );
-    fprintf('\nTotal match:     %i / %i (%3.1f%%)\n', ...
-            matches, all_matches, matches/all_matches*100 );
-    fprintf('Adjusted match:  %i / %i (%3.1f%%)\n\n', ...
-            matches, theor_matches, matches/theor_matches*100);
+    sol = diffadj_sol;
+    return
 end
 
-% set output on error
-if unc_error || con_error
-    gene_states = [];
-    models = {};
+sol.genes = genes;
+sol.gene_states = gene_states;
+sol.opt_states = opt_states;
+
+sol.condition = cell(1,ncond);
+for i = 1 : ncond
+    sol.condition{i}.max_obj_flux = diffadj_sol.obj_vals(i);
+    sol.condition{i}.adj_obj_flux = diffadj_sol.adj_vals(i);
+    sol.condition{i}.flux_ratio = diffadj_sol.adj_vals(i) ...
+                                      / diffadj_sol.obj_vals(i);
+end
+
+T = diffadj_sol.T;
+D = zeros(size(d));
+if find_theor
+    Dopt = zeros(size(d));
+end
+sol.transition = cell(1,ntrans);
+for i = 1 : ntrans
+    [t.condition1,t.condition2] = find_conditions(i,T);
+    D(:,i) = round(gene_states(:,t.condition2) ...
+                       - gene_states(:,t.condition1));
+    if find_theor
+        Dopt(:,i) = opt_states(:,t.condition2) ...
+                        - opt_states(:,t.condition1);
+    end
+    
+    t.increasing = count( d(:,i) == 1 );
+    t.increasing_matched = count( d(:,i) == 1 & D(:,i) == 1 );
+    
+    t.decreasing = count( d(:,i) == -1 );
+    t.decreasing_matched = count( d(:,i) == -1 & D(:,i) == -1 );
+    
+    t.constant = count( d(:,i) == 0 );
+    t.constant_matched = count( d(:,i) == 0 & D(:,i) == 0 );
+
+    sol.transition{i} = t;
 end
     
-    
+sol.D_data = d;
+sol.D_matched = D;
+sol.D_optimal = Dopt;
+
+sol.total_transitions = numel(d);
+sol.matches = count(D(:) - d(:) == 0);
+sol.theoretical_matches = count(Dopt(:) - d(:) == 0);
+sol.match_percent = sol.matches / sol.total_transitions * 100;
+sol.adjusted_match_percent = sol.matches / sol.theoretical_matches * 100;
+
+if p.Results.return_models
+    sol.models = milps;
+end
+sol.verified = diffadj_sol.verified;
+
+if verbose
+    show_made_results(sol);
+end
+
+
+

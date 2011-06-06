@@ -5,12 +5,14 @@ function [table] = create_table(data,varargin)
 p = inputParser;
 p.addParamValue('spacer','  ');
 p.addParamValue('numfmt','%f');
+p.addParamValue('rowfmt',{});
 p.addParamValue('columnlabels',array2names('%i',1:n));
 p.addParamValue('rowlabels',array2names('%i',1:m));
 p.parse(varargin{:});
 
 spacer = p.Results.spacer;
 numfmt = p.Results.numfmt;
+rowfmt = p.Results.rowfmt;
 col_headings = p.Results.columnlabels;
 row_headings = p.Results.rowlabels;
 
@@ -18,7 +20,11 @@ if ~isa(data,'cell')
     X = cell(m,n);
     for i = 1 : m
         for j = 1 : n
-            X{i,j} = sprintf(numfmt,data(i,j));
+            if isempty(rowfmt)
+                X{i,j} = sprintf(numfmt,data(i,j));
+            else
+                X{i,j} = sprintf(rowfmt{j},data(i,j));
+            end
         end
     end
     data = X;
