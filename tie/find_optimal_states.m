@@ -31,7 +31,7 @@ for i = 0 : 2^(N-1)
     for j = 1 : total
         [cond1,cond2] = find_conditions(j,T);
         if d(j) == 0
-            score = score - w(j)*(states(cond1) == states(cond2));
+            score = score - w(j)*(states(cond1) ~= states(cond2));
         else
             d_obs = states(cond2) - states(cond1);
         	score = score - w(j)*abs(d_obs - d(j));
