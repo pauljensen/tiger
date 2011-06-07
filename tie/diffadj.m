@@ -48,6 +48,11 @@ function [states,sol,mip_error,models] = ...
 %   MIP_ERROR  True if an error was encourtered during the optimization.
 %   MODELS     Models with STATES applied to VARS.
 
+USE_NONBINDING_DIFF = true;
+
+if nargin < 5
+    I = [];
+end
 
 if nargin < 6 || isempty(bounds)
     bounds = [];
@@ -153,9 +158,15 @@ for t = 1 : ntrans
 end
 
 % create constant variables
-[mip,con_vars] = add_diff(mip,con_idx1,con_idx2);
-[~,con_idxs] = convert_ids(mip.varnames,con_vars);
-mip.obj(con_idxs) = con_objs;
+if USE_NONBINDING_DIFF
+    [mip,pos_idxs,neg_idxs] = add_nonbinding_diff(mip,con_idx1,con_idx2);
+    mip.obj(pos_idxs) = con_objs;
+    mip.obj(neg_idxs) = con_objs;
+else
+    [mip,con_vars] = add_diff(mip,con_idx1,con_idx2);
+    [~,con_idxs] = convert_ids(mip.varnames,con_vars);
+    mip.obj(con_idxs) = con_objs;
+end
 
 sol = cmpi.solve_mip(mip);
 sol.mip = mip;
@@ -202,4 +213,32 @@ else
 end
 
 
+function [mip,pos_idxs,neg_idxs] = add_nonbinding_diff(mip,idxs1,idxs2)
+    N = length(idxs1);
+    
+    [m,n] = size(mip.A);
+    
+    pos_idxs = n + (1:N);
+    neg_idxs = n + N + (1:N);
+    
+    plb = zeros(N,1);
+    pub = zeros(N,1);
+    nlb = zeros(N,1);
+    nub = zeros(N,1);
+    varnames = [array2names('nbd_diff_pos%i',pos_idxs); ...
+                array2names('nbd_diff_neg%i',neg_idxs)];
+    
+    for i = 1 : N
+        pub(i) = mip.ub(idxs1(i)) - mip.lb(idxs2(i));
+        nub(i) = mip.ub(idxs2(i)) - mip.lb(idxs1(i));
+    end
+    mip = add_column(mip,varnames,'c',[plb;nlb],[pub;nub]);
+    
+    mip = add_row(mip,N);
+    for i = 1 : N
+        % add constraint var1 - var2 + p_slack - n_slack = 0
+        mip.A(m+i,[idxs1(i) idxs2(i) pos_idxs(i) neg_idxs(i)]) ...
+            = [1 -1 1 -1];
+    end
+    
 

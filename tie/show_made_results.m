@@ -5,7 +5,7 @@ fprintf(['\n\nMADE:  ', ...
 fprintf('------------------------------------------------------\n\n');
 
 fprintf('%i genes found in model with %i conditions.\n\n', ...
-        length(sol.gene_names),length(sol.conditions));
+        length(sol.genes),length(sol.condition));
 
 fprintf('FBA results:\n');
 if ~all(sol.verified)
@@ -13,7 +13,7 @@ if ~all(sol.verified)
     fprintf('    ***  not meet the objective constraint.  ***\n');
 end
 fprintf('Condition    Max Obj Flux    Adj Obj Flux    Ratio\n');
-for i = 1 : length(sol.conditions)
+for i = 1 : length(sol.condition)
     cond = sol.condition{i};
     fprintf('    %i         %10f      %10f      %3.2f\n',...
             i,cond.max_obj_flux,cond.adj_obj_flux,cond.flux_ratio);
