@@ -185,11 +185,10 @@ if ~mip_error
     [~,bins] = intersect(vars,find(mip.vartypes == 'b'));
     states(bins,:) = round(states(bins,:));
     
+    models = cell(1,ncond);
     for i = 1 : ncond
         % copy models and apply gene states
-        models{i} = milps{i};
-        models{i}.lb(vars) = states(:,i);
-        models{i}.ub(vars) = states(:,i);
+        models{i} = set_var(milps{i},vars,[],states(:,i));
     end
     
     % verify solutions

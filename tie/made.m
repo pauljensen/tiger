@@ -245,10 +245,8 @@ sol.match_percent = sol.matches / sol.total_transitions * 100;
 sol.adjusted_match_percent = sol.matches / sol.theoretical_matches * 100;
 
 if p.Results.return_models
-    sol.models = cell(1,ncond);
+    sol.models = milps;
     for i = 1 : ncond
-        % constrain genes in each model
-        sol.models{i} = set_var(milps{i},genes,[],gene_states(:,i));
         % remove the growth constraint
         sol.models{i}.A(end,:) = 0;
         sol.models{i}.b(end) = 0;
