@@ -1,7 +1,9 @@
-function [elf] = cobra_to_elf(cobra)
+function [elf] = cobra_to_elf(cobra,make_gene_inds)
 
-make_gene_inds = false;
-
+if nargin < 2
+    make_gene_inds = false;
+end
+    
 elf = cobra_to_tiger(cobra,false);
 genes = elf.genes;
 ngenes = length(genes);

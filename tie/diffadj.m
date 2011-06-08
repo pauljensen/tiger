@@ -206,6 +206,8 @@ if ~mip_error
             end
         end
     end
+    
+    sol.variables = deparse_sol(sol.x,milps);
 else
     % solver did not return a solution
     states = [];
@@ -241,4 +243,29 @@ function [mip,pos_idxs,neg_idxs] = add_nonbinding_diff(mip,idxs1,idxs2)
             = [1 -1 1 -1];
     end
     
-
+    
+function [vars] = deparse_sol(xall,models)
+    RXN_PRE = 'RXN__';
+    genes = models{1}.genes;
+    ncond = length(models);
+    nrxns = size(models{1}.S,2);
+    nvars = size(models{1}.A,2);
+    
+    vars = cell(1,ncond);
+    
+    rxn_names = map(@(x) [RXN_PRE x],models{1}.varnames(1:nrxns));
+    [rxn_tf,rxn_idxs] = ismember(rxn_names,models{1}.varnames);
+    [~,gene_idxs] = ismember(genes,models{1}.varnames);
+    for i = 1 : ncond
+        x = xall(nvars*(i-1)+(1:nvars));
+        
+        vars{i}.flux = x(1:nrxns);
+        
+        vars{i}.rxn = zeros(nrxns,1);
+        vars{i}.rxn(rxn_tf) = x(rxn_idxs(rxn_tf));
+        vars{i}.rxn(~rxn_tf) = -1;
+        
+        vars{i}.gene = x(gene_idxs);
+    end
+        
+    

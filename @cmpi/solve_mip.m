@@ -44,6 +44,7 @@ function [sol] = solve_mip(mip)
 %                             FeasTol     Feasibility tolerance
 %                             IntFeasTol  Integer feasibility tolerance
 %                             OptTol      Optimality tolerance
+%                             AbsOptTol   Absolute optimality tolerance
 %               Q         Quadratic objective matrix.  If given, the
 %                         problem is solved as a MIQP.  See CONVERT_MIQP
 %                         for details on Q and related fields.
