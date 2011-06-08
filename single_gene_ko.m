@@ -30,6 +30,10 @@ for i = 1 : N
     m = tiger;
     m.ub(idxs(i)) = 0;
     sol = fba(m);
+    if isempty(sol.val)
+        % infeasible; assume lethal
+        sol.val = 0;
+    end
     grRateKO(i) = sol.val;
     statbar.update(i);
 end
