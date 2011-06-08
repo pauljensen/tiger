@@ -245,7 +245,11 @@ sol.match_percent = sol.matches / sol.total_transitions * 100;
 sol.adjusted_match_percent = sol.matches / sol.theoretical_matches * 100;
 
 if p.Results.return_models
-    sol.models = milps;
+    % constrain genes in each model
+    sol.models = cell(1,ncond);
+    for i = 1 : ncond
+        sol.models{i} = set_var(milps{i},[],gene_names,gene_states(:,i));
+    end
 end
 sol.verified = diffadj_sol.verified;
 
