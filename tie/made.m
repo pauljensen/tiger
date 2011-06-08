@@ -253,6 +253,8 @@ if p.Results.return_models
 end
 sol.verified = diffadj_sol.verified;
 
+sol.variables = diffadj_sol.variables;
+
 if verbose
     show_made_results(sol);
 end
