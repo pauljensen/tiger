@@ -1,5 +1,5 @@
 function [ziped] = cellzip(f,a,b)
-% CELLZIP  Zip to cell arrays by a function
+% CELLZIP  Zip two cell arrays by a function
 %
 %   [ZIPED] = CELLZIP(F,A,B)
 %

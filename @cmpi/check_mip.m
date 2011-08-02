@@ -1,8 +1,10 @@
 function [mip] = check_mip(mip)
 % CHECK_MIP  Ensure that the sense, ind, and indtypes fields are filled
 %
+%   [MIP] = CHECK_MIP(MIP)
+%
 %   Checks that the fields 'sense', 'ind', and 'indtypes' fields exist 
-%   and are the correct size.
+%   and are the correct size.  Returns the valided MIP.
 
 m = size(mip.A,1);
 

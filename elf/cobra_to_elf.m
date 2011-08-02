@@ -1,8 +1,37 @@
-function [elf] = cobra_to_elf(cobra,make_gene_inds)
+function [elf] = cobra_to_elf(cobra,varargin)
+% COBRA_TO_ELF  Create an ELF model from a COBRA structure
+%
+%   [ELF] = COBRA_TO_ELF(COBRA,...params...)
+%
+%   Create an ELF model structure from an existing COBRA structure.  The
+%   following naming conventions are used for rows and columns added to 
+%   the model:
+%       Columns:
+%           RGB(i)_v    The ith RGB for reaction v.
+%           v__f        Forward portion of a reversible reaction.
+%           v__r        Reverse portion of a reversible reaction.
+%           v_FOR_IND   Indicator; true if a forward portion carries flux.
+%           v_REV_IND   Indicator; true if a reverse portion carries flux.
+%
+%       If the parameter 'gene_indicators' is true (default = false), a
+%       set of indicator variables I_x are added for each gene x.  These
+%       variables are bound to the gene activities.  A function handle
+%       'indof' is added to ELF, where indof(gene) is the index of I_gene.
+%
+%       Rows:
+%           SUM_RGB_v   Original flux v must sum to the fluxes of all 
+%                       corresponding RGBs.
+%           SUM_FR_v    Original flux v must sum to the forward minus
+%                       reverse reations.
+%           ELF_REV_CON1 - ELF_REV_CON3  Reversibility constraints; a
+%                       forward and reverse reaction cannot both carry
+%                       flux in the same solution vector.
 
-if nargin < 2
-    make_gene_inds = false;
-end
+p = inputParser;
+p.addParamValue('gene_indicators',false);
+p.parse();
+
+make_gene_inds = p.Results.gene_indicators;
     
 elf = cobra_to_tiger(cobra,false);
 genes = elf.genes;

@@ -1,7 +1,7 @@
 function [tiger,sol] = add_growth_constraint(tiger,val,varargin)
 % ADD_GROWTH_CONSTRAINT  Add minimum growth constraint to a model.
 %
-%   [TIGER] = ADD_GROWTH_CONSTRAINT(TIGER,VAL,...params...)
+%   [TIGER,SOL] = ADD_GROWTH_CONSTRAINT(TIGER,VAL,...params...)
 %
 %   Adds a constraint that requires a minimum flux through the objective
 %   reaction.

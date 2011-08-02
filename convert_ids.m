@@ -17,10 +17,13 @@ function [names,idxs,logic] = convert_ids(all_names,ids,type)
 %   Example:
 %       all_names = {'a','b','c','d'};
 %       ids = [2 4];
-%       [n,i,l] = convert_ids(all_names,ids);
-%           n = {'b','d'};
-%           i = [2 4];
-%           l = [0 1 0 1];
+%       [n,i,l] = convert_ids(all_names,ids)
+%           n = {'b','d'}
+%           i = [2 4]
+%           l = [0 1 0 1]
+%
+%       idx = convert_ids(all_names,'c','index')
+%           idx = 3
 
 if isa(ids,'logical')
     logic = ids;

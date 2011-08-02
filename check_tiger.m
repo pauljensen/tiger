@@ -1,8 +1,10 @@
 function [tiger] = check_tiger(tiger)
 % CHECK_TIGER  Check size and orientation of TIGER fields
 %
+%   [TIGER] = CHECK_TIGER(TIGER)
+%
 %   Checks that fields in a TIGER model structure are the correct size 
-%   and orientation.
+%   and orientation.  Returns the validated TIGER model.
 
 col_fields = {'b','lb','ub','obj','varnames','rownames', ...
               'vartypes','ctypes','ind','indtypes'};
