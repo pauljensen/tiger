@@ -1,4 +1,6 @@
 function show_made_results(sol,varargin)
+% SHOW_MADE_RESULTS  
+
 
 SUMMARY = 1;
 DEBUG = 2;

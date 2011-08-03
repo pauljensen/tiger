@@ -1,4 +1,12 @@
 function show_exchange_rxns(model,sol)
+% SHOW_EXCHANGE_RXNS  Show exchange reactions (and fluxes)
+%
+%   SHOW_EXCHANGE_RXNS(MODEL)
+%   SHOW_EXCHANGE_RXNS(MODEL,SOL)
+%
+%   Shows the metabolite name and index of exchange reactions in MODEL.
+%   If a solution structure or flux vector SOL is given, only nonzero
+%   fluxes are displayed (with the corresponding flux value).
 
 show_flux = nargin >= 2;
 

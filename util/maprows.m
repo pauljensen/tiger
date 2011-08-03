@@ -4,7 +4,7 @@ function [mapped] = maprows(f,M,ncols)
 %   [MAPPED] = MAPROWS(F,M) applies the function F to each row in M:
 %       MAPPED(i,:) = F(M(i,:)) for each i
 %
-%   MAPCOLS(F,M,NCOLS) specifies the number of columns returned by F.
+%   MAPROWS(F,M,NCOLS) specifies the number of columns returned by F.
 
 if nargin < 3 || isempty(ncols)
     ncols = size(M,2);

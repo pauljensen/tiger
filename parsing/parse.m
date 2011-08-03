@@ -1,4 +1,16 @@
 function [expression] = parse(tokens,levels,unary)
+% PARSE  Parse a sequence of TOKEN objects
+%
+%   [EXPRESSION] = PARSE(TOKENS,LEVLES,UNARY)
+%
+%   Parse a cell of TOKEN objects (TOKENS) to create an EXPR object.
+%
+%   LEVELS is a cell specifying the operator precedence.  Each entry is a
+%   cell containing strings identifying an operator at the current level.
+%   The LEVELS{1} contains the operators of highest precedence.
+%
+%   UNARY is a cell of operators that should be treated as unary and
+%   prefix.  All other operators are assumed to be binary infix.
 
 expression = parse_aux();
 
