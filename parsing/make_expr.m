@@ -1,4 +1,14 @@
 function [ex] = make_expr(e1,op,e2)
+% MAKE_EXPR  Make an EXPR cons object from tokens
+%
+%   [EX] = MAKE_EXPR(E1)
+%   [EX] = MAKE_EXPR(E1,OP,E2)
+%
+%   If one object (E1) is given, an atom is created and returned.  If E1
+%   is already an expression, it is returned unchanged.
+%
+%   If two tokens (E1 and E2) are given, they are cons-ed with the
+%   operator string OP; the resulting compound expression is returned.
 
 if nargin == 1
     if isa(e1,'token')

@@ -1,6 +1,23 @@
 function [sol] = fba(tiger,fluxnorm,obj_frac)
 % FBA  Run Flux Balance Analysis on a TIGER model.
-%      Returns a CMPI solution structure.
+%
+%   [SOL] = FBA(TIGER)
+%   [SOL] = FBA(TIGER,FLUXNORM,OBJ_FRAC)
+%
+%   Run Flux Balance Analysis on a TIGER model, returning a CMPI solution
+%   structure.  If given, FLUXNORM specifies the norm to be minimized;
+%   choices include 
+%       'none' (default):
+%           maximize obj*v
+%           s.t. Sv = 0
+%                lb <= v <= ub
+%       'two' (Euclidian)
+%           minimize v'*v
+%           s.t. Sv = 0
+%                lb <= v <= ub
+%                obj*v >= OBJ_FRAC*v_max
+%
+%   Unless specified, OBJ_FRAC defaults to 1.0.
 
 if nargin < 3
     obj_frac = 1.0;

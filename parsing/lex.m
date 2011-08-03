@@ -1,5 +1,5 @@
 function [tokens] = lex(str)
-% TODO add support for quoted strings
+% LEX  Return a list of TOKENS from a string
 
 op_subs = { 'and', {'and','AND','&&','&'}, ...
             'or' , {'or','OR','||','|'}, ...

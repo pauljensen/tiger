@@ -1,4 +1,18 @@
 function [and_lists] = make_dnf(ex,names_only)
+% MAKE_DNF  Make lists of atoms in the Disjunctive Normal Form
+%
+%   [AND_LISTS] = MAKE_DNF(EX)
+%   [AND_LISTS] = MAKE_DNF(EX,NAMES_ONLY)
+%
+%   Splits an expression EX into a series of ATOM lists.  Each list
+%   corresponds to a disjunction in the form
+%       EX <=> (list1) or (list2) or (list3) or ...
+%   where
+%       list1 <=> AND_LISTS{1}{1} & AND_LISTS{1}{2} & ...
+%
+%   AND_LISTS is a cell array of ATOM cells.  If NAMES_ONLY is true
+%   (default = false), then only the names of the atoms are returned, not
+%   the entire ATOM object.
 
 if nargin < 2
     names_only = false;

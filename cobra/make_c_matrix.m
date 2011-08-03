@@ -1,4 +1,22 @@
 function [C,model] = make_c_matrix(model,varargin)
+% MAKE_C_MATRIX  Make reaction/gene correlation (C) matrix
+%
+%   [C,MODEL] = MAKE_C_MATRIX(MODEL,...params...)
+%
+%   Creates C, a |rxns| x |genes| matrix containing a correlation 
+%   coefficient between a reaction and the genes in the corresponding GPR.
+%   MODEL is returned with C additional fields used in the calculation
+%   (rxnGeneMat and rules).
+%
+%   Parameters
+%   'normalize'  If true, the entries for each reaction are normalized to
+%                sum to one.
+%   'cutoff'     If a GPR contains more than 'cutoff' genes, the
+%                coefficients are estimated by Monte Carlo sampling.
+%                (Default = 10)
+%   'samples'    If Monte Carlo sampling is used, 'samples' number of 
+%                draws are taken.  (Default = 1000)
+%   'verbose'    If true (default = false), a status bar is displayed.
 
 p = inputParser();
 p.addParamValue('normalize',true);
@@ -32,8 +50,10 @@ N = sum(RGM,2);
 C = zeros(nrxns,ngenes);
 
 x = zeros(ngenes,1);
+statbar = statusbar(nrxns,verbose);
+statbar.start('C Matrix calculation');
 for r = 1 : nrxns
-    if verbose, disp(r); end
+    statbar.update(r);
     
     if isempty(rules{r})
         continue;
@@ -82,6 +102,10 @@ if normalize
         Cmax = max(C(i,:));
         C(i,:) = (C(i,:) - Cmin) / (Cmax - Cmin);
     end
+end
+
+if nargout > 1
+    model.C = C;
 end
 
 
