@@ -68,20 +68,56 @@ if to_show(SUMMARY)
 end
 
 if to_show(DEBUG)
+    N_RXNS_SHOW = 10;
+    
     % debuging reactions
     vars = sol.variables{1};
     off_rxns = round(vars.rxn) == 0 & vars.flux ~= 0.0;
-    fluxes = vars.flux;
-    fluxes(~off_rxns) = 0;
-    [~,I] = sort(abs(fluxes(:)),1,'descend');
-    for i = 1 : 10
-        fprintf('%i  %1.10f  %1.10f\n',I(i),fluxes(I(i)),vars.rxn(I(i)));
+    if any(off_rxns)
+        fluxes = vars.flux;
+        fluxes(~off_rxns) = 0;
+        [~,I] = sort(abs(fluxes(:)),1,'descend');
+        for i = 1 : min([N_RXNS_SHOW,count(off_rxns)])
+            fprintf('%i  %1.10f  %1.10f\n', ...
+                    I(i),fluxes(I(i)),vars.rxn(I(i)));
+        end
+    else
+        fprintf('\nNo flux found through non-integral reactions.\n\n');
     end
-    
 end
 
 if to_show(GENES)
     % show condition lists
+    [ngenes,ncond] = size(sol.gene_states);
+    data = cell(ngenes,2*ncond - 1);
+    columnlabels = cell(1,2*ncond - 1);
+    for g = 1 : ngenes
+        for i = 1 : ncond
+            data{g,2*(i-1)+1} = num2str(sol.gene_states(g,i));
+            columnlabels{2*(i-1)+1} = num2str(i);
+            columnlabels{2*(i-1)+2} = ' ';
+            
+            if i == ncond
+                break;
+            end
+            
+            if sol.D_data(g,i) == 1
+                spacer = ' / ';
+            elseif sol.D_data(g,i) == -1
+                spacer = ' \ ';
+            else
+                spacer = ' - ';
+            end
+            if sol.D_matched(g,i) ~= sol.D_data(g,i)
+                spacer([1 3]) = '**';
+            end
+            data{g,2*(i-1)+2} = spacer;
+        end
+    end
+    
+    fprintf('\nGene states (* indicates transition mismatch)\n');
+    create_table(data,'rowlabels',sol.genes,'columnlabels',columnlabels)
+    fprintf('\n\n');
 end
 
 
