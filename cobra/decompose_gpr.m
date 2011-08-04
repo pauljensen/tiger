@@ -1,4 +1,5 @@
 function decompose_gpr(cobra)
+% DECOMPOSE_GPR  Show summary statistics on the GPR of a COBRA model
 
 byg = sum(cobra.rxnGeneMat,1);
 byr = sum(cobra.rxnGeneMat,2);

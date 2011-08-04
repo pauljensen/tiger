@@ -40,11 +40,15 @@ function [states,sol,mip_error,models] = ...
 %   STATES     A |variables| x |conditions| matrix of states (levels) for
 %              each variable in each condition.
 %   SOL        Solution object from CMPI.  Contains the additional fields
-%                  'obj_vals' Objective values through original models
-%                  'adj_vals' Objective values through adjusted models
-%                  'verified' True if obj_val(i) >= FRAC(i)*c'x_max
-%                  'mip'      Full MIP structure
-%                  'I'        Interaction matrix
+%                  'obj_vals'  Objective values through original models
+%                  'adj_vals'  Objective values through adjusted models
+%                  'verified'  True if obj_val(i) >= FRAC(i)*c'x_max
+%                  'mip'       Full MIP structure
+%                  'I'         Interaction matrix
+%                  'variables' Variable structure with fields:
+%                       'flux'  Reaction fluxes
+%                       'rxn'   Reaction indicator variables
+%                       'gene'  Gene indicator variables
 %   MIP_ERROR  True if an error was encourtered during the optimization.
 %   MODELS     Models with STATES applied to VARS.
 

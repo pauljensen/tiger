@@ -6,6 +6,9 @@ tiger = add_column(tiger,{'a','b','c','x','y','z'},'bbbiii', ...
                          [0;0;0;0;0;0],[1;1;1;2;2;3],[],[]);
 tiger = add_row(tiger,3);
 
+tiger.genes = tiger.varnames;
+tiger.S = tiger.A;
+
 vars = 1:6;
 
 %     1   2   3

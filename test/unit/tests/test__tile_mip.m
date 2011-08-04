@@ -18,7 +18,7 @@ sol3 = cmpi.solve_mip(t3);
 
 n = size(tiger.A,2);
 
-milp = cmpi.tile_milp(t1,t2,t3);
+milp = cmpi.tile_mip(t1,t2,t3);
 sol = cmpi.solve_mip(milp);
 val1 = t1.obj'*sol.x(1:n);
 val2 = t2.obj'*sol.x(n+1:2*n);

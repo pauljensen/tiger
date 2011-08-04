@@ -1,8 +1,7 @@
 function [sol] = made(tiger,fold_change,pvals,varargin)
 % MADE  Metabolic Adjustment by Differential Expression
 %
-%   [GENE_STATES,GENES,SOL,MODELS] = 
-%       MADE(TIGER,FOLD_CHANGE,PVALS,...parameters...)
+%   [SOL] = MADE(TIGER,FOLD_CHANGE,PVALS,...parameters...)
 %
 %   Integrate gene expression data with metabolic models using the MADE
 %   algorithm [Jensen & Papin (2011), Bioinformatics].
@@ -61,15 +60,48 @@ function [sol] = made(tiger,fold_change,pvals,varargin)
 %   'verbose'    If true (default), a results table is printed.  Otherwise,
 %                MADE is silent.
 %
-%   Outputs
-%   GENE_STATES Binary expression states calculated by MADE.  Columns
+%   Output is a solution structure with the following fields:
+%   output      Solution structure with details from the MILP solver.
+%   gene_states Binary expression states calculated by MADE.  Columns
 %               correspond to conditions, rows are genes in both
 %               the model and the expression data.
-%   GENES       Cell of gene names corresponding to the rows in
-%               GENE_STATES.
-%   SOL         Solution structure with details from the MILP solver.
-%   MODELS      Cell of Cobra model structures with bounds set to
-%               the results of applying GENE_STATES expression levels.
+%   opt_states  Optimal binary expression states.  If no growth constraint
+%               was enforced, these would be the same as 'gene_states'.
+%   genes       Cell of gene names corresponding to the rows in
+%               'gene_states'.
+%   models      Cell of TIGER model structures with bounds set to
+%               the results of applying 'gene_states' expression levels.
+%   condition   Cell array of structures with fields:
+%                   max_obj_flux  Maximum objective fluxes for each
+%                                 condition.
+%                   adj_obj_flux  Adjusted objective fluxes after applying
+%                                 expression data.
+%                   flux_ratio    Ratio between adjusted and maximum
+%                                 objective fluxes.
+%   transition  Cell array of structures with fields:
+%                   increasing, increasing_matched
+%                       Number of gene increasing in transation, and the
+%                       number that were matched.
+%                   decreasing, decreasing_matched
+%                       Number of decresing genes.
+%                   constant, constant_matched
+%                       Number of genes with constant expression.
+%   D_data      Differences in expression in the expression data.  '1'
+%               indicates a significant increase, '-1' is a significant
+%               decrease in expression, and '0' is no significant change.
+%   D_matched   Same as for 'D_data', but for the gene states returned by
+%               MADE.
+%   D_optimal   Same as for 'D_data', but for the optimal gene alignment.
+%   total_transitions   Total number of transitions (number of genes times
+%                       the number of transitions.
+%   matched             Total number of transitions matched by MADE.
+%   theoretical_matches Total number of matches in the optimal alignment.
+%   match_percent           'matched' / 'total_transitions' * 100
+%   adjusted_match_percent  'matched' / theoretical_matches' * 100
+%   verified    Logical array indicating if the model for each condition
+%               can carry the minimum objective flux.
+%   variables   Variable cell array returned by DIFFADJ.
+%               See 'help diffadj' for more details.
 
 % TODO  don't compute theoretical matches when opt_match is off
 
@@ -194,6 +226,8 @@ if diffadj_error
     sol = diffadj_sol;
     return
 end
+
+sol.output = diffadj_sol;
 
 sol.genes = genes;
 sol.gene_states = gene_states;

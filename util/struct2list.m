@@ -1,4 +1,14 @@
 function [list] = struct2list(s)
+% STRUCT2LIST  Convert a structure to a parameter list
+%
+%   [LIST] = STRUCT2LIST(S)
+%
+%   Example:
+%   >> S.A = 1;
+%   >> S.B = 'test';
+%   >> struct2list(S)
+%   ans = 
+%       'A'   [1]   'B'   'test'
 
 names = fieldnames(s);
 Nnames = length(names);

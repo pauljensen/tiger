@@ -1,6 +1,17 @@
 function show_made_results(sol,varargin)
-% SHOW_MADE_RESULTS  
-
+% SHOW_MADE_RESULTS  Summarize results from the MADE algorithm
+%
+%   SHOW_MADE_RESULTS(SOL,...params...)
+%
+%   Displays a summary of the results from the MADE algorithm.  SOL is the
+%   solution structure returned by MADE.  The following parameters
+%   determine the information shown:
+%       'summary'  (default) Objective values for unconstrained and
+%                  adjusted models, counts of transitions matched for each
+%                  condition.
+%       'debug'    Show reactions that are "off" which carry nonzero flux.
+%                  Used to identify integrality errors.
+%       'all'      Show all of the above.
 
 SUMMARY = 1;
 DEBUG = 2;

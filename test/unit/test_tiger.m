@@ -1,4 +1,8 @@
 function test_tiger()
+% TEST_TIGER  Run unit tests on the TIGER package
+%
+%   Before running this function, move to the TIGER/test/unit directory.
+%   Unit tests are located in TIGER/test/unit/tests.
 
 home;
 fprintf('\nTIGER unit testing:\n\n');
