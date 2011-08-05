@@ -5,7 +5,8 @@ function [table] = create_table(data,varargin)
 %
 %   Create and display a matrix or cell array DATA in tabular form.
 %   Parameters are:
-%       'spacer'    String placed between columns of data.  Default is ''.
+%       'spacer'    String placed between columns of data.
+%                   (Default is '  ')
 %       'numfmt'    If DATA is a matrix, this format string is used to
 %                   convert the entries to strings.  Default is '%f'.
 %       'rowfmt'    A cell array of format strings, one for each column in

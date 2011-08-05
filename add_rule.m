@@ -345,10 +345,10 @@ function add_var(name,lb,ub)
         
     % if user specified bounds, change from default
     if ~isempty(user_bounds)
-        [tf,loc] = ismember(user_bounds.names,names);
+        [tf,loc] = ismember(user_bounds{1},names);
         if any(tf)
-            lbs(loc(tf)) = user_bounds.lb(tf);
-            ubs(loc(tf)) = user_bounds.ub(tf);
+            lbs(loc(tf)) = user_bounds{2}(tf);
+            ubs(loc(tf)) = user_bounds{3}(tf);
         end
     end
     

@@ -97,7 +97,7 @@ function [sol] = made(tiger,fold_change,pvals,varargin)
 %   matched             Total number of transitions matched by MADE.
 %   theoretical_matches Total number of matches in the optimal alignment.
 %   match_percent           'matched' / 'total_transitions' * 100
-%   adjusted_match_percent  'matched' / theoretical_matches' * 100
+%   adjusted_match_percent  'matched' / 'theoretical_matches' * 100
 %   verified    Logical array indicating if the model for each condition
 %               can carry the minimum objective flux.
 %   variables   Variable cell array returned by DIFFADJ.

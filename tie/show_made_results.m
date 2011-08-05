@@ -77,13 +77,16 @@ if to_show(DEBUG)
         fluxes = vars.flux;
         fluxes(~off_rxns) = 0;
         [~,I] = sort(abs(fluxes(:)),1,'descend');
+        fprintf('\nOff reactions with highest flux:\n');
+        fprintf('  Rxn             Flux        Indicator\n');
         for i = 1 : min([N_RXNS_SHOW,count(off_rxns)])
-            fprintf('%i  %1.10f  %1.10f\n', ...
+            fprintf('%5i  %15f  %15f\n', ...
                     I(i),fluxes(I(i)),vars.rxn(I(i)));
         end
     else
-        fprintf('\nNo flux found through non-integral reactions.\n\n');
+        fprintf('\nNo flux found through non-integral reactions.\n');
     end
+    fprintf('\n');
 end
 
 if to_show(GENES)
@@ -104,12 +107,12 @@ if to_show(GENES)
             if sol.D_data(g,i) == 1
                 spacer = ' / ';
             elseif sol.D_data(g,i) == -1
-                spacer = ' \ ';
+                spacer = ' \\ ';
             else
                 spacer = ' - ';
             end
             if sol.D_matched(g,i) ~= sol.D_data(g,i)
-                spacer([1 3]) = '**';
+                spacer([1 end]) = '**';
             end
             data{g,2*(i-1)+2} = spacer;
         end
