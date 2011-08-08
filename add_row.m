@@ -69,4 +69,6 @@ tiger.rownames(locs) = name;
 tiger.ind(locs) = ind;
 tiger.indtypes(locs) = indtype;
 
+tiger.param.rule_id(end+(1:N)) = 0;
+
 tiger = check_tiger(tiger);

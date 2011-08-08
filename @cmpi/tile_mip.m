@@ -21,8 +21,10 @@ if N == 0
     error('at least one mip must be provided');
 end
 
+% copy all parameters
+mip = mips{1};
+
 if N == 1
-    mip = mips{1};
     return;
 end
 

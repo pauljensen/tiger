@@ -17,3 +17,6 @@ tiger.ind = [];
 tiger.indtypes = '';
 
 tiger.param.ind = 0;
+tiger.param.fixedvar = [];
+tiger.param.rules = {};
+tiger.param.rule_id = [];

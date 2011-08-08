@@ -30,9 +30,8 @@ end
 switch fluxnorm
     case {'none','fba'}
         % standard FBA
-        milp = make_milp(tiger);
-        milp.sense = -1;
-        sol = cmpi.solve_mip(milp);
+        tiger.sense = -1;
+        sol = cmpi.solve_mip(tiger);
     case {'euclid','two','quad'}
         % Euclidian norm
         tiger = add_growth_constraint(tiger,obj_frac);

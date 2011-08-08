@@ -43,6 +43,11 @@ function [tiger] = add_rule(tiger,rule,varargin)
 %                 variable names.  Default is 'NOT__'.
 %   'numeric'     If true, atoms resembling numeric constants are parsed
 %                 as such.  (default = true)
+%   'keep_rules'  If true (default), ADD_RULE remembers which rows were
+%                 created to compile each rule.  These associations are
+%                 stored in TIGER.param.rule_id, which if
+%                 TIGER.param.rule_id(i) = j, then row i was created to
+%                 parse the rule TIGER.param.rules{j}.
 
 assert(nargin >= 2, 'ADD_RULE requires at least two inputs.');
 
@@ -74,6 +79,8 @@ p.addParamValue('not_type','inverted',valid_not_type);
 
 p.addParamValue('numeric',true);
 
+p.addParamValue('keep_rules',true);
+
 p.parse(varargin{:});
 
 IND_PRE = p.Results.ind_prefix;
@@ -89,6 +96,8 @@ default_ub = p.Results.default_ub;
 user_bounds = p.Results.bounds;  % TODO: add support for user bounds
 
 parse_numeric = p.Results.numeric;
+
+keep_rules = p.Results.keep_rules;
 
 % rule parsing
 rules = assert_cell(rule);
@@ -126,7 +135,16 @@ indtypes = tiger.indtypes;
 roff = size(A,1);  % row offset for adding constraints
 
 % simplify the rules and convert to inequalities
-cellfun(@simplify_rule,rules);
+for i = 1 : N
+    if keep_rules
+        current_rule_id = i;
+    else
+        current_rule_id = 0;
+    end
+    
+    simplify_rule(rules{i});
+end
+tiger.param.rules(end+(1:N)) = rules;
 
 % add new entries to the TIGER model
 Nvars_added = size(A,2) - orig_n;
@@ -464,6 +482,9 @@ function simple_rule_to_ineqs(r)
         ctypes(roff) = ctype;
         ind(roff) = 0;
         indtypes(roff) = ' ';
+        
+        % assign the row to a rule
+        tiger.param.rule_id(roff) = current_rule_id;
     end   
 end
 

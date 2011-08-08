@@ -79,6 +79,8 @@ if isfield(tiger,'Qc') && ~isempty(tiger.Qc)
     tiger.Qc.c(n+N) = 0;
 end 
 
+tiger.param.fixedvar(end+(1:N)) = false;
+
 tiger = check_tiger(tiger);
 
 if nargout > 1
