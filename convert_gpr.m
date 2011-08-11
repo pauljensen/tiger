@@ -4,7 +4,23 @@ function [tiger] = convert_gpr(tiger,varargin)
 %   [TIGER] = CONVERT_GPR(TIGER,...ADD_RULE params...)
 %
 %   Each GPR expression is converted to a rule and added to the model.
-%   Extra parameters will be passed to the ADD_RULE function.
+%
+%   Params
+%   'status'        If true (default = false), display progress indicators
+%                   for the conversion.
+%   'parse_string'  Cell of parameters to pass to PARSE_STRING.
+%   'add_rule'      Cell of parameters to pass to ADD_RULE.
+
+p = inputParser;
+p.addParamValue('status',false);
+p.addParamValue('parse_string',{});
+p.addParamValue('add_rule',{});
+p.parse(varargin{:});
+
+parse_string_params = p.Results.parse_string;
+add_rule_params = p.Results.add_rule;
+
+status = p.Results.status;
 
 tiger = assert_tiger(tiger);
 
@@ -26,5 +42,8 @@ gpr_rules = cellzip(@(x,y) [x ' <=> "' y '"'],tiger.gpr(rxns),rxn_names);
 %tiger.lb = [tiger.lb; zeros(Nrxns+Ngenes,1)];
 %tiger.ub = [tiger.ub;  ones(Nrxns+Ngenes,1)];
 
-tiger = add_rule(tiger,gpr_rules,varargin{:});
+args = {add_rule_params{:}, ...
+        'parse_string',{parse_string_params{:},'status',status}, ...
+        'status',status};
+tiger = add_rule(tiger,gpr_rules,args{:});
 tiger = bind_var(tiger,tiger.varnames(rxns),rxn_names);

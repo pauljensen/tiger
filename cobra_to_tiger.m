@@ -1,22 +1,15 @@
-function [tiger] = cobra_to_tiger(cobra,add_gpr,varargin)
+function [tiger] = cobra_to_tiger(cobra,varargin)
 % COBRA_TO_TIGER  Convert a COBRA model to a TIGER model
 %
 %   [TIGER] = COBRA_TO_TIGER(COBRA,CONVERT_GPR,...ADD_RULE params...)
 %
 %   Convert a COBRA model structure to a TIGER model structure.
 %
-%   Inputs
-%   COBRA        COBRA toolbox model structure
-%   CONVERT_GPR  If true, add the GPR constraints as rules.
-%                (default = true)
-%   params       Extra parameters are passed to ADD_RULE.
-%
-%   Outputs
-%   TIGER        TIGER model structure.
-
-if nargin < 2 || isempty(add_gpr)
-    add_gpr = true;
-end
+%   Params (passed to CONVERT_GPR)
+%   'status'        If true (default = false), display progress indicators
+%                   for the conversion.
+%   'parse_string'  Cell of parameters to pass to PARSE_STRING.
+%   'add_rule'      Cell of parameters to pass to ADD_RULE.
 
 tiger = rmfield(cobra,'c');
 
@@ -50,20 +43,19 @@ tiger.genes = cobra.genes(:);
 tiger.ind = zeros(m,1);
 tiger.indtypes = repmat(' ',m,1);
 
-if add_gpr
-    % reset bounds
-    orig_N = size(cobra.S,2);
-    orig_lb = tiger.lb;
-    orig_ub = tiger.ub;
+% add the GPR
+% reset bounds
+orig_N = size(cobra.S,2);
+orig_lb = tiger.lb;
+orig_ub = tiger.ub;
 
-    tiger.lb(:) = min(tiger.lb);
-    tiger.ub(:) = max(tiger.ub);
-    
-    tiger = convert_gpr(tiger,varargin{:});
-    
-    tiger.lb(1:orig_N) = orig_lb;
-    tiger.ub(1:orig_N) = orig_ub;
-end
+tiger.lb(:) = min(tiger.lb);
+tiger.ub(:) = max(tiger.ub);
+
+tiger = convert_gpr(tiger,varargin{:});
+
+tiger.lb(1:orig_N) = orig_lb;
+tiger.ub(1:orig_N) = orig_ub;
 
 
 

@@ -55,7 +55,7 @@ weights = p.Results.weights;
 RXN_PRE = 'RXN__';
 
 model = extract_cobra(model);
-tiger = cobra_to_tiger(model,true,'default_ub',2);
+tiger = cobra_to_tiger(model,'add_rule',{'default_ub',2});
 
 if frac > 0
     tiger = add_growth_constraint(tiger,frac);

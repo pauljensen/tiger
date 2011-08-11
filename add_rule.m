@@ -19,35 +19,38 @@ function [tiger] = add_rule(tiger,rule,varargin)
 %   TIGER   TIGER model structure with rules added.
 %
 %   Parameters
-%   'default_lb'  Default lower bound for new variables found in the 
-%                 rules.  Default is 0.
-%   'default_ub'  Default upper bound for new variables found in the 
-%                 rules.  Default is 1.
-%   'bounds'      Cell specifing upper and lower bounds for new variables.
-%                 The first entry is a cell of variable names.  The second
-%                 and third entries are vectors containing the lower and
-%                 upper bounds for each variable name.  If a atom name is
-%                 found in the rules that is not listed, the default 
-%                 bounds are used.
-%   'not_type'    Type of NOT indicator to use for multilevel variables.
-%                 Options are
-%                     'inverted'  NOT x =  x_max - x  (default)
-%                     'binary'    NOT x =  1  if x > 0
-%                                          0  otherwise
-%   'ind_prefix'  String denoting the prefix used when creating indicator
-%                 variable names.  Default is 'I'.
-%   'ind_width'   Integer denoting the number of digits used to create
-%                 indicator variable names.  Extra places will be zero-
-%                 padded.  Default is 4.
-%   'not_prefix'  String denoting the prefix used when creating negated
-%                 variable names.  Default is 'NOT__'.
-%   'numeric'     If true, atoms resembling numeric constants are parsed
-%                 as such.  (default = true)
-%   'keep_rules'  If true (default), ADD_RULE remembers which rows were
-%                 created to compile each rule.  These associations are
-%                 stored in TIGER.param.rule_id, which if
-%                 TIGER.param.rule_id(i) = j, then row i was created to
-%                 parse the rule TIGER.param.rules{j}.
+%   'default_lb'   Default lower bound for new variables found in the 
+%                  rules.  Default is 0.
+%   'default_ub'   Default upper bound for new variables found in the 
+%                  rules.  Default is 1.
+%   'bounds'       Cell specifing upper and lower bounds for new variables.
+%                  The first entry is a cell of variable names.  The second
+%                  and third entries are vectors containing the lower and
+%                  upper bounds for each variable name.  If a atom name is
+%                  found in the rules that is not listed, the default 
+%                  bounds are used.
+%   'not_type'     Type of NOT indicator to use for multilevel variables.
+%                  Options are
+%                      'inverted'  NOT x =  x_max - x  (default)
+%                      'binary'    NOT x =  1  if x > 0
+%                                           0  otherwise
+%   'ind_prefix'   String denoting the prefix used when creating indicator
+%                  variable names.  Default is 'I'.
+%   'ind_width'    Integer denoting the number of digits used to create
+%                  indicator variable names.  Extra places will be zero-
+%                  padded.  Default is 4.
+%   'not_prefix'   String denoting the prefix used when creating negated
+%                  variable names.  Default is 'NOT__'.
+%   'numeric'      If true, atoms resembling numeric constants are parsed
+%                  as such.  (default = true)
+%   'keep_rules'   If true (default), ADD_RULE remembers which rows were
+%                  created to compile each rule.  These associations are
+%                  stored in TIGER.param.rule_id, which if
+%                  TIGER.param.rule_id(i) = j, then row i was created to
+%                  parse the rule TIGER.param.rules{j}.
+%   'status'       If true, display a status bar as rules are added.
+%                  (default = false)
+%   'parse_string' Cell of parameters to pass to PARSE_STRING.
 
 assert(nargin >= 2, 'ADD_RULE requires at least two inputs.');
 
@@ -78,8 +81,9 @@ valid_not_type = @(x) ismember(x,{'pseudo-binary','inverted'});
 p.addParamValue('not_type','inverted',valid_not_type);
 
 p.addParamValue('numeric',true);
-
 p.addParamValue('keep_rules',true);
+p.addParamValue('status',false);
+p.addParamValue('parse_string',{});
 
 p.parse(varargin{:});
 
@@ -97,10 +101,12 @@ user_bounds = p.Results.bounds;  % TODO: add support for user bounds
 
 parse_numeric = p.Results.numeric;
 
+parse_string_params = p.Results.parse_string;
+
 keep_rules = p.Results.keep_rules;
 
 % rule parsing
-rules = assert_cell(parse_string(rule,parse_numeric));
+rules = assert_cell(parse_string(rule,parse_string_params{:}));
 N = length(rules);
 
 % Get all atoms in the expression list.  This is repeated in
@@ -125,6 +131,8 @@ if keep_rules
 end
 
 % simplify the rules and convert to inequalities
+statbar = statusbar(N,p.Results.status);
+statbar.start('Converting rules to inequalities');
 for i = 1 : N
     if keep_rules
         current_rule_id = i;
@@ -133,6 +141,7 @@ for i = 1 : N
     end
     
     simplify_rule(rules{i});
+    statbar.update(i);
 end
 
 % add new entries to the TIGER model

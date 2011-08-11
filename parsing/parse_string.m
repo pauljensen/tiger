@@ -1,8 +1,7 @@
-function [exp] = parse_string(str,numeric)
+function [exp] = parse_string(str,varargin)
 % PARSE_STRING  Parse a rule string into an EXPR object
 %
-%   [EXP] = PARSE_STRING(STR)
-%   [EXP] = PARSE_STRING(STR,NUMERIC)
+%   [EXP] = PARSE_STRING(STR,...params...)
 %
 %   Parse a string and return the corresponding EXPR object.  If STR is a
 %   cell array of strings, EXP will be a cell array of EXPR objects.
@@ -10,13 +9,21 @@ function [exp] = parse_string(str,numeric)
 %   If any element of STR is already an EXPR object, a copy of the object 
 %   is returned.
 %
-%   The NUMERIC option determines if conditional statements can contain
-%   numeric constants.  If true (the default), atoms in conditionals are
-%   parsed as constants.  If false, they are treated as variable names.
+%   The 'numeric' parameter determines if conditional statements can 
+%   contain numeric constants.  If true (the default), atoms in 
+%   conditionals are parsed as constants.  If false, they are treated as 
+%   variable names.
+%
+%   If 'status' is true (default = false), a progress indicator is
+%   displayed.
 
-if nargin < 2
-    numeric = true;
-end
+p = inputParser;
+p.addParamValue('numeric',true);
+p.addParamValue('status',false);
+p.parse(varargin{:});
+
+numeric = p.Results.numeric;
+status = p.Results.status;
 
 % default regular expression for numeric values
 NUMERIC_REGEXP = '^[+-]?\d+\.?\d*([eE]+[+-]?\d+)?$';
@@ -29,7 +36,16 @@ levels = { {'not'}, ...
 unary = {'not'};
 
 strs = assert_cell(str);
-exp = map(@parse_single,strs);
+
+N = length(strs);
+statbar = statusbar(N,status);
+statbar.start('Parsing strings');
+exp = cell(1,N);
+for i = 1 : N
+    exp{i} = parse_single(strs{i});
+    statbar.update(i);
+end
+
 if numeric
     cellfun(@(x) x.iterif(@(e) e.is_cond,@parse_numerics),exp);
 end
