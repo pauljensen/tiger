@@ -7,9 +7,19 @@ function [sol] = solve_tiger(tiger,sense)
 %   SENSE can be either 'min' for minimization (default) or 'max' for 
 %   maximization.
 
-if nargin < 2
+if nargin < 2 && ~isfield(tiger,'sense')
     sense = 'min';
 end
 
-milp = make_milp(tiger,sense);
-sol = cmpi.solve_mip(milp);
+if nargin > 1 && ~isempty(sense)
+    switch sense
+        case {'min','minimize'}
+            tiger.sense = 1;
+        case {'max','maximize'}
+            tiger.sense = -1;
+        otherwise
+            error('invalid sense: %s',sense);
+    end
+end
+
+sol = cmpi.solve_mip(tiger);

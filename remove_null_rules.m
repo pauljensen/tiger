@@ -15,7 +15,7 @@ p.parse(varargin{:});
 
 remove_rows = p.Results.remove_rows;
 
-is_null = map(@(x) x.NULL,tiger.param.rules);
+is_null = cellfun(@(x) x.NULL,tiger.param.rules);
 nulls = find(is_null);
 
 to_remove = false(size(tiger.A,1),1);

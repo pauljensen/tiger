@@ -120,6 +120,10 @@ ind = tiger.ind;
 indtypes = tiger.indtypes;
 roff = size(A,1);  % row offset for adding constraints
 
+if keep_rules
+    tiger.param.rules(end+(1:N)) = map(@(x) x.copy,rules);
+end
+
 % simplify the rules and convert to inequalities
 for i = 1 : N
     if keep_rules
@@ -130,7 +134,6 @@ for i = 1 : N
     
     simplify_rule(rules{i});
 end
-tiger.param.rules(end+(1:N)) = rules;
 
 % add new entries to the TIGER model
 Nvars_added = size(A,2) - orig_n;

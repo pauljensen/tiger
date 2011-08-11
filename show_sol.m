@@ -35,8 +35,14 @@ end
     
 x(tiger.vartypes ~= 'c') = round(x(tiger.vartypes ~= 'c'));
 
-fprintf('\n\n');
+fprintf('\n');
 
+if isa(sol,'struct')
+    fprintf(' Objective value:  %08f\n',sol.val);
+    fprintf('   Solution flag:  %i\n',sol.flag);
+end
+
+fprintf('Optimal solution:\n');
 for i = 1 : length(to_show)
     if tiger.vartypes(to_show(i)) == 'c'
         fmt = '%10s:  %+08f\n';
@@ -45,3 +51,5 @@ for i = 1 : length(to_show)
     end
     fprintf(fmt,tiger.varnames{to_show(i)},x(to_show(i)));    
 end
+fprintf('\n');
+

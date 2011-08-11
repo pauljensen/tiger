@@ -1,6 +1,6 @@
 function about_tiger()
 
-VERSION = '0.9.1';
+VERSION = '0.9.1 (08/05/2011)';
 
 fprintf('\n\n');
 fprintf('TIGER:  Toolbox for Integrating Genome-scale metabolism,\n');
@@ -12,5 +12,5 @@ fprintf('          Department of Biomedical Engineering\n');
 fprintf('                 University of Virginia\n\n');
 fprintf('Questions, comments, and suggestions can be sent to \n');
 fprintf('tigerproject@email.virginia.edu\n\n');
-fprintf('Source code and documentation is available online at\n');
+fprintf('Source code and documentation are available online at\n');
 fprintf('http://csbl.bitbucket.org/tiger\n\n');
