@@ -100,22 +100,8 @@ parse_numeric = p.Results.numeric;
 keep_rules = p.Results.keep_rules;
 
 % rule parsing
-rules = assert_cell(rule);
+rules = assert_cell(parse_string(rule,parse_numeric));
 N = length(rules);
-% parse all strings if necessary
-for i = 1 : N
-    if ~isa(rules{i},'expr')
-        if isa(rules{i},'char')
-            rules{i} = parse_string(rules{i},parse_numeric);
-        else
-            error('Objects of class %s cannot be parsed.', ...
-                  class(rules{i}));
-        end
-    else
-        % be sure to not overwrite parent object
-        rules{i} = rules{i}.copy;
-    end
-end
 
 % Get all atoms in the expression list.  This is repeated in
 % simplify_rule, but do it on all atoms here for efficiency.

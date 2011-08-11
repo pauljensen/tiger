@@ -7,6 +7,9 @@ function [exp] = parse_string(str,numeric)
 %   Parse a string and return the corresponding EXPR object.  If STR is a
 %   cell array of strings, EXP will be a cell array of EXPR objects.
 %
+%   If any element of STR is already an EXPR object, a copy of the object 
+%   is returned.
+%
 %   The NUMERIC option determines if conditional statements can contain
 %   numeric constants.  If true (the default), atoms in conditionals are
 %   parsed as constants.  If false, they are treated as variable names.
@@ -36,10 +39,14 @@ if ~isa(str,'cell') && ~isempty(exp)
 end
 
 function [e] = parse_single(s)
-    if isempty(s)
+    if isa(s,'expr')
+        e = s.copy();
+    elseif isempty(s)
         e = expr();
         e.NULL = true;
     else
+        assert(isa(s,'char'),'Objects of class %s cannot be parsed.', ...
+                             class(s));
         e = parse(lex(s),levels,unary);
     end
 end
