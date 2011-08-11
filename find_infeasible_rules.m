@@ -1,7 +1,7 @@
 function [infeasible,side] = find_infeasible_rules(tiger,rules)
 % FIND_INFEASIBLE_RULES  Determine which rules make a model infeasible.
 %
-%   [INFEASIBLE,SIDE] = FIND_INFEASIBLE_RULES(TIGER,RULES)
+%   [INFEASIBLE,SIDE] = FIND_INFEASIBLE_RULES(TIGER,RULES,...params...)
 %
 %   Find a minimal set of rules which cannot be satisfied when finding a
 %   feasible solution.  Reports which rules are not feasible and which 
@@ -13,12 +13,20 @@ function [infeasible,side] = find_infeasible_rules(tiger,rules)
 %           These rules should not have been previously added to the TIGER
 %           model.
 %
+%           If RULES is empty or the functions is called with only one
+%           argument, all previously added rules are removed from the 
+%           model and used in the infeasibility calculation.  The indices
+%           returned in INFEASIBLE reference the cell TIGER.param.rules.
+%
 %   Outputs
 %   INFEASIBLE  Array of indices corresponding to rules in RULES that are
 %               not satisfiable in any feasible solution.
 %   SIDE        Character array describing the side of the rule that was
 %               infeasible.  'l' corresponds to the left side, 'r' is the
 %               right side.
+%
+%   Parameters
+%   'display'   If true (default), display the infeasible rules.
 
 if nargin < 3 || isempty(indicators)
     indicators = false;
