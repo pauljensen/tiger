@@ -1,4 +1,4 @@
-function [infeasible,side] = find_infeasible_rules(tiger,rules)
+function [infeasible,side] = find_infeasible_rules(tiger,rules,varargin)
 % FIND_INFEASIBLE_RULES  Determine which rules make a model infeasible.
 %
 %   [INFEASIBLE,SIDE] = FIND_INFEASIBLE_RULES(TIGER,RULES,...params...)
@@ -26,21 +26,32 @@ function [infeasible,side] = find_infeasible_rules(tiger,rules)
 %               right side.
 %
 %   Parameters
-%   'display'   If true (default), display the infeasible rules.
+%   'display'   If true, display the infeasible rules.  (default = false)
+%   'obj_frac'  Define a fraction of the objective value that must be
+%               obtained when the rules are added for the model to be
+%               declared feasible.  Default is 0.0.  It is also possible
+%               add the objective constraint to TIGER before calling this
+%               function (see ADD_GROWTH_CONSTRAINT).
 
-if nargin < 3 || isempty(indicators)
-    indicators = false;
+p = inputParser;
+p.addParamValue('display',false);
+p.addParamValue('obj_frac',0);
+p.parse(varargin{:});
+show_rules = p.Results.display;
+obj_frac = p.Results.obj_frac;
+
+if nargin < 2 || isempty(rules)
+    % use all previously added rules
+    rules = tiger.param.rules;
+    tiger = remove_rule(tiger,rules);
+end
+
+if obj_frac ~= 0
+    tiger = add_growth_constraint(tiger,obj_frac);
 end
 
 N = length(rules);
-exprs = cell(1,N);
-for i = 1 : N
-    if isa(rules{i},'char')
-        exprs{i} = parse_string(rules{i});
-    else
-        exprs{i} = rules{i}.copy;
-    end
-end
+exprs = map(@(x) x.copy,parse_string(rules));
 
 s_names = {};
 s_rules = [];
@@ -54,30 +65,40 @@ end
 
 model = add_rule(tiger,exprs);
 
-% indicators
-if indicators
-    ind_rows = find(model.ind);
-    ind_inds = model.ind(ind_rows);
-    and_vars = array2names('inf_ind_AND[%i]',ind_inds);
-    or_vars  = array2names('inf_ind_OR[%i]',ind_inds);
-    sub_vars = arary2names('inf_ind_SUB[%i]',ind_inds);
-end 
-
-[~,loc] = ismember(s_names,model.varnames);
+loc = convert_ids(model.varnames,s_names,'index');
 model.obj(:) = 0;
 model.obj(loc) = 1;
 
-sol = cmpi.solve_mip(make_milp(model));
+sol = cmpi.solve_mip(model);
 if isempty(sol.x)
     warning('Model cannot be made feasible.');
     infeasible = [];
     side = '';
     return;
-end
+elseif near(sol.val,0)
+    showif(show_rules,'\n\nModel is feasible.\n\n');
+    infeasible = [];
+    side = '';
+    return;
+end 
 
 state = logical(round(sol.x(loc)));
 infeasible = s_rules(state);
-side = map(@(x) x(end),s_names(state));
+side = cellfun(@(x) x(end),s_names(state));
+
+if show_rules
+    fprintf('\n\nInfeasible rules (#[side] rule):\n');
+    for i = 1 : length(infeasible)
+        idx = infeasible(i);
+        if isa(rules{idx},'char')
+            string = rules{idx};
+        else
+            string = rules{idx}.to_string;
+        end
+        fprintf('%5i[%s]  %s\n',idx,side(i),string);
+    end
+    fprintf('\n');
+end
 
 function [new] = append_s(e,side)
     s_name = sprintf('_s%i%s',i,side);
