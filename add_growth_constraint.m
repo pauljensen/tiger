@@ -36,9 +36,6 @@ p.parse(varargin{:});
 switch p.Results.valtype
     case 'frac'
         sol = fba(tiger);
-%         if sol.val > 1e-8
-%             warning('FBA objective near zero.');
-%         end
         value = val*sol.val;
     case 'abs'
         value = val;

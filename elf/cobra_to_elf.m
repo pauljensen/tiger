@@ -33,7 +33,7 @@ p.parse();
 
 make_gene_inds = p.Results.gene_indicators;
     
-elf = cobra_to_tiger(cobra,false);
+elf = cobra_to_tiger(cobra,'add_gpr',false);
 genes = elf.genes;
 ngenes = length(genes);
 
@@ -42,7 +42,7 @@ nmets = size(elf.A,1);
 elf = make_irreversible_rxns(elf);
 nrxns = size(elf.A,2);
 
-act_bound = max(max(abs(elf.lb),abs(elf.ub)));
+act_bound = max_abs(elf.lb,elf.ub);
 
 % define gene activities
 elf = add_column(elf,genes,'c',0,act_bound);

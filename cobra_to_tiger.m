@@ -5,11 +5,23 @@ function [tiger] = cobra_to_tiger(cobra,varargin)
 %
 %   Convert a COBRA model structure to a TIGER model structure.
 %
-%   Params (passed to CONVERT_GPR)
+%   Parameters
+%   'add_gpr'       If true (default), the GPR is converted into a set of
+%                   inequalities and added as constraints.
+%
+%   Parameters (passed to CONVERT_GPR)
 %   'status'        If true (default = false), display progress indicators
 %                   for the conversion.
 %   'parse_string'  Cell of parameters to pass to PARSE_STRING.
 %   'add_rule'      Cell of parameters to pass to ADD_RULE.
+
+p = inputParser;
+p.addParamValue('add_gpr',true);
+p.KeepUnmatched = true;
+p.parse(varargin{:});
+convert_gpr_params = struct2list(p.Unmatched);
+
+add_gpr = p.Results.add_gpr;
 
 tiger = rmfield(cobra,'c');
 
@@ -43,20 +55,20 @@ tiger.genes = cobra.genes(:);
 tiger.ind = zeros(m,1);
 tiger.indtypes = repmat(' ',m,1);
 
-% add the GPR
-% reset bounds
-orig_N = size(cobra.S,2);
-orig_lb = tiger.lb;
-orig_ub = tiger.ub;
+if add_gpr
+    % reset bounds
+    orig_N = size(cobra.S,2);
+    orig_lb = tiger.lb;
+    orig_ub = tiger.ub;
 
-tiger.lb(:) = min(tiger.lb);
-tiger.ub(:) = max(tiger.ub);
+    tiger.lb(:) = min(tiger.lb);
+    tiger.ub(:) = max(tiger.ub);
 
-tiger = convert_gpr(tiger,varargin{:});
+    tiger = convert_gpr(tiger,convert_gpr_params{:});
 
-tiger.lb(1:orig_N) = orig_lb;
-tiger.ub(1:orig_N) = orig_ub;
-
+    tiger.lb(1:orig_N) = orig_lb;
+    tiger.ub(1:orig_N) = orig_ub;
+end
 
 
     

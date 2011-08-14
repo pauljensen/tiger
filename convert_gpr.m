@@ -5,7 +5,7 @@ function [tiger] = convert_gpr(tiger,varargin)
 %
 %   Each GPR expression is converted to a rule and added to the model.
 %
-%   Params
+%   Parameters
 %   'status'        If true (default = false), display progress indicators
 %                   for the conversion.
 %   'parse_string'  Cell of parameters to pass to PARSE_STRING.
