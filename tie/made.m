@@ -138,7 +138,7 @@ p.addParamValue('p_eps',1e-10,pvalidate);
 p.addParamValue('transition_matrix',[]);
 p.addParamValue('remove_rev',false);
 p.addParamValue('theoretical_match',true);
-p.addParamValue('log_fold_change',true);
+p.addParamValue('log_fold_change',false);
 p.addParamValue('return_models',true);
 
 p.addParamValue('verbose',true);
@@ -148,6 +148,11 @@ p.parse(varargin{:});
 verbose = p.Results.verbose;
 
 find_theor = p.Results.theoretical_match;
+
+% check for a non-default number of transitions
+if ~isempty(p.Results.transition_matrix)
+    ncond = max(p.Results.transition_matrix(:));
+end
 
 % find the genes to match
 genes = p.Results.gene_names;

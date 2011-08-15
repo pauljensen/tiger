@@ -22,6 +22,10 @@ function [mip] = convert_indicators(mip)
 %   for each indicator.
 
 IND_EPS = cmpi.get_ind_eps();
+% temporary fix
+if isempty(IND_EPS)
+    IND_EPS = 1e-8;
+end
 
 mip.ind = cmpi.check_field('ind',mip);
 mip.indtypes = cmpi.check_field('indtypes',mip);
