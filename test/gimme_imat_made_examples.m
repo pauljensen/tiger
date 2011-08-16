@@ -37,8 +37,8 @@ levels = [ 1;   % g4
            2;   % g6
            2;   % g7a
            2;   % g7b
-           2;   % g8a
-           1 ]; % g8b
+           1;   % g8a
+           2 ]; % g8b
 
 [levels,gene,sol,tiger] = imat(cobra,levels)
 
