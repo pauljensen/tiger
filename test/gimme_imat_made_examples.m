@@ -1,3 +1,5 @@
+% This file contains examples for Figure 5 of the TIGER manuscript.
+
 
 %%
 % GIMME
@@ -32,11 +34,11 @@ cobra_model_extended;
 levels = [ 1;   % g4
            0;   % g5a
            0;   % g5b
-           3;   % g6
-           3;   % g7a
-           3;   % g7b
-           3;   % g8a
-           2 ]; % g8b
+           2;   % g6
+           2;   % g7a
+           2;   % g7b
+           2;   % g8a
+           1 ]; % g8b
 
 [levels,gene,sol,tiger] = imat(cobra,levels)
 
@@ -66,7 +68,7 @@ p_values = [ 0.68  0.08  0.15;   % g4
              0.38  0.40  0.43;   % g7a
              0.04  0.19  0.12;   % g7b
              0.40  0.21  0.45;   % g8a
-             0.89  0.83  0.28 ]; % g8b
+             0.89  0.13  0.28 ]; % g8b
 
 T = [ 0 1 0;
       0 0 2;
