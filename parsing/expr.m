@@ -55,7 +55,7 @@ methods
             ratoms = subsref(obj.rexpr,substruct('.','atoms'));
             atoms = unique([latoms ratoms]);
         else
-            if obj.is_numeric
+            if obj.is_numeric || isempty(obj.id)
                 atoms = {};
             else
                 atoms = {obj.id};

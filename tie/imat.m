@@ -61,6 +61,8 @@ if frac > 0
     tiger = add_growth_constraint(tiger,frac);
 end
 
+assert(all(ismember(levels,0:2)),'each level must be a 0, 1, or 2');
+
 rxn_inds = find_like(['^' RXN_PRE],tiger.varnames);
 rxn_names = map(@(x) x(length(RXN_PRE)+1:end),rxn_inds);
 
