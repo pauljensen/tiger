@@ -6,17 +6,40 @@ SINGLE_SOLVE_MAXTIME = 1e5;
 
 solver_calls = 0;
 
+% couplings
+UP = 1;
+DOWN = 2;
+UPDOWN = 3;
+
 max_bound = max_abs(elf.lb,elf.ub);
 
 p = inputParser;
 p.addParamValue('vars',elf.genes);
 p.addParamValue('open_bounds',true);
 p.addParamValue('delta',0.01*max_bound);
+p.addParamValue('coupling','updown');
 p.addParamValue('display',false);
+p.addParamValue('logfile',[]);
 p.parse(varargin{:});
 
 open_bounds = p.Results.open_bounds;
 delta = p.Results.delta;
+
+switch p.Results.coupling
+    case 'updown'
+        coupling = UPDOWN;
+    case 'up'
+        coupling = UP;
+    case 'down'
+        coupling = DOWN;
+end
+
+logfile = p.Results.logfile;
+logging = ~isempty(logfile);
+if logging
+    logid = fopen(logfile,'w');
+    start_time = tic;
+end
 
 vars = convert_ids(elf.varnames,p.Results.vars,'index');
 Nvars = length(vars);
@@ -35,6 +58,13 @@ for curr_var = 1 : Nvars
     next_row = find_corr_row(elf,get_cands(vars));
     update_cores(next_row);
     statbar.update(curr_var);
+    if logging
+        append_logfile();
+    end
+end
+
+if logging
+    fclose(logid);
 end
 
 if p.Results.display
@@ -47,9 +77,17 @@ function [row] = find_corr_row(mip,cands)
     new_cands = cands;
     while 1
         old_cands = new_cands;
-        up_cands = sim_aux(old_cands,-1);
-        dn_cands = sim_aux(new_cands, 1);
-        new_cands = unique([up_cands; dn_cands]);
+        if coupling == UP
+            new_cands = sim_aux(old_cands,-1);
+        end
+        if coupling == DOWN
+            new_cands = sim_aux(old_cands, 1);
+        end
+        if coupling == UPDOWN
+            up_cands = sim_aux(old_cands,-1);
+            dn_cands = sim_aux(old_cands, 1);
+            new_cands = unique([up_cands; dn_cands]);
+        end
         if all(ismember(old_cands,new_cands))
             break;
         end
@@ -61,8 +99,14 @@ function [row] = find_corr_row(mip,cands)
             continue;
         end
         [~,loc] = ismember(new_cands(j),vars);
-        row(loc) =     ~isempty(sim_aux(new_cands,-1))  ...
-                    || ~isempty(sim_aux(new_cands, 1));
+        if coupling == UP
+            row(loc) = ~isempty(sim_aux(new_cands(j),-1));
+        elseif coupling == DOWN
+            row(loc) = ~isempty(sim_aux(new_cands(j), 1));
+        else
+            row(loc) =     ~isempty(sim_aux(new_cands(j),-1))  ...
+                        || ~isempty(sim_aux(new_cands(j), 1));
+        end
     end
     row(curr_var) = 1;
     
@@ -141,6 +185,14 @@ function update_cores(row)
 
     cores = cores(sum(cores,2) > 0,:);
     in_cores = sum(cores,1) > 0;
+end
+
+function append_logfile()
+    vars_in_cores = count(in_cores);
+    fprintf(logid,['%i/%i, %f seconds, %i solver calls, ' ...
+                   '%i cores, %3.1f%% in cores\n'], ...
+            curr_var,Nvars,toc(start_time),solver_calls, ...
+            size(cores,1),vars_in_cores/Nvars*100);
 end
 
 end
