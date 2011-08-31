@@ -22,5 +22,27 @@ end
 if ~any(cellfun(@iscell,lists))
     list = lists;
 else
-    list = [lists{:}];
+    %list = [lists{:}];
+    % hack to avoid error with horzcat and expr objects
+    n = 0;
+    for i = 1 : length(lists)
+        if isa(lists{i},'cell')
+            n = n + length(lists{i});
+        else
+            n = n + 1;
+        end
+    end
+    list = cell(1,n);
+    idx = 0;
+    for i = 1 : length(lists)
+        if isa(lists{i},'cell')
+            for j = 1 : length(lists{i})
+                idx = idx + 1;
+                list{idx} = lists{i}{j};
+            end
+        else
+            idx = idx + 1;
+            list{idx} = lists{i};
+        end
+    end
 end

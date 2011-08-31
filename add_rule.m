@@ -41,8 +41,6 @@ function [tiger] = add_rule(tiger,rule,varargin)
 %                  padded.  Default is 4.
 %   'not_prefix'   String denoting the prefix used when creating negated
 %                  variable names.  Default is 'NOT__'.
-%   'numeric'      If true, atoms resembling numeric constants are parsed
-%                  as such.  (default = true)
 %   'keep_rules'   If true (default), ADD_RULE remembers which rows were
 %                  created to compile each rule.  These associations are
 %                  stored in TIGER.param.rule_id, which if
@@ -80,7 +78,6 @@ p.addParamValue('bounds',[]);
 valid_not_type = @(x) ismember(x,{'pseudo-binary','inverted'});
 p.addParamValue('not_type','inverted',valid_not_type);
 
-p.addParamValue('numeric',true);
 p.addParamValue('keep_rules',true);
 p.addParamValue('status',false);
 p.addParamValue('parse_string',{});
@@ -98,8 +95,6 @@ default_lb = p.Results.default_lb;
 default_ub = p.Results.default_ub;
 
 user_bounds = p.Results.bounds;  % TODO: add support for user bounds
-
-parse_numeric = p.Results.numeric;
 
 parse_string_params = p.Results.parse_string;
 

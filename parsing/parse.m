@@ -1,4 +1,4 @@
-function [expression] = parse(tokens,levels,unary)
+function [expression] = parse(tokens,levels,unary,varargin)
 % PARSE  Parse a sequence of TOKEN objects
 %
 %   [EXPRESSION] = PARSE(TOKENS,LEVLES,UNARY)
@@ -13,6 +13,15 @@ function [expression] = parse(tokens,levels,unary)
 %   prefix.  All other operators are assumed to be binary infix.
 
 expression = parse_aux();
+
+p = inputParser;
+p.addParamValue('numeric',true);
+p.addParamValue('regex','^[+-]?\d+\.?\d*([eE]+[+-]?\d+)?$');
+p.parse(varargin{:});
+
+if p.Results.numeric
+    expression.iterif(@(e) e.is_cond,@parse_numerics);
+end
 
 function [ex] = parse_aux()
     ex = get_expr(0);
@@ -52,6 +61,20 @@ function [e] = get_expr(level)
         if next.is_op && get_level(next.value) < level
             tokens.pop();
             e = make_expr(e,next.value,get_expr(get_level(next.value)));
+        end
+    end
+end
+
+function parse_numerics(cond)
+    parse_aux(cond.lexpr);
+    parse_aux(cond.rexpr);
+
+    function parse_aux(e)
+        if ~e.was_quoted
+            m = regexp(e.id,p.Results.regex,'once');
+            if ~isempty(m)
+                e.is_numeric = true;
+            end
         end
     end
 end

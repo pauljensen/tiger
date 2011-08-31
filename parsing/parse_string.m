@@ -25,15 +25,24 @@ p.parse(varargin{:});
 numeric = p.Results.numeric;
 status = p.Results.status;
 
-% default regular expression for numeric values
-NUMERIC_REGEXP = '^[+-]?\d+\.?\d*([eE]+[+-]?\d+)?$';
-
 levels = { {'not'}, ...
            {'>=','>','=','<','<=','~='}, ...
            {'and','or'}, ...
            {'iff','if'} };
 
 unary = {'not'};
+
+op_subs = { 'and', {'and','AND','&&','&'}, ...
+            'or' , {'or','OR','||','|'}, ...
+            'iff', {'iff','Iff','IFF','<=>','<==>','<->','<-->'}, ...
+            'if' , {'if','If','IF','=>','==>','->','-->'}, ...
+            '>=' , {'>='}, ...
+            '>'  , {'>'}, ...
+            '='  , {'=','=='}, ...
+            '<'  , {'<'}, ...
+            '<=' , {'<='}, ...
+            '~=' , {'~=','!=','<>'}, ...
+            'not', {'not','NOT','Not','~','!'} };
 
 strs = assert_cell(str);
 
@@ -44,10 +53,6 @@ exp = cell(1,N);
 for i = 1 : N
     exp{i} = parse_single(strs{i});
     statbar.update(i);
-end
-
-if numeric
-    cellfun(@(x) x.iterif(@(e) e.is_cond,@parse_numerics),exp);
 end
 
 if ~isa(str,'cell') && ~isempty(exp)
@@ -63,21 +68,7 @@ function [e] = parse_single(s)
     else
         assert(isa(s,'char'),'Objects of class %s cannot be parsed.', ...
                              class(s));
-        e = parse(lex(s),levels,unary);
-    end
-end
-
-function parse_numerics(cond)
-    parse_aux(cond.lexpr);
-    parse_aux(cond.rexpr);
-
-    function parse_aux(e)
-        if ~e.was_quoted
-            m = regexp(e.id,NUMERIC_REGEXP,'once');
-            if ~isempty(m)
-                e.is_numeric = true;
-            end
-        end
+        e = parse(lex(s,op_subs),levels,unary,'numeric',numeric);
     end
 end
 
