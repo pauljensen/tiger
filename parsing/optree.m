@@ -25,7 +25,7 @@ end
 
 methods
     function [tf] = get.is_unary(obj)
-        tf = ~isempty(obj.lexpr) || isempty(obj.rexpr);
+        tf = ~isempty(obj.lexpr) && isempty(obj.rexpr);
     end
     
     function [tf] = get.is_binary(obj)
@@ -78,50 +78,46 @@ methods
         end
 
         toplevel = (nargin < 2);
-
-        if obj.AND
-            name = 'AND';
-        elseif obj.OR
-            name = 'OR';
-        elseif obj.is_atom
-            name = obj.id;
-        elseif obj.is_cond
-            name = obj.cond_to_str;
-        else % rule?
-            name = '';
-        end
-
-        if obj.negated
-            spacer = [EXTRA_SPACER '- ~'];
+        spacer = [EXTRA_SPACER '-- '];
+        
+        if obj.is_op
+            name = ['[ ' obj.op ' ]'];
         else
-            spacer = [EXTRA_SPACER '-- '];
+            name = obj.id;
         end
 
         if toplevel
             indent = TOPLEVEL_INDENT;
-            if obj.negated
-                frame.add_line('%s~%s',indent(1:end-1),name);
-            else
-                frame.add_line('%s%s',indent,name);
-            end
+            frame.add_line('%s%s',indent,name);
         else
             if pipe
-                frame.add_line('%s |%s%s',indent,spacer,name);
-                indent = [indent ' |' BASE_INDENT(3:end)];
+                frame.add_line('%s  |%s%s',indent,spacer,name);
+                indent = [indent '  |' BASE_INDENT(3:end)];
             else
-                frame.add_line('%s +%s%s',indent,spacer,name);
-                indent = [indent BASE_INDENT];
+                frame.add_line('%s  +%s%s',indent,spacer,name);
+                indent = [indent ' ' BASE_INDENT];
             end
         end
-        if ~isempty(obj.lexpr) && ~obj.is_cond
-            frame = frame.vcat(obj.lexpr.make_textframe(indent,true));
+        if ~isempty(obj.lexpr)
+            if ~isempty(obj.rexpr)
+                % binary operator; use a pipe
+                frame = frame.vcat(obj.lexpr.make_textframe(indent,true));
+            else
+                % unary operator; use a plus
+                frame = frame.vcat(obj.lexpr.make_textframe(indent,false));
+            end
+        end
+        if ~isempty(obj.rexpr)
             if ~TIGHT_DISPLAY
-                frame.add_line('%s |',indent);
+                frame.add_line('%s  |',indent);
             end
             frame = frame.vcat(obj.rexpr.make_textframe(indent,false));
         end
     end
     
+    function display(obj)
+        obj.make_textframe().display();
+    end
 end
 
 end

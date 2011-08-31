@@ -1,57 +1,46 @@
 function [tree] = parse2(tokens,levels,unary,varargin)
 
 is_token = @(x) isa(x,'token');
-is_unary = @(x) x.is_op && ismember(x.value,unary);
+is_unary = @(x) is_token(x) && x.is_op && ismember(x.value,unary);
 
 Nlevels = length(levels);
 
 reduce_stack(Nlevels+1);
-while tokens.length > 1
-    reduce_stack(Nlevels+1);
-end
 
-tree = tokens.pop();
+tree = make_optree(tokens.pop());
 
 
 function reduce_stack(level)
+    prev_length = tokens.length;
+    
+    if tokens.length <= 1
+        return
+    end
     next = tokens.pop();
     
-    if next.is_rparen
-        return
+    if is_unary(next)
+        % unary operators bind tightest
+        reduce_stack(0);
+        next = make_optree(tokens.pop(),next);
     end
     
-    if is_token(next)
-        if is_unary(next)
-            % unary operators bind tightest
-            reduce_stack(Nlevels+1);
-            t = optree();
-            t.op = next.value;
-            t.lexpr = tokens.pop();
-            tokens.push(t);
-            reduce_stack(level);
+    if tokens.is_another
+        op = tokens.peek();
+        
+        if get_level(op.value) > level
+            tokens.push(next);
+            return
         end
-
-        next = make_optree(next);
-    end
-
-    if tokens.length == 0
-        tokens.push(next);
-        return
-    elseif tokens.length == 1
-        % error -- unclaimed token
-    end
-    
-    % next is an optree object
-    % there are at least two tokens on the stack
-    op = tokens.peek();
-    if get_level(op.value) >= level
-        tokens.push(next);
-    else
-        tokens.pop();  % clear the operator
+        
+        tokens.pop();  % remove the op
         reduce_stack(get_level(op.value));
         tokens.push(make_optree(next,op,tokens.pop()));
-    end      
-end
+    end
+    
+    if tokens.length < prev_length
+        reduce_stack(level);
+    end
+end     
 
 
 function [level] = get_level(op)
@@ -61,10 +50,20 @@ end
 
 function [t] = make_optree(t1,op,t2)
     if nargin == 1
+        if isa(t1,'optree')
+            t = t1;
+        else
+            t = optree();
+            t.id = t1.value;
+            t.was_quoted = t1.quoted;
+        end
+    elseif nargin == 2
+        % unary operator
         t = optree();
-        t.id = t1.value;
-        t.was_quoted = t1.quoted;
+        t.lexpr = make_optree(t1);
+        t.op = op.value;
     else
+        % binary operator
         t = optree();
         t.lexpr = make_optree(t1);
         t.rexpr = make_optree(t2);
