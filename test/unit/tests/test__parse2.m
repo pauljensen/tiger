@@ -14,9 +14,9 @@ op_subs = { '+'  , {'+'}, ...
 
 unary = {'-'};
 
-str = 'a + b = c';
+str = '-a + b = c + (-f) + - (2*c + a)';
 
-e = parse2(lex(str,op_subs),levels,unary);
+e = parse2(lex(str,op_subs),levels,unary)
 
 %%
 
@@ -39,6 +39,6 @@ op_subs = { 'and', {'and','AND','&&','&'}, ...
             '~=' , {'~=','!=','<>'}, ...
             'not', {'not','NOT','Not','~','!'} };
 
-str = 'a > b < d | e => f < not g & h';
+str = '((a < b) < d) | e => f < not(g & h)';
 
-e2 = parse2(lex(str,op_subs),levels,unary)
+e2 = parse2(lex(str,op_subs),levels,unary);
