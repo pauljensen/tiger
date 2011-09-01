@@ -40,9 +40,13 @@ methods
         end
     end
 
+    function assert_is_another(obj)
+        assert(obj.is_another,'TIGER:stack:empty','stack is empty');
+    end
+    
     function [item] = pop(obj)
         % POP  Remove the last object added to the stack.
-        assert(obj.is_another,'stack is empty');
+        obj.assert_is_another();
         item = obj.values{end};
         obj.values = obj.values(1:end-1);
     end
@@ -55,13 +59,18 @@ methods
     function [item] = peek(obj)
         % PEEK  Return the last item added to the stack,
         %       without removing it.
-        assert(obj.is_another,'stack is empty');
+        obj.assert_is_another();
         item = obj.values{end};
     end
 
     function reverse(obj)
         % REVERSE  Reverse the order of items on the stack.
         obj.values = fliplr(obj.values);
+    end
+    
+    function [s] = copy(obj)
+        % COPY  Create an independent copy of the stack.
+        s = stack(obj.values);
     end
     
     % ------- dependent access methods -------

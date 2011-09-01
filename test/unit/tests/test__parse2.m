@@ -14,7 +14,7 @@ op_subs = { '+'  , {'+'}, ...
 
 unary = {'-'};
 
-str = '-a + b = c + (-f) + - (2*c + a)';
+str = '-a + b = c + (-f + - (2*c + a)';
 
 e = parse2(str,levels,unary,op_subs)
 
