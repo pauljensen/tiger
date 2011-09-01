@@ -42,7 +42,7 @@ methods
 
     function [item] = pop(obj)
         % POP  Remove the last object added to the stack.
-        assert(obj.is_another, 'stack is empty');
+        assert(obj.is_another,'stack is empty');
         item = obj.values{end};
         obj.values = obj.values(1:end-1);
     end
@@ -55,7 +55,7 @@ methods
     function [item] = peek(obj)
         % PEEK  Return the last item added to the stack,
         %       without removing it.
-        assert(obj.is_another, 'stack is empty');
+        assert(obj.is_another,'stack is empty');
         item = obj.values{end};
     end
 

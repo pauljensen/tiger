@@ -1,4 +1,6 @@
-function [tree] = parse2(tokenstack,levels,unary,varargin)
+function [tree] = parse2(str,levels,unary,op_subs,varargin)
+
+tokenstack = lex(str,op_subs);
 
 Nlevels = length(levels);
 is_token = @(x) isa(x,'token');

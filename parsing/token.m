@@ -11,6 +11,7 @@ properties
     quoted = false     % true if the value was originally quoted
     
     value   % token string
+    index   % start location of token in the original string
 end
 
 methods

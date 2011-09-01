@@ -12,7 +12,7 @@ op_vals = op_subs(2:2:end);
 
 whitespace = {' ','\t'};
 
-chars = stack(fliplr(str));
+chars = stackcounter(fliplr(str));
 tokens = stack();
 
 
@@ -23,9 +23,9 @@ while chars.is_another
     ch = chars.pop();
     if in_quote
         if ch == '\'
-            buf.append(chars.pop());
+            buf.append(chars.pop(),chars.last_count);
         else
-            buf.append(ch);
+            buf.append(ch,chars.last_count);
         end
         
         if ch == quote
@@ -42,14 +42,14 @@ while chars.is_another
                 tokens.push(make_token());
                 buf.clear;
             end
-            tokens.push(make_token(ch));
+            tokens.push(make_token(ch,chars.last_count));
         case whitespace
             if ~isempty(buf)
                 tokens.push(make_token());
                 buf.clear;
             end
         case opstart
-            punc = strbuffer(ch);
+            punc = strbuffer(ch,chars.last_count);
             while chars.is_another && is_sub_op([punc.val chars.peek()])
                 punc.append(chars.pop());
             end
@@ -59,17 +59,17 @@ while chars.is_another
                     tokens.push(make_token());
                     buf.clear;
                 end
-                tokens.push(make_token(punc.val));
+                tokens.push(make_token(punc.val,punc.index));
             else
                 % this was not a complete operator
-                buf.append(punc.val);
+                buf.append(punc.val,chars.last_count);
             end
         case {'''','"'}
-            buf.append(ch);
+            buf.append(ch,chars.last_count);
             in_quote = true;
             quote = ch;
         otherwise
-            buf.append(ch);
+            buf.append(ch,chars.last_count);
     end
 end
 
@@ -84,9 +84,10 @@ function [tf] = is_sub_op(str)
     tf = any(cellfun(@(x) like(x,str),all_ops));
 end
 
-function [tok] = make_token(str)
+function [tok] = make_token(str,index)
     if nargin == 0
         str = buf.val;
+        index = buf.index;
     end
     
     quoted = false;
@@ -108,6 +109,7 @@ function [tok] = make_token(str)
     end
     
     tok.quoted = quoted;
+    tok.index = index;
 end
 
 function [tf] = is_op(str)
