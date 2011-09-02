@@ -14,10 +14,11 @@ op_subs = { '+'  , {'+'}, ...
 
 unary = {'-'};
 
-%str = '-a + b = c + (-f + - (2*c + a))';
-str = 'a + b = c'
+% error message is incorrect for the following string
+%str = '-a + b = c + (-f + + (2*c + a))';
+str = 'a + b = c';
 
-e = parse2(str,levels,unary,op_subs)
+e = parse2(str,levels,unary,op_subs);
 
 %%
 
@@ -42,4 +43,4 @@ op_subs = { 'and', {'and','AND','&&','&'}, ...
 
 str = '((a < b) < d) | e => f < not(g & h)';
 
-%e2 = parse2(lex(str,op_subs),levels,unary);
+e2 = parse2(str,levels,unary,op_subs);

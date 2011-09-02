@@ -6,14 +6,14 @@ properties (Dependent)
     is_atom
     is_op
     
-    uexpr
+    utree
     atoms
 end
 
 properties
     op = ''
-    lexpr = []
-    rexpr = []
+    ltree = []
+    rtree = []
     
     is_numeric = false
     was_quoted = false
@@ -28,11 +28,11 @@ end
 
 methods
     function [tf] = get.is_unary(obj)
-        tf = ~isempty(obj.lexpr) && isempty(obj.rexpr);
+        tf = ~isempty(obj.ltree) && isempty(obj.rtree);
     end
     
     function [tf] = get.is_binary(obj)
-        tf = ~isempty(obj.lexpr) && ~isempty(obj.rexpr);
+        tf = ~isempty(obj.ltree) && ~isempty(obj.rtree);
     end
     
     function [tf] = get.is_atom(obj)
@@ -43,14 +43,14 @@ methods
         tf = ~obj.is_atom;
     end
     
-    function [e] = get.uexpr(obj)
-        e = obj.lexpr;
+    function [e] = get.utree(obj)
+        e = obj.ltree;
     end
     
     function [atoms] = get.atoms(obj)
-        if ~isempty(obj.lexpr) || ~isempty(obj.rexpr)
-            latoms = subsref(obj.lexpr,substruct('.','atoms'));
-            ratoms = subsref(obj.rexpr,substruct('.','atoms'));
+        if ~isempty(obj.ltree) || ~isempty(obj.rtree)
+            latoms = subsref(obj.ltree,substruct('.','atoms'));
+            ratoms = subsref(obj.rtree,substruct('.','atoms'));
             atoms = unique([latoms ratoms]);
         else
             if obj.is_numeric || isempty(obj.id)
@@ -101,20 +101,20 @@ methods
                 indent = [indent ' ' BASE_INDENT];
             end
         end
-        if ~isempty(obj.lexpr)
-            if ~isempty(obj.rexpr)
+        if ~isempty(obj.ltree)
+            if ~isempty(obj.rtree)
                 % binary operator; use a pipe
-                frame = frame.vcat(obj.lexpr.make_textframe(indent,true));
+                frame = frame.vcat(obj.ltree.make_textframe(indent,true));
             else
                 % unary operator; use a plus
-                frame = frame.vcat(obj.lexpr.make_textframe(indent,false));
+                frame = frame.vcat(obj.ltree.make_textframe(indent,false));
             end
         end
-        if ~isempty(obj.rexpr)
+        if ~isempty(obj.rtree)
             if ~TIGHT_DISPLAY
                 frame.add_line('%s  |',indent);
             end
-            frame = frame.vcat(obj.rexpr.make_textframe(indent,false));
+            frame = frame.vcat(obj.rtree.make_textframe(indent,false));
         end
     end
     

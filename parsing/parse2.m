@@ -123,14 +123,14 @@ function [tree] = parse_aux(tokens)
         elseif nargin == 2
             % unary operator
             t = optree();
-            t.lexpr = make_optree(t1);
+            t.ltree = make_optree(t1);
             t.op = op.value;
             t.index = op.index;
         else
             % binary operator
             t = optree();
-            t.lexpr = make_optree(t1);
-            t.rexpr = make_optree(t2);
+            t.ltree = make_optree(t1);
+            t.rtree = make_optree(t2);
             t.op = op.value;
             t.index = op.index;
         end
