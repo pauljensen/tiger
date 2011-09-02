@@ -23,6 +23,8 @@ catch ME
     end
 end
 
+tree.str = str;
+
 function collapse_to_right()
     newstack = stack();
     while tokenstack.is_another
@@ -116,18 +118,21 @@ function [tree] = parse_aux(tokens)
                 t = optree();
                 t.id = t1.value;
                 t.was_quoted = t1.quoted;
+                t.index = t1.index;
             end
         elseif nargin == 2
             % unary operator
             t = optree();
             t.lexpr = make_optree(t1);
             t.op = op.value;
+            t.index = op.index;
         else
             % binary operator
             t = optree();
             t.lexpr = make_optree(t1);
             t.rexpr = make_optree(t2);
             t.op = op.value;
+            t.index = op.index;
         end
     end
 end

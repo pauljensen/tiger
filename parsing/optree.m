@@ -21,6 +21,9 @@ properties
     id = ''
     
     NULL = false
+    
+    str
+    index
 end
 
 methods

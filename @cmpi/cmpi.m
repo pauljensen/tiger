@@ -172,6 +172,7 @@ methods (Static)
     [mip] = check_mip(mip)
     [sols] = solve_multiple_mips(mip,alts,varargin)
     [qtype] = miqp_type(mip)
+    [inf_rows,sol] = find_infeasible_rows(mip,varargin)
 end
 
 end % class

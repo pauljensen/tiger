@@ -34,11 +34,14 @@ switch fluxnorm
         sol = cmpi.solve_mip(tiger);
     case {'euclid','two','quad'}
         % Euclidian norm
-        tiger = add_growth_constraint(tiger,obj_frac);
+        [tiger,growth_sol] = add_growth_constraint(tiger,obj_frac);
         nS = size(tiger.S,2);
         nA = size(tiger.A,2);
         tiger.Q = spalloc(nA,nA,nS);
         tiger.Q(1:nS,1:nS) = eye(nS);
         sol = cmpi.solve_mip(tiger);
+        
+        % change val to be the objective flux value
+        sol.val = growth_sol.val;
 end
 
