@@ -93,6 +93,8 @@ end
      
 
 function [tiger] = make_irreversible_rxns(tiger)
+    MAX_ABS = max_abs(tiger.lb,tiger.ub);
+
     if ~isfield(tiger,'rev')
         rev = tiger.lb < 0;
     else
@@ -107,11 +109,11 @@ function [tiger] = make_irreversible_rxns(tiger)
             r = f + 1;
             tiger = add_column(tiger, ...
                                [tiger.varnames{i} '__f'], ...
-                               'c',0,tiger.ub(i));
+                               'c',0,MAX_ABS);
             tiger.A(:,f) = tiger.A(:,i);
             tiger = add_column(tiger, ...
                                [tiger.varnames{i} '__r'], ...
-                               'c',0,-tiger.lb(i));
+                               'c',0,MAX_ABS);
             tiger.A(:,r) = -tiger.A(:,i);
             
             % move the GPR onto the new reactions

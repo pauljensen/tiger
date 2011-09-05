@@ -6,7 +6,7 @@ p.addParamValue('obj','count');
 p.addParamValue('eps',1e-5);
 p.parse(varargin{:});
 
-rows = p.Results.rows;
+rows = convert_ids(mip.varnames,p.Results.rows,'index');
 
 assert(ismember(upper(p.Results.obj),{'COUNT','ABS'}), ...
        'parameter ''obj'' must be either ''count'' or ''abs''');
@@ -19,11 +19,15 @@ slack_lb = zeros(nrows,1);
 for i = 1 : nrows
     row_up = mip.A(rows(i),:) .* mip.ub';
     row_dn = mip.A(rows(i),:) .* mip.lb';
-    slack_ub(i) = sum(max(row_up,row_dn));
-    slack_lb(i) = sum(min(row_up,row_dn));
+    slack_lb(i) = mip.b(rows(i)) - sum(max(row_up,row_dn));
+    slack_ub(i) = mip.b(rows(i)) - sum(min(row_up,row_dn));
 end
 
+coff = size(mip.A,2);
 [mip,slacks] = add_column(mip,[],'c',slack_lb,slack_ub);
+for i = 1 : nrows
+    mip.A(rows(i),coff+i) = 1;
+end
 
 if count_obj
     inds = map(@(x) ['I_',x],slacks);
@@ -49,7 +53,7 @@ if isempty(sol.x)
 end
 
 if count_obj
-    var_locs = convert_ids(mip,inds,'index');
+    var_locs = convert_ids(mip.varnames,inds,'index');
 else
     var_locs = slack_locs;
 end

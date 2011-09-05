@@ -124,7 +124,7 @@ for r = 1 : length(rowidxs)
     pb.start_wrap;
     pb.printf('%s:  ',rownames{row});
     show_coef_list(mip.A(row,:));
-    switch mip.ctypes(r)
+    switch mip.ctypes(row)
         case '<'
             fprintf(' <= ');
         case '>'
@@ -132,7 +132,7 @@ for r = 1 : length(rowidxs)
         case '='
             fprintf(' = ');
     end
-    fprintf('%g\n',mip.b(r));
+    fprintf('%g\n',mip.b(row));
     pb.stop_wrap;
 end
 

@@ -18,7 +18,7 @@ tiger = add_row(tiger,Nrows);
 
 for i = 1 : Nrows
     roff = Nprev + i;
-    [tf,loc] = ismember(linalgs{i}.vars);
+    [tf,loc] = ismember(linalgs{i}.vars,tiger.varnames);
     
     if any(~tf)
         tiger = add_column(tiger,linalgs{i}.vars(~tf));
