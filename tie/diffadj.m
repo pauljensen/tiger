@@ -261,7 +261,7 @@ function [vars] = deparse_sol(xall,models)
     
     rxn_names = map(@(x) [RXN_PRE x],models{1}.varnames(1:nrxns));
     [rxn_tf,rxn_idxs] = ismember(rxn_names,models{1}.varnames);
-    [~,gene_idxs] = ismember(genes,models{1}.varnames);
+    [gene_tf,gene_idxs] = ismember(genes,models{1}.varnames);
     for i = 1 : ncond
         x = xall(nvars*(i-1)+(1:nvars));
         
@@ -272,7 +272,8 @@ function [vars] = deparse_sol(xall,models)
         vars{i}.rxn(~rxn_tf) = -1;
         
         % TODO:  fix when gene_names are given
-        vars{i}.gene = x(gene_idxs(gene_idxs > 0));
+        vars{i}.gene = ones(size(gene_tf));
+        vars{i}.gene(gene_tf) = x(gene_idxs(gene_tf));
     end
         
     
