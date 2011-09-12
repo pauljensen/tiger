@@ -271,7 +271,8 @@ function [vars] = deparse_sol(xall,models)
         vars{i}.rxn(rxn_tf) = x(rxn_idxs(rxn_tf));
         vars{i}.rxn(~rxn_tf) = -1;
         
-        vars{i}.gene = x(gene_idxs);
+        % TODO:  fix when gene_names are given
+        vars{i}.gene = x(gene_idxs(gene_idxs > 0));
     end
         
     

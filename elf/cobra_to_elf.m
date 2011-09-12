@@ -29,7 +29,7 @@ function [elf] = cobra_to_elf(cobra,varargin)
 
 p = inputParser;
 p.addParamValue('gene_indicators',false);
-p.parse();
+p.parse(varargin{:});
 
 make_gene_inds = p.Results.gene_indicators;
     
@@ -100,6 +100,9 @@ function [tiger] = make_irreversible_rxns(tiger)
     else
         rev = tiger.rev;
     end
+    
+    % only reverse reaction that have a nonzero GPR
+    rev = rev & cellfun(@(x) ~isempty(x),tiger.gpr);
     
     n = size(tiger.A,2);
     for i = 1 : n
