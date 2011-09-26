@@ -1,3 +1,3 @@
 
 cmpi.init();
-cmpi.set_solver('glpk');
+cmpi.set_solver('cplex');

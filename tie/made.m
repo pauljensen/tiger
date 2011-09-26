@@ -111,9 +111,6 @@ assert(nargin >= 3, 'MADE requires at least three inputs.');
 % make sure the input was an TIGER model
 tiger = assert_tiger(tiger);
 
-ntrans = size(fold_change,2);   % number of transitions
-ncond  = ntrans + 1;            % number of conditions
-
 assert(all(size(pvals) == size(fold_change)), ...
        'FOLD_CHANGE and PVALS must have the same dimensions');
 
@@ -150,8 +147,11 @@ verbose = p.Results.verbose;
 find_theor = p.Results.theoretical_match;
 
 % check for a non-default number of transitions
+ntrans = size(fold_change,2);   % number of transitions
+ncond  = ntrans + 1;            % number of conditions
 if ~isempty(p.Results.transition_matrix)
-    ncond = max(p.Results.transition_matrix(:));
+    ntrans = max(p.Results.transition_matrix(:));
+    ncond = length(p.Results.transition_matrix);
 end
 
 % find the genes to match

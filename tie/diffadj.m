@@ -79,7 +79,7 @@ vars = convert_ids(milp.varnames,vars,'index');
 [nvars,ntrans] = size(w);
 ncond = ntrans + 1;
 if ~isempty(I)
-    ntrans = max(I(:));
+    ncond = length(I);
 end
 
 I = check_transition_matrix(I,ncond,ntrans);

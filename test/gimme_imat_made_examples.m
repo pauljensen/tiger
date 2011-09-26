@@ -5,9 +5,9 @@
 % GIMME
 
 clear all;
-cmpi.init();
+cmpi.init();  % initialize the solver
 
-cobra_model_extended;
+cobra_model_extended;  % load a cobra model from cobra_model_extended.m
 tiger = cobra_to_tiger(cobra);
 
 express = [ 13;   % g4
