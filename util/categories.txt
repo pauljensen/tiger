@@ -1,37 +1,49 @@
->Model Creation and Modification
-create_empty_tiger
-assert_tiger
-parse_string
-add_rule
-set_var
-set_fieldval
-add_row
-add_column
-add_diff
-bind_var
-convert_ids
+>Starting TIGER
+start_tiger
 
 >COBRA Model Conversion
 cobra_to_tiger
 convert_gpr
 bind_mets
+convert_ids
 
 >Flux Balance Analysis
 fba
+fva
 single_gene_ko
 add_growth_constraint
+moma
+
+>Data Integration
+made
+gimme
+imat
+
+>Model Creation and Modification
+create_empty_tiger
+add_rule
+update_rule
+remove_rule
+set_var
+set_fieldval
+add_row
+add_column
+remove_row
+remove_column
+add_diff
+bind_var
+convert_ids
 
 >Model Solution
 solve_tiger
 find_infeasible_rules
+set_solver
+get_solver
+set_solver_option
+get_solver_options
+clear_solver_options
 
 >Model Verification
 show_tiger
 show_sol
-check_tiger
 is_valid_rule
-
->Data Integration
-made
-
-
