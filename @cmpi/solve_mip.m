@@ -70,6 +70,9 @@ function [sol] = solve_mip(mip)
 %               output  Other solver-specific output
 
 solver = cmpi.get_solver();
+if isempty(solver)
+    error('No solver selected.  Use set_solver() to choose a solver');
+end
 
 if ~issparse(mip.A)
     mip.A = sparse(mip.A);

@@ -86,11 +86,11 @@ methods (Static)
     end
 
     function set_option(option,val)
-        % SET_OPTIONS  Set a default solver option
+        % SET_OPTION  Set a default solver option
         %
         %   Sets an option in the default option structure.  For a
         %   description of the solver options, see the documentation
-        %   for SOLVE_MILP.
+        %   for SOLVE_MIP.
         
         global CMPI_OPTIONS
         CMPI_OPTIONS.(option) = val;

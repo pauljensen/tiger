@@ -5,7 +5,7 @@
 % GIMME
 
 clear all;
-cmpi.init();  % initialize the solver
+start_tiger();  % initialize the solver
 
 cobra_model_extended;  % load a cobra model from cobra_model_extended.m
 tiger = cobra_to_tiger(cobra);
@@ -27,7 +27,7 @@ thresh = 10;
 % iMAT
 
 clear all;
-cmpi.init();
+start_tiger();
 
 cobra_model_extended;
 
@@ -47,7 +47,7 @@ levels = [ 1;   % g4
 % MADE
 
 clear all;
-cmpi.init();
+start_tiger();
 
 cobra_model_extended;
 tiger = cobra_to_tiger(cobra);
