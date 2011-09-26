@@ -53,7 +53,7 @@ end
 sets_dn = data_dn | eye(N);
 sets_up = data_up | eye(N);
 
-if nargout == 1;
+if nargout == 1
     sets_dn = sets_dn | sets_up;
 end
 

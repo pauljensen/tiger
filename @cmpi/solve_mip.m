@@ -154,6 +154,34 @@ switch solver
                    
         sol.flag = cmpi.get_cplex_flag(sol.output.cplexstatus);
         
+    case 'glpk'
+        % move equality bounds to A (problem with GLPK?)
+        mip = cmpi.bounds_to_constraints(mip,'bounds','equal');
+        
+        opts = cmpi.set_glpk_opts(mip.options);
+        
+        mip.b = mip.b(:);
+        if qp
+            error('GLPK does not support MIQP problems.');
+        end
+        
+        ctypes = mip.ctypes;
+        ctypes(ctypes == '<') = 'U';
+        ctypes(ctypes == '=') = 'S';
+        ctypes(ctypes == '>') = 'L';
+        
+        if ~isempty(opts)
+            [sol.x,sol.val,glpk_flag,sol.output] = ...
+                glpk(mip.obj(:),mip.A,mip.b(:),mip.lb(:),mip.ub(:), ...
+                     ctypes,upper(mip.vartypes),mip.sense,opts);
+        else
+            [sol.x,sol.val,glpk_flag,sol.output] = ...
+                glpk(mip.obj(:),mip.A,mip.b(:),mip.lb(:),mip.ub(:), ...
+                     ctypes,upper(mip.vartypes),mip.sense);
+        end
+         
+        sol.flag = cmpi.get_glpk_flag(glpk_flag);
+        
     otherwise
         error('Unrecognized solver: %s',solver);
 end

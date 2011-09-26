@@ -165,6 +165,8 @@ methods (Static)
     [opts,cplex] = set_cplex_opts(options,cplex)
     [opts] = set_gurobi_opts(options)
     [flag] = get_cplex_flag(status)
+    [flag] = get_glpk_flag(cmpi_flag)
+    [opts] = set_glpk_opts(options)
     [mip] = convert_indicators(mip)
     [mip] = convert_miqp(mip)
     [milp] = tile_milp(varargin)
@@ -173,6 +175,7 @@ methods (Static)
     [sols] = solve_multiple_mips(mip,alts,varargin)
     [qtype] = miqp_type(mip)
     [inf_rows,sol] = find_infeasible_rows(mip,varargin)
+    [mip] = bounds_to_constraints(mip,varargin)
 end
 
 end % class

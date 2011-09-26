@@ -2,6 +2,8 @@
 cobra_model
 init_test
 
+cmpi.set_solver('glpk')
+
 tiger = cobra_to_tiger(cobra);
 
 wtsol = fba(tiger);
