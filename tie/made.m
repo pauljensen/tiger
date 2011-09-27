@@ -59,6 +59,11 @@ function [sol] = made(tiger,fold_change,pvals,varargin)
 %                (Default = true)
 %   'verbose'    If true (default), a results table is printed.  Otherwise,
 %                MADE is silent.
+%   'set_IntFeasTol'  A reduced value for the IntFeasTol solver parameter
+%                to avoid "integrality leaks" that return models with zero
+%                objective flux.  The default value is 1e-10.  If false,
+%                the parameter is not adjusted.  All solver parameters are
+%                reset to previous values before the function returns.
 %
 %   Output is a solution structure with the following fields:
 %   output      Solution structure with details from the MILP solver.
@@ -137,6 +142,7 @@ p.addParamValue('remove_rev',false);
 p.addParamValue('theoretical_match',true);
 p.addParamValue('log_fold_change',false);
 p.addParamValue('return_models',true);
+p.addParamValue('set_IntFeasTol',1e-10);
 
 p.addParamValue('verbose',true);
 
@@ -145,6 +151,14 @@ p.parse(varargin{:});
 verbose = p.Results.verbose;
 
 find_theor = p.Results.theoretical_match;
+
+% set the integer feasibility tolerance
+IntFeasTol = p.Results.set_IntFeasTol;
+set_IntFeasTol = isnumeric(IntFeasTol);
+if set_IntFeasTol
+    prev_solver_options = get_solver_options();
+    set_solver_option('IntFeasTol',IntFeasTol);
+end
 
 % check for a non-default number of transitions
 ntrans = size(fold_change,2);   % number of transitions
@@ -299,5 +313,9 @@ if verbose
     show_made_results(sol);
 end
 
+% reset the solver options
+if set_IntFeasTol
+    set_solver_option(prev_solver_options);
+end
 
 

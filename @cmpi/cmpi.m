@@ -88,12 +88,22 @@ methods (Static)
     function set_option(option,val)
         % SET_OPTION  Set a default solver option
         %
-        %   Sets an option in the default option structure.  For a
-        %   description of the solver options, see the documentation
+        %   SET_OPTION(OPTION,VAL) sets an option in the default option 
+        %   structure.
+        %
+        %   SET_OPTION(STRUCT) sets the default option structure to the
+        %   structure STRUCT.
+        %
+        %   For a description of the solver options, see the documentation
         %   for SOLVE_MIP.
         
         global CMPI_OPTIONS
-        CMPI_OPTIONS.(option) = val;
+        
+        if nargin == 1 && isa(option,'struct')
+            CMPI_OPTIONS = option;
+        else
+            CMPI_OPTIONS.(option) = val;
+        end
     end
 
     function clear_options()

@@ -1,4 +1,18 @@
 
+===== New Features =====
+
+* SET_SOLVER_OPTION and CMPI.SET_OPTION now accept a structure with
+  solver options.  This may be useful for change values inside a function
+  and restoring default options:
+    old_options = get_solver_options();  % save old options
+    set_solver_option('MaxTime',100);
+    ... code using new options ...
+    set_solver_option(old_options);  % restore previous options
+
+* MADE by default reduces the IntFeasTol solver parameter to avoid
+  returning models with zero objective flux from integrality leaks.
+  This can be changes via the 'set_IntFeasTol' parameter to MADE.
+
 ===== Bugs =====
 
 * Corrected typos in documentation for

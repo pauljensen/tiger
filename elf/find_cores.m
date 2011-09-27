@@ -19,6 +19,7 @@ p.addParamValue('open_bounds',true);
 p.addParamValue('delta',0.01*max_bound);
 p.addParamValue('coupling','updown');
 p.addParamValue('display',false);
+p.addParamValue('no_minflux',true);
 p.addParamValue('logfile',[]);
 p.parse(varargin{:});
 
@@ -39,6 +40,10 @@ logging = ~isempty(logfile);
 if logging
     logid = fopen(logfile,'w');
     start_time = tic;
+end
+
+if p.Results.no_minflux
+    elf.lb(elf.lb > 0) = 0;
 end
 
 vars = convert_ids(elf.varnames,p.Results.vars,'index');
