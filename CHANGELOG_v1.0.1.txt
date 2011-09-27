@@ -1,0 +1,8 @@
+
+===== Bugs =====
+
+* Corrected typos in documentation for
+   add_column
+
+
+

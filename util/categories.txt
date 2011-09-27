@@ -1,5 +1,6 @@
 >Starting TIGER
 start_tiger
+about_tiger
 
 >COBRA Model Conversion
 cobra_to_tiger

@@ -18,7 +18,7 @@ function [tiger,varname] = add_column(tiger,name,vartype,lb,ub,obj,A)
 %   given for the other arguments, it will be repeated for all new 
 %   columns.
 %
-%   The return value VARNAME is the name(s) of the columns added.
+%   The return value VARNAME is the name(s) of the column(s) added.
 
 [m,n] = size(tiger.A);
 loc = n+1;
