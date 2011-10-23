@@ -1,5 +1,4 @@
 
-init_test
 cobra_model
 
 levels     = [    2    1     0     0];
@@ -12,3 +11,5 @@ tiger = cobra_to_tiger(cobra);
                                          'weights',weights);
 
 assert(near(levels,[2 2 0 1]),'levels incorrect');
+
+clear cobra gene_names genes levels m n sol t tiger weights

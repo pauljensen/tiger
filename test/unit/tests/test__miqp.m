@@ -1,5 +1,4 @@
 
-init_test
 
 mip.obj = [-2 -6]';
 mip.A = sparse([1 1; -1 2; 2 1]);
@@ -32,3 +31,5 @@ t.Qd = [0 1 0;
 t.ctypes(1) = '=';
 sol = cmpi.solve_mip(t);
 assert(near(sol.x,[1/3 1/3 1/3]),'MIQP Qd obj val');
+
+clear mip sol t

@@ -1,6 +1,4 @@
 
-init_test
-
 tiger = create_empty_tiger();
 tiger = add_column(tiger,{'a','b','c','x','y','z'},'bbbiii', ...
                          [0;0;0;0;0;0],[1;1;1;2;2;3],[],[]);
@@ -38,3 +36,5 @@ optimal = [ 0     0     1
             0     3     0 ];
 
 assert(near(states,optimal),'answer error');
+
+clear d mip_error models optimal sol states tiger vars w

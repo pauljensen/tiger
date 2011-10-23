@@ -1,6 +1,4 @@
 
-init_test();
-
 t = create_empty_tiger();
 
 t = add_column(t,'v','c');
@@ -21,3 +19,5 @@ s2 = solve_tiger(t2);
 
 assert(near(s.val,-0.67),'original obj val');
 assert(near(s2.val,-1),'removed obj val');
+
+clear r1 r2 r3 s s2 t t2

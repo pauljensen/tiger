@@ -72,6 +72,10 @@ methods
         end
     end
     
+    function increment(obj,n)
+        obj.update(obj.last_update + n)
+    end
+    
     function [bar] = getbar(obj,n)
         trailer = '';
         frac = n / obj.N;

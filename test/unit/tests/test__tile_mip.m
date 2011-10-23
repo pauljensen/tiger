@@ -28,3 +28,4 @@ assert(near(sol1.val,val1),'model 1');
 assert(near(sol2.val,val2),'model 2');
 assert(near(sol3.val,val3),'model 3');
 
+clear cobra m milp n sol sol1 sol2 sol3 t1 t2 t3 tiger val1 val2 val3

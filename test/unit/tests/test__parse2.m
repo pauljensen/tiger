@@ -44,3 +44,5 @@ op_subs = { 'and', {'and','AND','&&','&'}, ...
 str = '((a < b) < d) | e => f < not(g & h)';
 
 e2 = parse2(str,levels,unary,op_subs);
+
+clear e e2 levels op_subs str unary

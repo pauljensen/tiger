@@ -1,8 +1,14 @@
-function test_tiger()
+function test_tiger(solver)
 % TEST_TIGER  Run unit tests on the TIGER package
 %
 %   Before running this function, move to the TIGER/test/unit directory.
 %   Unit tests are located in TIGER/test/unit/tests.
+
+if nargin == 0
+    start_tiger();
+else
+    start_tiger(solver);
+end
 
 home;
 fprintf('\nTIGER unit testing:\n\n');

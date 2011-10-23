@@ -9,3 +9,5 @@ l3 = linalg({{1,'b'}},'>',3);
 t1 = add_constraint(t,l1);
 t2 = add_constraint(t1,l2);
 t3 = add_constraint(t2,l3);
+
+clear l1 l2 l3 t t1 t2 t3

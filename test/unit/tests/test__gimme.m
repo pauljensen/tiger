@@ -1,5 +1,4 @@
 
-init_test
 cobra_model
 
 express    = [   10   10     1     2    3];
@@ -10,3 +9,5 @@ tiger = cobra_to_tiger(cobra);
 
 assert(near(states,[1 1 0 1 0]),'states incorrect');
 assert(cmpi.is_acceptable_exit(fba(t)),'nonfunctional');
+
+clear cobra express gene_names genes m n sol states t tiger

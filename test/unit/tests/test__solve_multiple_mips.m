@@ -1,7 +1,4 @@
 
-
-init_test
-
 cobra_model
 
 tiger = cobra_to_tiger(cobra);
@@ -22,3 +19,5 @@ sols2 = cmpi.solve_multiple_mips(tiger,alts,'restart',true);
 
 assert(near(sols1.flag,sols2.flag),'flag off');
 assert(near(sols1.val,sols2.val),'vals off');
+
+clear alts cobra i m n nrxns sols1 sols2 tiger

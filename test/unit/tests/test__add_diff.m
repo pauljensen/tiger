@@ -1,6 +1,4 @@
 
-init_test();
-
 tiger = create_empty_tiger();
 
 % TODO  find out why this is infeasible
@@ -46,3 +44,9 @@ sol4max = fba(t4max);
 %show_sol(t4,sol4)
 assert(near(-sol4min.val,0),'sol4 min');
 assert(near( sol4max.val,1),'sol4 max');
+
+clear -regexp ^sol\dmax$
+clear -regexp ^sol\dmin$
+clear t tiger
+clear -regexp ^t\dmax$
+clear -regexp ^t\dmin$

@@ -1,6 +1,4 @@
 
-init_test
-
 %%
 % IFF tests
 
@@ -61,3 +59,4 @@ t = set_fieldval(t,'obj','f',-1);
 sol = fba(t);
 assert(near(sol.val,-2),'multi if or2');
 
+clear rules sol t tiger

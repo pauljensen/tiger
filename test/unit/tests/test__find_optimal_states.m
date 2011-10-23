@@ -7,3 +7,5 @@ d = [ 1 -1 -1 ];
 w = [ 1  3 10 ];
   
 [states,score,matched,total] = find_optimal_states(d,T,w);
+
+clear T d matched score states total w
