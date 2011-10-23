@@ -24,11 +24,11 @@
   with IntFeasTol less than this value, it is changed before calling 
   Gurobi.
 
+* Fixed handling of problems without constraints for Gurobi.
+
 * Corrected scaling of quadratic terms with CPLEX.  CPLEX uses objectives
   of the form (0.5*x'*Q*x) -- CMPI uses (x'*Q*x).
 
 * Corrected typos in documentation for
    add_column
-
-
 

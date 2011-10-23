@@ -99,6 +99,13 @@ end
 
 switch solver
     case 'gurobi'
+        % Gurobi does not like problems without constraints;
+        % add a dummy constraint: x(1) <= ub(x(1))
+        if nnz(mip.A) == 0
+            mip = add_row(mip,[],'<',mip.ub(1));
+            mip.A(end,1) = 1;
+        end
+        
         opts = cmpi.set_gurobi_opts(mip.options);
         if qp
             [opts.QP.qrow,opts.QP.qcol,opts.QP.qval] = find(mip.Q);
