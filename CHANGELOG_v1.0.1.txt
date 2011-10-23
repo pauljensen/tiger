@@ -13,7 +13,19 @@
   returning models with zero objective flux from integrality leaks.
   This can be changes via the 'set_IntFeasTol' parameter to MADE.
 
+* TEST_TIGER allows a solver to be specified for the unit tests.
+  (issue #12)
+
 ===== Bugs =====
+
+* Fixed indexing error for MIQP problems with Gurobi.
+
+* Gurobi does not allow IntFeasTol below 1e-09; if SOLVE_MIP is called
+  with IntFeasTol less than this value, it is changed before calling 
+  Gurobi.
+
+* Corrected scaling of quadratic terms with CPLEX.  CPLEX uses objectives
+  of the form (0.5*x'*Q*x) -- CMPI uses (x'*Q*x).
 
 * Corrected typos in documentation for
    add_column

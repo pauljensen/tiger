@@ -14,7 +14,8 @@ if isfield(options,'FeasTol')
     opts.FeasibilityTol = options.FeasTol;
 end
 if isfield(options,'IntFeasTol')
-    opts.IntFeasTol = options.IntFeasTol;
+    % respect the Gurobi minimim
+    opts.IntFeasTol = max([options.IntFeasTol,1e-09]);
 end
 if isfield(options,'OptTol')
     opts.OptimalityTol = options.OptTol;

@@ -12,7 +12,7 @@ mip.vartypes = 'cc';
 mip.Q = [0.5 0; 0 1];
 
 sol = cmpi.solve_mip(mip);
-assert(near(sol.val,-25/3),'MIQP Q obj val');
+assert(near(sol.val,-66/9),'MIQP Q obj val');
 
 t = create_empty_tiger();
 t = add_column(t,3,'c');
