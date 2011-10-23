@@ -3,6 +3,9 @@ function test_tiger(solver)
 %
 %   Before running this function, move to the TIGER/test/unit directory.
 %   Unit tests are located in TIGER/test/unit/tests.
+%
+%   If called as TEST_TIGER(SOLVER), the solver is changed to SOLVER
+%   before the tests are run.
 
 if nargin == 0
     start_tiger();
