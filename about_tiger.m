@@ -1,6 +1,6 @@
 function about_tiger()
 
-VERSION = '1.0.0 (09/25/2011)';
+VERSION = '1.0.1 (10/23/2011)';
 
 fprintf('\n\n');
 fprintf('TIGER:  Toolbox for Integrating Genome-scale metabolism,\n');
@@ -20,5 +20,5 @@ fprintf('http://csbl.bitbucket.org/tiger\n\n');
 
 fprintf('Citation information:\n');
 fprintf('   Jensen P.A., K.A. Lutz, J.A. Papin.  TIGER:  Toolbox for integrating\n');
-fprintf('   genome-scale metabolic models, expression data, and trascriptional\n');
+fprintf('   genome-scale metabolic models, expression data, and transcriptional\n');
 fprintf('   regulatory networks.  BMC Systems Biology (2011) 5:147\n\n');

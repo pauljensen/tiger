@@ -16,6 +16,7 @@
 * TEST_TIGER allows a solver to be specified for the unit tests.
   (issue #12)
 
+
 ===== Bugs =====
 
 * Fixed indexing error for MIQP problems with Gurobi.
@@ -31,4 +32,3 @@
 
 * Corrected typos in documentation for
    add_column
-

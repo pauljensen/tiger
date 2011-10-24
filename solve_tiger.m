@@ -6,6 +6,8 @@ function [sol] = solve_tiger(tiger,sense)
 %   Solve a TIGER model structure and return a CMPI solution structure.  
 %   SENSE can be either 'min' for minimization (default) or 'max' for 
 %   maximization.
+%
+%   For more information, see the documentation for SOLVE_MIP.
 
 if nargin < 2 && ~isfield(tiger,'sense')
     sense = 'min';
