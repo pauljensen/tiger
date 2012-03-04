@@ -8,7 +8,13 @@ all_ops = [op_subs{2:2:end}];
 opstart = setdiff(cellfun(@(x) {x(1)},all_ops), ...
                   arrayfun(@(x) {x}, alphas));
 op_keys = op_subs(1:2:end);
-op_vals = op_subs(2:2:end);    
+op_vals = op_subs(2:2:end);
+for i = 1 : length(op_keys)
+    key = op_keys(i);
+    op_keys{i} = key(ones(1,length(op_vals{i})));
+end
+op_keys = [op_keys{:}];
+op_vals = [op_vals{:}];
 
 whitespace = {' ','\t'};
 
@@ -93,7 +99,7 @@ function [tok] = make_token(str,index)
     quoted = false;
     
     if is_op(str)
-        str = op_keys{cellfun(@(x) ismember(str,x),op_vals)};
+        str = op_keys{strcmp(str,op_vals)};
         tok = token(str,true);
     elseif str == '('
         tok = token(str,false,true);
@@ -116,7 +122,7 @@ function [tf] = is_op(str)
     if nargin == 0
         str = buf.val;
     end
-    tf = ismember(str,all_ops);
+    tf = any(strcmp(str,all_ops));
 end
 
 end % function

@@ -51,13 +51,13 @@ if obj_frac ~= 0
 end
 
 N = length(rules);
-exprs = map(@(x) x.copy,parse_string(rules));
+exprs = parse_string(rules);
 
 s_names = {};
 s_rules = [];
 
 for i = 1 : N
-    if exprs{i}.IFF
+    if is_iff(exprs{i})
         exprs{i}.lexpr = append_s(exprs{i}.lexpr,'l');
     end
     exprs{i}.rexpr = append_s(exprs{i}.rexpr,'r');
@@ -93,7 +93,7 @@ if show_rules
         if isa(rules{idx},'char')
             string = rules{idx};
         else
-            string = rules{idx}.to_string;
+            string = expr_to_string(rules{idx});
         end
         fprintf('%5i[%s]  %s\n',idx,side(i),string);
     end
@@ -104,9 +104,9 @@ function [new] = append_s(e,side)
     s_name = sprintf('_s%i%s',i,side);
     s_names{end+1} = s_name;
     s_rules(end+1) = i;
-    new = expr();
-    new.OR = true;
-    new.lexpr = expr();
+    new = create_empty_expr_struct();
+    new.op = 'or';
+    new.lexpr = create_empty_expr_struct();
     new.lexpr.id = s_name;
     new.rexpr = e;
 end

@@ -10,11 +10,11 @@ rules = map(@convert_aux,cobra.grRules);
 
 function [rule] = convert_aux(str)
     e = parse_string(str);
-    e.iterif(@(x) x.is_atom,@(x) switch_atom(x));
-    rule = e.to_string();
+    e = expr_mapif(e,@(x) is_atom(x),@(x) switch_atom(x));
+    rule = expr_to_string(e);
 end
 
-function switch_atom(e)
+function [e] = switch_atom(e)
     [~,loc] = ismember(e.id,cobra.genes);
     e.id = sprintf('x(%i)',loc);
 end

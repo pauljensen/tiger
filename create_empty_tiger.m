@@ -20,3 +20,7 @@ tiger.param.ind = 0;
 tiger.param.fixedvar = [];
 tiger.param.rules = {};
 tiger.param.rule_id = [];
+
+tiger.bounds.var = [];
+tiger.bounds.ind = [];
+tiger.bounds.type = '';

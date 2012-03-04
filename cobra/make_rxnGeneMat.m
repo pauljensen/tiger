@@ -36,7 +36,7 @@ rgm = false(nrxns,ngenes);
 for i = 1 : nrxns
     if has_gpr(i)
         rgm(i,:) = ismember(cobra.genes, ...
-                            exprs{i}.atoms);
+                            get_atoms(exprs{i}));
     end
 end
 

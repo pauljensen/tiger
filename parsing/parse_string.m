@@ -16,10 +16,14 @@ function [exp] = parse_string(str,varargin)
 %
 %   If 'status' is true (default = false), a progress indicator is
 %   displayed.
+%
+%   If 'as_expr' is true (default), an EXPR object is returned.  If false,
+%   the expression structure is returned.
 
 p = inputParser;
 p.addParamValue('numeric',true);
 p.addParamValue('status',false);
+p.addParamValue('as_expr',false);
 p.parse(varargin{:});
 
 numeric = p.Results.numeric;
@@ -52,6 +56,11 @@ statbar.start('Parsing strings');
 exp = cell(1,N);
 for i = 1 : N
     exp{i} = parse_single(strs{i});
+    
+    if p.Results.as_expr
+        exp{i} = struct_to_expr(exp{i});
+    end
+    
     statbar.update(i);
 end
 
@@ -62,13 +71,15 @@ end
 function [e] = parse_single(s)
     if isa(s,'expr')
         e = s.copy();
+    elseif isa(s,'struct')
+        e = s;
     elseif isempty(s)
-        e = expr();
+        e = create_empty_expr_struct();
         e.NULL = true;
     else
         assert(isa(s,'char'),'Objects of class %s cannot be parsed.', ...
                              class(s));
-        e = parse(lex(s,op_subs),levels,unary,'numeric',numeric);
+        e = parse(s,levels,unary,op_subs,'numeric',numeric);
     end
 end
 

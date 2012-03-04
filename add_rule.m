@@ -50,6 +50,10 @@ function [tiger] = add_rule(tiger,rule,varargin)
 %                  (default = false)
 %   'parse_string' Cell of parameters to pass to PARSE_STRING.
 
+% faster locating
+isin = @(x,S) any(strcmp(x,S));
+whereis = @(x,S) find(strcmp(x,S));
+
 assert(nargin >= 2, 'ADD_RULE requires at least two inputs.');
 
 % if there is no starting model, start with a blank model
@@ -101,12 +105,13 @@ parse_string_params = p.Results.parse_string;
 keep_rules = p.Results.keep_rules;
 
 % rule parsing
-rules = assert_cell(parse_string(rule,parse_string_params{:}));
+rules = assert_cell(parse_string(rule,parse_string_params{:}, ...
+                                      'as_expr',false));
 N = length(rules);
 
 % Get all atoms in the expression list.  This is repeated in
 % simplify_rule, but do it on all atoms here for efficiency.
-atoms = cellfun(@(x) x.atoms,rules,'Uniform',false);
+atoms = map(@get_atoms,rules);
 atoms = setdiff(unique([atoms{:}]),tiger.varnames);
 add_var(atoms);
 
@@ -122,7 +127,7 @@ indtypes = tiger.indtypes;
 roff = size(A,1);  % row offset for adding constraints
 
 if keep_rules
-    tiger.param.rules(end+(1:N)) = map(@(x) x.copy,rules);
+    tiger.param.rules(end+(1:N)) = rules;
 end
 
 % simplify the rules and convert to inequalities
@@ -154,42 +159,41 @@ tiger.param.ind = ind_counter;
 
 tiger = check_tiger(tiger);
 
-function prepare_conditional(cond)
+function [cond] = prepare_conditional(cond)
     % Remove '>', '<', and '~=' operators
-    switch cond.cond_op
+    switch cond.op
         case '>'
-            cond.cond_op = '<=';
+            cond.op = '<=';
             cond.negated = ~cond.negated;
         case '<'
-            cond.cond_op = '>=';
+            cond.op = '>=';
             cond.negated = ~cond.negated;
         case '~='
-            cond.cond_op = '=';
+            cond.op = '=';
             cond.negated = ~cond.negated;
     end
     
-    if strcmp(cond.cond_op,'=')
+    if strcmp(cond.op,'=')
         % switch (a = b) to (a >= b) AND (a <= b) to avoid indicators
         % on equality constraints
-        lexpr = cond.copy;
-        lexpr.cond_op = '>=';
-        rexpr = cond.copy;
-        rexpr.cond_op = '<=';
+        lexpr = cond;
+        lexpr.op = '>=';
+        rexpr = cond;
+        rexpr.op = '<=';
         
-        cond.cond_op = '';
-        cond.AND = true;
+        cond.op = 'and';
         cond.lexpr = lexpr;
         cond.rexpr = rexpr;
         
-        cond.demorgan();
+        cond = demorgan_expr(cond);
     end
 end
             
-function switch_nots(e)
+function [e] = switch_nots(e)
     % Create negated variables to remove negated atoms. 
-    e.iterif(@(x) x.is_atom && x.negated,@switch_aux);
+    e = expr_mapif(e,@(x) is_atom(x) && x.negated,@switch_aux);
     
-    function switch_aux(e)
+    function [e] = switch_aux(e)
         not_name = [NOT_PRE e.id];
         add_not_con(e.id,not_name);
         e.id = not_name;
@@ -200,10 +204,10 @@ end
 function add_not_con(not_var,not_ind)
     if strcmpi(not_type,'binary')
         pseudo_rule = sprintf('%s > 0 <=> %s',not_var,not_ind);
-        simplify_rule(parse_string(pseudo_rule));
+        simplify_rule(parse_string(pseudo_rule,'as_expr',false));
     else
-        [~,var_idx] = ismember(not_var,tiger.varnames);
-        tf = ismember(not_ind,tiger.varnames);
+        var_idx = whereis(not_var,tiger.varnames);
+        tf = isin(not_ind,tiger.varnames);
         if ~tf
             add_var(not_ind,tiger.lb(var_idx),tiger.ub(var_idx));
             ind_idx = length(tiger.varnames);
@@ -224,47 +228,41 @@ function simplify_rule(r)
     %       atom OR  atom -> atom
     % The simple rules are converted to inequalities.
     
-    atoms = r.atoms;
-    tf = ismember(atoms,tiger.varnames);
-    add_var(atoms(~tf));
+    %atoms = get_atoms(r);
+    %tf = cellfun(@(x) isin(x,tiger.varnames),atoms);
+    %add_var(atoms(~tf));
     
     % move nots down to the atoms
-    r.demorgan();
+    r = demorgan_expr(r);
     
     % prepare conditionals
-    r.iterif(@(e) e.is_cond,@prepare_conditional);
+    r = expr_mapif(r,@is_cond,@prepare_conditional);
 
-    if ~r.rexpr.is_atom
+    if ~is_atom(r.rexpr)
         r.rexpr = make_substitution(r.rexpr);
     end
-    if ~r.lexpr.is_simple
-        simplify_expr(r.lexpr);
+    if ~is_simple(r.lexpr)
+        r.lexpr = simplify_expr(r.lexpr);
     end
     
-    switch_nots(r);
+    r = switch_nots(r);
         
     % convert to ineqs
     simple_rule_to_ineqs(r);
 end
 
-function simplify_expr(e)
+function [e] = simplify_expr(e)
     % Simplifies an expression.  If the left or right subexpressions
     % are not atoms, they are replaced with an indicator variable.
     % This function modifies the expression in place.
-    if e.is_cond
-        % cannot replace entire expression directly; must copy manually
-        new_ind = make_substitution(e);
-        e.cond_op = '';
-        e.id = new_ind.id;
-        e.negated = new_ind.negated;
-        e.lexpr = [];
-        e.rexpr = [];
+    if is_cond(e)
+        e = make_substitution(e);
         return;
     end
-    if ~e.lexpr.is_atom
+    if ~is_atom(e.lexpr)
         e.lexpr = make_substitution(e.lexpr);
     end
-    if ~e.rexpr.is_atom
+    if ~is_atom(e.rexpr)
         e.rexpr = make_substitution(e.rexpr);
     end
 end
@@ -281,13 +279,13 @@ function [ind_expr] = make_substitution(e)
     % passed in is copied as well, so the expression in the parent
     % rule can be modified in place.
     ind_name = get_next_ind_name();
-    ind_expr = expr();
+    ind_expr = create_empty_expr_struct();
     ind_expr.id = ind_name;
 
-    ind_rule = expr();
-    ind_rule.IFF = true;
-    ind_rule.lexpr = e.copy;
-    ind_rule.rexpr = ind_expr.copy;
+    ind_rule = create_empty_expr_struct();
+    ind_rule.op = 'iff';
+    ind_rule.lexpr = e;
+    ind_rule.rexpr = ind_expr;
     
     % leave the negation on the indicator
     if e.negated
@@ -304,14 +302,14 @@ end
 function [lb,ub] = get_expr_bounds(e)
     % Get upper and lower bounds on an expression
     % TODO  tighten bounds on AND and OR
-    if e.is_numeric
+    if isempty(e) || e.is_numeric
         lb = 0;
         ub = 0;
-    elseif e.is_atom
-        [~,loc] = ismember(e.id,tiger.varnames);
+    elseif is_atom(e)
+        loc = whereis(e.id,tiger.varnames);
         lb = tiger.lb(loc);
         ub = tiger.ub(loc);
-    elseif e.is_cond
+    elseif is_cond(e)
         % conditionals use binary indicators
         lb = 0;
         ub = 1;
@@ -356,7 +354,8 @@ function add_var(name,lb,ub)
         
     % if user specified bounds, change from default
     if ~isempty(user_bounds)
-        [tf,loc] = ismember(user_bounds{1},names);
+        tf = isin(user_bounds{1},names);
+        loc = whereis(user_bounds{1},names);
         if any(tf)
             lbs(loc(tf)) = user_bounds{2}(tf);
             ubs(loc(tf)) = user_bounds{3}(tf);
@@ -375,11 +374,11 @@ end
 function simple_rule_to_ineqs(r)
     e = r.lexpr;
     I = r.rexpr.id;
-    [~,Iloc] = ismember(I,tiger.varnames);
+    Iloc = whereis(I,tiger.varnames);
     
-    if e.is_atom
-        [~,loc] = ismember(e.id,tiger.varnames);
-        if r.IFF
+    if is_atom(e)
+        loc = whereis(e.id,tiger.varnames);
+        if strcmp(r.op,'iff')
             % x <=> I ~> x = I
             addrow([1 -1],'=',0,[loc Iloc]);
         else
@@ -389,21 +388,21 @@ function simple_rule_to_ineqs(r)
         return;
     end
     
-    if e.is_cond
-        assert(ismember(e.cond_op,{'<=','=','>='}), ...
-               'Operator %s should have been removed.',e.cond_op);
+    if is_cond(e)
+        assert(ismember(e.op,{'<=','=','>='}), ...
+               'Operator %s should have been removed.',e.op);
         lname = e.lexpr.id;
-        [~,lloc] = ismember(lname,tiger.varnames);
+        lloc = whereis(lname,tiger.varnames);
         rname = e.rexpr.id;
-        [~,rloc] = ismember(rname,tiger.varnames);
-        op = e.cond_op;
+        rloc = whereis(rname,tiger.varnames);
+        op = e.op;
         if e.rexpr.is_numeric
             addrow(1,op(1),str2double(rname),lloc);
         else
             addrow([1 -1],op(1),0,[lloc rloc]);
         end
         ind(roff) = Iloc;
-        if r.IFF
+        if strcmp(r.op,'iff')
             indtypes(roff) = 'b';
         else
             indtypes(roff) = 'p';
@@ -414,8 +413,8 @@ function simple_rule_to_ineqs(r)
     
     x = r.lexpr.lexpr.id;
     y = r.lexpr.rexpr.id;
-    [~,xloc] = ismember(x,tiger.varnames);
-    [~,yloc] = ismember(y,tiger.varnames);
+    xloc = whereis(x,tiger.varnames);
+    yloc = whereis(y,tiger.varnames);
     locs = [xloc yloc Iloc];
     
     multilevel = is_multilevel(r.lexpr);
@@ -428,37 +427,41 @@ function simple_rule_to_ineqs(r)
     xrange = xmax - xmin;
     yrange = ymax - ymin;
     
-    if ~multilevel && e.AND
+    if ~multilevel && strcmp(e.op,'and')
         addrow([2 2 -4],'<',3);
-        if r.IFF
+        if strcmp(r.op,'iff')
             addrow([2 2 -4],'>',-1);
         end
-    elseif ~multilevel && e.OR
+    elseif ~multilevel && strcmp(e.op,'or')
         addrow([-1 -1 3],'>',0);
-        if r.IFF
+        if strcmp(r.op,'iff')
             addrow([-1 -1 3],'<',2);
         end
-    elseif e.is_junc
+    elseif is_junc(e)
         % multilevel expressions
-        if e.AND
+        if strcmp(e.op,'and')
             Iaux = get_next_ind_name();
-            I_exp = parse_string(sprintf('%s > %s <=> %s',x,y,Iaux));
+            add_var(Iaux);
+            I_exp = parse_string(sprintf('%s > %s <=> %s',x,y,Iaux), ...
+                                 'as_expr',false);
             simplify_rule(I_exp);
-            [~,Iaux_loc] = ismember(Iaux,tiger.varnames);
+            Iaux_loc = whereis(Iaux,tiger.varnames);
             addrow([1  xrange -1],'<',     0,[xloc Iaux_loc Iloc]);
             addrow([1 -yrange -1],'<',yrange,[yloc Iaux_loc Iloc]);
-            if r.IFF
+            if strcmp(r.op,'iff')
                 addrow([1 -1],'<',0,[Iloc xloc]);
                 addrow([1 -1],'<',0,[Iloc yloc]);
             end
-        elseif e.OR
+        elseif strcmp(e.op,'or')
             addrow([1 -1],'>',0,[Iloc xloc]);
             addrow([1 -1],'>',0,[Iloc yloc]);
-            if r.IFF
+            if strcmp(r.op,'iff')
                 Iaux = get_next_ind_name();
-                I_exp = parse_string(sprintf('%s > %s <=> %s',x,y,Iaux));
+                add_var(Iaux);
+                I_exp = parse_string(sprintf('%s > %s <=> %s',x,y,Iaux), ...
+                                     'as_expr',false);
                 simplify_rule(I_exp);
-                [~,Iaux_loc] = ismember(Iaux,tiger.varnames);
+                Iaux_loc = whereis(Iaux,tiger.varnames);
                 addrow([1 -xrange -1],'>',-xrange,[xloc Iaux_loc Iloc]);
                 addrow([1  yrange -1],'>',      0,[yloc Iaux_loc Iloc]);
             end
@@ -482,12 +485,12 @@ function simple_rule_to_ineqs(r)
 end
 
 function [tf] = is_binary(e)
-    if e.is_atom
-        [~,loc] = ismember(e.id,tiger.varnames);
+    if is_atom(e)
+        loc = whereis(e.id,tiger.varnames);
         tf = tiger.vartypes(loc) == 'b';
-    elseif e.is_cond
+    elseif is_cond(e)
         tf = true;
-    elseif e.is_junc
+    elseif is_junc(e)
         tf = is_binary(e.lexpr) && is_binary(e.rexpr);
     end
 end

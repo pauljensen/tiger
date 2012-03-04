@@ -14,11 +14,14 @@ function [and_lists] = make_dnf(ex,names_only)
 %   (default = false), then only the names of the atoms are returned, not
 %   the entire ATOM object.
 
+% TODO: this function needs to be re-optimized to use EXPR structures
+%       and grouping
+
 if nargin < 2
     names_only = false;
 end
 
-ex_list = {ex.copy};
+ex_list = {ex};
 
 while any(cellfun(@has_or,ex_list))
     for i = 1 : length(ex_list)
@@ -37,21 +40,21 @@ end
 
 
 function [tf] = has_or(ex)
-    tf = ex.is_junc ...
-            && (ex.OR || has_or(ex.lexpr) || has_or(ex.rexpr));
+    tf = is_junc(ex) ...
+            && (is_or(ex) || has_or(ex.lexpr) || has_or(ex.rexpr));
         
 function [sub_ex] = split_by_or(ex,dir)
     if ~has_or(ex)
-        sub_ex = ex.copy;
-    elseif ex.OR
+        sub_ex = ex;
+    elseif is_or(ex)
         switch dir
             case 'left'
-                sub_ex = ex.lexpr.copy;
+                sub_ex = ex.lexpr;
             case 'right'
-                sub_ex = ex.rexpr.copy;
+                sub_ex = ex.rexpr;
         end
     else % AND
-        sub_ex = ex.copy;
+        sub_ex = ex;
         if has_or(ex.lexpr)
             sub_ex.lexpr = split_by_or(ex.lexpr,dir);
         else
@@ -60,8 +63,8 @@ function [sub_ex] = split_by_or(ex,dir)
     end
 
 function [atoms] = get_atoms(ex)
-    if ~ex.is_junc
-        atoms = {ex.copy};
+    if ~is_junc(ex)
+        atoms = {ex};
     else
         atoms = [get_atoms(ex.lexpr), get_atoms(ex.rexpr)];
     end

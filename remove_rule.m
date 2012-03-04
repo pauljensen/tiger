@@ -16,14 +16,15 @@ else
     exprs = assert_cell(parse_string(rule));
 end
 
-null_expr = expr();
+null_expr = create_empty_expr_struct();
 null_expr.NULL = true;
 
 N = length(exprs);
-rule_strs = map(@(x) x.to_string,tiger.param.rules);
+rule_strs = map(@expr_to_string,tiger.param.rules);
 for i = 1 : N
     % find matching rules
-    matched = find(cellfun(@(x) strcmp(x,exprs{i}.to_string),rule_strs));
+    matched = find(cellfun(@(x) strcmp(x,expr_to_string(exprs{i})), ...
+                           rule_strs));
     % find corresponding rows
     to_zero = ismember(tiger.param.rule_id,matched);
     % zero the rows
@@ -33,7 +34,7 @@ for i = 1 : N
     tiger.indtypes(to_zero) = ' ';
     % replace the removed rule with the null expression
     for j = 1 : length(matched)
-        tiger.param.rules{matched(j)} = null_expr.copy;
+        tiger.param.rules{matched(j)} = null_expr;
     end
 end
 

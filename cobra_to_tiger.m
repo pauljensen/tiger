@@ -1,13 +1,15 @@
 function [tiger] = cobra_to_tiger(cobra,varargin)
 % COBRA_TO_TIGER  Convert a COBRA model to a TIGER model
 %
-%   [TIGER] = COBRA_TO_TIGER(COBRA,CONVERT_GPR,...ADD_RULE params...)
+%   [TIGER] = COBRA_TO_TIGER(COBRA,...params...)
 %
 %   Convert a COBRA model structure to a TIGER model structure.
 %
 %   Parameters
 %   'add_gpr'       If true (default), the GPR is converted into a set of
 %                   inequalities and added as constraints.
+%   'fast_gpr'      If true, use the 'fast GPR' conversion method (default
+%                   is false)
 %
 %   Parameters (passed to CONVERT_GPR)
 %   'status'        If true (default = false), display progress indicators
@@ -17,17 +19,23 @@ function [tiger] = cobra_to_tiger(cobra,varargin)
 
 p = inputParser;
 p.addParamValue('add_gpr',true);
+p.addParamValue('fast_gpr',false);
 p.KeepUnmatched = true;
 p.parse(varargin{:});
 convert_gpr_params = struct2list(p.Unmatched);
 
 add_gpr = p.Results.add_gpr;
+fast_gpr = p.Results.fast_gpr;
+if fast_gpr
+    add_gpr = false;
+end
 
 tiger = rmfield(cobra,'c');
 
 % get default params
 empty_tiger = create_empty_tiger();
 tiger.param = empty_tiger.param;
+tiger.bounds = empty_tiger.bounds;
 
 [m,n] = size(tiger.S);
 
@@ -68,6 +76,14 @@ if add_gpr
 
     tiger.lb(1:orig_N) = orig_lb;
     tiger.ub(1:orig_N) = orig_ub;
+end
+
+if fast_gpr
+    for i = 1 : size(tiger.S,2)
+        if tiger.gpr{i}
+            tiger = add_fast_gpr(tiger,parse_string(tiger.gpr{i}),i);
+        end
+    end
 end
 
 

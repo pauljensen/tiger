@@ -1,0 +1,55 @@
+
+===== New Features =====
+
+* Faster rule parsing.  The runtime of the COBRA_TO_TIGER function on the
+  iAF1260 E. coli model decreased by 55% (from 193.6 to 86.3 seconds).
+
+* The new parser reports helpful error messages when encountering errors
+  in PARSE_STRING.  Missing parenthesis are also identified.
+
+* A new method is included for converting GPR rules into constraints.
+  The conversion uses only a single binary variable for the gene indicator,
+  and continuous variables otherwise.  The GPR is also re-grouped to
+  reduce the number of substitutions needed.  This feature reduces 
+  complexity of the generated MILPs and can be enabled by setting the 
+  'fast_gpr' parameter in COBRA_TO_TIGER to true.
+
+* TIGER models allows for delay indicator binding.  CMPI replaces bounds 
+  on indicator variables immediately before passing the problem to the 
+  solver. This feature improves runtime for MILPs.  See ADD_BINDING for 
+  details.
+
+* Expressions are represented as Matlab structures, not with a separate 
+  class.  EXPR class methods are replaced with functions:
+
+        EXPR method         Replacement function
+        -----------         --------------------
+        display, disp       display_expr
+        iter, map           expr_map
+        iterif, mapif       expr_mapif
+        demorgan            demorgan_expr
+        atoms               get_atoms
+        AND, OR, IF, IFF    is_and, is_or, is_if, is_iff
+        NULL                is_null
+        cond_op             op
+        is_junc, is_cond    is_junc, is_cond
+        is_op, is_rule      is_op, is_rule
+        is_atom             is_atom
+        expr()              create_empty_expr_struct()
+        copy                <none> Structures are copied automatically
+                                   on assignment.
+
+===== Bug Fixes =====
+
+* Documentation fixes for COBRA_TO_TIGER.
+
+* SINGLE_GENE_KO works correctly when only given one gene name.  Also,
+  status bar can be turned off with the 'status' parameter. (issue #21)
+
+* MADE parameter 'pvalidate' parses correctly. (issue #20)
+
+* CMPI.SET_OPTION works correctly when given [] as the only input.
+  (issue #19)
+
+* EXTRACT_TIGER now updates S to reflect changes made to the corresponding
+  entries in A. (issue #16)

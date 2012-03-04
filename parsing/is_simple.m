@@ -1,0 +1,6 @@
+function [tf] = is_simple(e)
+
+tf =    is_atom(e) ... 
+     || (is_cond(e) && ~e.negated) ...
+     || (is_junc(e) && is_atom(e.lexpr) && is_atom(e.rexpr));
+ 

@@ -1,4 +1,5 @@
 
+mip = create_empty_tiger();
 
 mip.obj = [-2 -6]';
 mip.A = sparse([1 1; -1 2; 2 1]);
@@ -8,6 +9,7 @@ mip.ub = [100 100]';
 
 mip.ctypes = '<<<';
 mip.vartypes = 'cc';
+mip.varnames = {'var1','var2'};
 
 mip.Q = [0.5 0; 0 1];
 

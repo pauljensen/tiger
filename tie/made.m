@@ -132,7 +132,7 @@ p.addParamValue('weighting','log',@(x) ismember(x,valid_weights));
 p.addParamValue('bounds',[]);
 p.addParamValue('objs',[]);
 
-pvalidate = @(x) validateattributes(x,'numeric', ...
+pvalidate = @(x) validateattributes(x,{'numeric'}, ...
                                     {'scalar','real','positive','<=',1});
 p.addParamValue('p_thresh',0.5,pvalidate);
 p.addParamValue('p_eps',1e-10,pvalidate);

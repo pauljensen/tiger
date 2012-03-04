@@ -1,10 +1,13 @@
-function [grRatio,grRateKO,grRateWT] = single_gene_ko(tiger,genes)
+function [grRatio,grRateKO,grRateWT] = single_gene_ko(tiger,genes,varargin)
 % SINGLE_GENE_KO  Perform single gene knockout simulations
 %
 %   [grRatio,grRateKO,grRateWT] = SINGLE_GENE_KO(TIGER,GENES)
 %
 %   Performs knockouts of each gene in the cell GENES.  If a GENES is not
 %   given, uses all genes in the cell TIGER.genes.
+%
+%   Parameters
+%   'status'  If true (default), display a status bar.
 %
 %   Outputs
 %   grRatio   Ratio of knockout and wild-type growth rates.
@@ -15,10 +18,16 @@ if nargin < 2
     genes = tiger.genes;
 end
 
+genes = assert_cell(genes);
+
+p = inputParser;
+p.addParamValue('status',true);
+p.parse(varargin{:});
+
 idxs = convert_ids(tiger.varnames,genes,'index');
 
 N = length(genes);
-statbar = statusbar(N);
+statbar = statusbar(N,p.Results.status);
 
 grRateKO = zeros(N,1);
 

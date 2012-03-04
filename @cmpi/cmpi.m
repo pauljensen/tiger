@@ -101,6 +101,8 @@ methods (Static)
         
         if nargin == 1 && isa(option,'struct')
             CMPI_OPTIONS = option;
+        elseif nargin == 1 && isempty(option)
+            CMPI_OPTIONS = [];
         else
             CMPI_OPTIONS.(option) = val;
         end
@@ -186,6 +188,7 @@ methods (Static)
     [qtype] = miqp_type(mip)
     [inf_rows,sol] = find_infeasible_rows(mip,varargin)
     [mip] = bounds_to_constraints(mip,varargin)
+    [mip] = convert_var_bindings(mip)
 end
 
 end % class

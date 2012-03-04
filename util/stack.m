@@ -15,6 +15,11 @@ end
 
 properties (SetAccess = private)
     values  % cell of stack values
+    current_index = 0
+end
+
+properties (Constant)
+    block_size = 10
 end
 
 methods
@@ -38,6 +43,8 @@ methods
                 obj.values{i} = array(i);
             end
         end
+        
+        obj.current_index = length(obj.values);
     end
 
     function assert_is_another(obj)
@@ -46,36 +53,43 @@ methods
     
     function [item] = pop(obj)
         % POP  Remove the last object added to the stack.
-        obj.assert_is_another();
-        item = obj.values{end};
-        obj.values = obj.values(1:end-1);
+        if obj.current_index < 1
+            obj.assert_is_another();
+        end
+        item = obj.values{obj.current_index};
+        obj.current_index = obj.current_index - 1;
     end
 
     function push(obj,item)
         % PUSH  Add an item to the stack.
-        obj.values{end+1} = item;
+        if obj.current_index == length(obj.values)
+            % expand the stack
+            obj.values{end+obj.block_size} = [];
+        end
+        obj.current_index = obj.current_index + 1;
+        obj.values{obj.current_index} = item;
     end
 
     function [item] = peek(obj)
         % PEEK  Return the last item added to the stack,
         %       without removing it.
         obj.assert_is_another();
-        item = obj.values{end};
+        item = obj.values{obj.current_index};
     end
 
     function reverse(obj)
         % REVERSE  Reverse the order of items on the stack.
-        obj.values = fliplr(obj.values);
+        obj.values = fliplr(obj.values(1:obj.current_index));
     end
     
     function [s] = copy(obj)
         % COPY  Create an independent copy of the stack.
-        s = stack(obj.values);
+        s = stack(obj.values(1:obj.current_index));
     end
     
     % ------- dependent access methods -------
     function [N] = get.length(obj)
-        N = length(obj.values);
+        N = obj.current_index;
     end
     function [N] = get.N(obj)
         N = obj.length;

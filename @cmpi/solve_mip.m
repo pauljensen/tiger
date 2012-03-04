@@ -86,9 +86,27 @@ if ~isfield(mip,'options') || isempty(mip.options)
     mip.options = cmpi.get_options();
 end
 
+% support remote solver calls
+if any(solver == '@')
+    parts = splitstr(solver,'@');
+    cmds = sprintf(['addpath(genpath(''/usr/local/tiger''));', ...
+                    'start_tiger(''%s'');', ...
+                    'sol=cmpi.solve_mip(mip);'], ...
+                   parts{1});
+    job_id = run_remote(cmds, ...
+                        'server',parts{2}, ...
+                        'send_workspace',true', ...
+                        'background',false, ...
+                        'send_files',false, ...
+                        'load_return',true);
+    sol = job_id.vars.sol;
+    return;
+end
+
 % preserve size before conversion
 N = size(mip.A,2);
 
+mip = cmpi.convert_var_bindings(mip);
 mip = cmpi.convert_indicators(mip);
 
 qp = ~isempty(cmpi.miqp_type(mip));
