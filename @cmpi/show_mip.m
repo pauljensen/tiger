@@ -63,6 +63,15 @@ end
 varnames = zip_names(default_varnames,varnames);
 rownames = zip_names(default_rownames,rownames);
 
+% show optimization direction
+if isfield(mip,'sense')
+    sense = mip.sense;
+else
+    sense = 1;
+end
+fprintf('\n\nOptimization sense:  %s', ...
+        iif(sense == 1,'minimize','maximize'));
+
 % show quadratic
 qptype = cmpi.miqp_type(mip);
 if ~isempty(qptype)

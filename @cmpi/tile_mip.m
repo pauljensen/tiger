@@ -28,12 +28,14 @@ if N == 1
     return;
 end
 
-% shift the indicator indices
+% shift the indicator and bounds indices
 ns = cellfun(@(x) size(x.A,2),mips);
 offsets = cumsum(ns) - ns(1);
 for i = 1 : N
     nonzero = mips{i}.ind > 0;
     mips{i}.ind(nonzero) = mips{i}.ind(nonzero) + offsets(i);
+    mips{i}.bounds.var = mips{i}.bounds.var + offsets(i);
+    mips{i}.bounds.ind = mips{i}.bounds.ind + offsets(i);
 end
 
 As = map(@(x) x.A,mips);
@@ -61,6 +63,14 @@ end
 field_names = {'obj','b','ctypes','vartypes','lb','ub', ...
                'ind','indtypes','rownames','varnames'};
 celliter(@concat_fields,field_names);
+
+% concatenate the bounds
+bound_vars = map(@(x) x.bounds.var,mips);
+mip.bounds.var = vertcat(bound_vars{:});
+bound_inds = map(@(x) x.bounds.ind,mips);
+mip.bounds.ind = vertcat(bound_inds{:});
+bound_types = map(@(x) x.bounds.type,mips);
+mip.bounds.type = vertcat(bound_types{:});
 
 mip.options = mips{1}.options;
 

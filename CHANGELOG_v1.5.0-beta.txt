@@ -2,7 +2,7 @@
 ===== New Features =====
 
 * Faster rule parsing.  The runtime of the COBRA_TO_TIGER function on the
-  iAF1260 E. coli model decreased by 55% (from 193.6 to 86.3 seconds).
+  iAF1260 E. coli model decreased by over 50%.
 
 * The new parser reports helpful error messages when encountering errors
   in PARSE_STRING.  Missing parenthesis are also identified.
@@ -14,7 +14,7 @@
   complexity of the generated MILPs and can be enabled by setting the 
   'fast_gpr' parameter in COBRA_TO_TIGER to true.
 
-* TIGER models allows for delay indicator binding.  CMPI replaces bounds 
+* TIGER models allows for delayed indicator binding.  CMPI replaces bounds 
   on indicator variables immediately before passing the problem to the 
   solver. This feature improves runtime for MILPs.  See ADD_BINDING for 
   details.
@@ -39,9 +39,12 @@
         copy                <none> Structures are copied automatically
                                    on assignment.
 
+* SHOW_TIGER and SHOW_MIP display the optimization sense (max or min).
+
+
 ===== Bug Fixes =====
 
-* Documentation fixes for COBRA_TO_TIGER.
+* Documentation fixes for COBRA_TO_TIGER. (issue #17)
 
 * SINGLE_GENE_KO works correctly when only given one gene name.  Also,
   status bar can be turned off with the 'status' parameter. (issue #21)
