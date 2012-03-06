@@ -41,6 +41,8 @@
 
 * SHOW_TIGER and SHOW_MIP display the optimization sense (max or min).
 
+* PARSE_STRING allows the 'matlab_levels' parameter for compatibility with
+  Matlab's operator order of operators ('and' binds tighter than 'or').
 
 ===== Bug Fixes =====
 
