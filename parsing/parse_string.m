@@ -28,7 +28,7 @@ p = inputParser;
 p.addParamValue('numeric',true);
 p.addParamValue('status',false);
 p.addParamValue('as_expr',false);
-p.addParamvalue('matlab_levels',true);
+p.addParamValue('matlab_levels',true);
 p.parse(varargin{:});
 
 numeric = p.Results.numeric;
