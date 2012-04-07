@@ -1,6 +1,6 @@
 function about_tiger()
 
-VERSION = '1.5.0-beta (03/04/2012)';
+VERSION = '1.2.0-beta (04/06/2012)';
 
 fprintf('\n\n');
 fprintf('TIGER:  Toolbox for Integrating Genome-scale metabolism,\n');
