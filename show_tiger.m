@@ -12,7 +12,7 @@ function show_tiger(tiger,varargin)
 showvars = ismember('bounds',varargin);
 showrxns = ismember('rxns',varargin);
 
-cmpi.show_mip(make_milp(tiger),'showvars',showvars);
+cmpi.show_mip(tiger,'showvars',showvars);
 
 if showrxns
     [m,n] = size(tiger.A);

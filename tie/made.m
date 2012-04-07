@@ -8,7 +8,8 @@ function [sol] = made(tiger,fold_change,pvals,varargin)
 %
 %   Inputs
 %   TIGER       TIGER model.  COBRA models will be converted to TIGER 
-%               models with a warning.
+%               models with a warning.  MADE also accepts a cell array of
+%               models for each condition.
 %   FOLD_CHANGE Measured fold change from expression data.  Columns
 %               correspond to conditions, rows correspond to genes.
 %   PVALS       P-values for changes.  Format is the same as for
@@ -64,6 +65,14 @@ function [sol] = made(tiger,fold_change,pvals,varargin)
 %                objective flux.  The default value is 1e-10.  If false,
 %                the parameter is not adjusted.  All solver parameters are
 %                reset to previous values before the function returns.
+%   'weight_thresh'  Threshold for weights on variables to be held
+%                constant.  MADE only attempts to keep variables constant
+%                if the weight from the P-value is above this value.
+%                (Default = 1e-8.)
+%   'verify'     If true (default), MADE checks that the generated models
+%                are feasible for the objective flux fraction.
+%   'round_states'  If true (default), binary variables in GENE_STATES are
+%                rounded.
 %
 %   Output is a solution structure with the following fields:
 %   output      Solution structure with details from the MILP solver.
@@ -105,24 +114,14 @@ function [sol] = made(tiger,fold_change,pvals,varargin)
 %   adjusted_match_percent  'matched' / 'theoretical_matches' * 100
 %   verified    Logical array indicating if the model for each condition
 %               can carry the minimum objective flux.
-%   variables   Variable cell array returned by DIFFADJ.
-%               See 'help diffadj' for more details.
+%   variables   Cell array of the solution vectors for each model.
 
 % TODO  don't compute theoretical matches when opt_match is off
-
-% test inputs
-assert(nargin >= 3, 'MADE requires at least three inputs.');
-
-% make sure the input was an TIGER model
-tiger = assert_tiger(tiger);
-
-assert(all(size(pvals) == size(fold_change)), ...
-       'FOLD_CHANGE and PVALS must have the same dimensions');
 
 % parse input param/value pairs
 p = inputParser;
 
-p.addParamValue('gene_names',tiger.genes);
+p.addParamValue('gene_names',[]);
 
 p.addParamValue('obj_frac',0.3);
 
@@ -143,6 +142,9 @@ p.addParamValue('theoretical_match',true);
 p.addParamValue('log_fold_change',false);
 p.addParamValue('return_models',true);
 p.addParamValue('set_IntFeasTol',1e-10);
+p.addParamValue('weight_thresh',1e-8);
+p.addParamValue('verify',true);
+p.addParamValue('round_states',true);
 
 p.addParamValue('verbose',true);
 
@@ -150,42 +152,122 @@ p.parse(varargin{:});
 
 verbose = p.Results.verbose;
 
-find_theor = p.Results.theoretical_match;
+% test inputs
+assert(nargin >= 2, 'MADE requires at least three inputs.');
 
-% set the integer feasibility tolerance
-IntFeasTol = p.Results.set_IntFeasTol;
-set_IntFeasTol = isnumeric(IntFeasTol);
-if set_IntFeasTol
-    prev_solver_options = get_solver_options();
-    set_solver_option('IntFeasTol',IntFeasTol);
+% check if p-values were given
+if isempty(pvals)
+    if verbose
+        fprintf('No P-values given; applying unit weighting.\n');
+    end
+    pvals = ones(size(fold_change));
+    p.Results.weighting = 'none';
+else
+    assert(all(size(pvals) == size(fold_change)), ...
+       'FOLD_CHANGE and PVALS must have the same dimensions');
 end
 
-% check for a non-default number of transitions
+% find the number of transitions and conditions
 ntrans = size(fold_change,2);   % number of transitions
 ncond  = ntrans + 1;            % number of conditions
 if ~isempty(p.Results.transition_matrix)
     ntrans = max(p.Results.transition_matrix(:));
     ncond = length(p.Results.transition_matrix);
 end
+if verbose
+    fprintf('Dataset includes %i transitions between %i conditions.\n', ...
+            ntrans,ncond);
+end
 
-% find the genes to match
-genes = p.Results.gene_names;
-[tf,gene_locs] = ismember(genes,tiger.varnames);
-genes = genes(tf);
-gene_locs = gene_locs(tf);
-fold_change = fold_change(tf,:);
-pvals = pvals(tf,:);
+% ============ Construct the Models ============
 
-ngenes = length(genes);
+% check if multiple models were given
+if isa(tiger,'cell')
+    assert(length(tiger) == ncond, ...
+           ['Number of models (%i) does not match ' ...
+            'the number of conditions (%i)'], ...
+            length(tiger),ncond);
+    models = tiger;
+else
+    % replicate the single model
+    models = cell(1,ncond);
+    for i = 1 : ncond
+        models{i} = tiger;
+    end
+end
+
+% make sure each input is an TIGER model
+models = map(@assert_tiger,models);
+
+if ~isempty(p.Results.bounds)
+    bounds = p.Results.bounds;
+    err_msg = sprintf(['Number of bounds (%i) must match ', ...
+                       'the number of conditions (%i).'], ...
+                       length(bounds),ncond);
+    assert(length(bounds) == ncond,err_msg);
+    for i = 1 : length(bounds)
+        models{i}.lb(:) = bounds{i}.lb(:);
+        models{i}.ub(:) = bounds{i}.ub(:);
+    end
+end
+
+if ~isempty(p.Results.objs)
+    objs = p.Results.objs;
+    err_msg = sprintf(['Number of objectives (%i) must match ', ...
+                       'the number of conditions (%i).'], ...
+                       length(objs),ncond);
+    assert(length(objs) == ncond,err_msg);
+    for i = 1 : length(objs)
+        models{i}.obj(:) = objs{i};
+    end
+end
 
 % set frac for each condition
 frac = p.Results.obj_frac;
 if length(frac) == 1
-    fracs = repmat(frac,1,ncond);
+    frac = repmat(frac,1,ncond);
 end
+assert(length(frac) == ncond);
+
+% add growth constraints
+orig_models = models;
+for i = 1 : length(frac)
+    models{i} = add_growth_constraint(models{i},frac(i));
+end
+
+% number of variables in each model
+nvars = cellfun(@(x) size(x.A,2),models);
+
+% find the genes to match
+common_vars = models{1}.varnames;
+for i = 2 : ncond
+    common_vars = intersect(common_vars,models{i}.varnames);
+end
+genes = p.Results.gene_names;
+tf = ismember(genes,common_vars);
+genes = genes(tf);
+fold_change = fold_change(tf,:);
+pvals = pvals(tf,:);
+gene_locs = cell(1,ncond);  % gene locations in the tiled model
+for i = 1 : ncond
+    [~,gene_locs{i}] = ismember(genes,models{i}.varnames);
+end
+unshifted_locs = gene_locs;
+offsets = cumsum(nvars);
+for i = 2 : ncond
+    gene_locs{i} = gene_locs{i} + offsets(i-1);
+end
+ngenes = length(genes);
+if verbose
+    fprintf('%i of %i genes were found in every model.\n', ...
+            ngenes,length(p.Results.gene_names));
+end
+
+% ============ Convert P-values and Fold Change ============
 
 p_thresh = p.Results.p_thresh;
 p_eps = p.Results.p_eps;
+weight_thresh = p.Results.weight_thresh;
 
 if strcmpi(p.Results.weighting,'none')
     % fold_change is a direction matrix, pvals are weights
@@ -200,12 +282,15 @@ else
         fold_change = fold_change + 1;
     end
     
+    p_lower = p_thresh;
+    p_upper = 1 - p_thresh;
+    
     % convert significant fold changes to differences
-    d(fold_change <  1.0 & pvals <= p_thresh) = -1;
-    d(fold_change >= 1.0 & pvals <= p_thresh) =  1;
+    d(fold_change <  1.0 & pvals <= p_lower) = -1;
+    d(fold_change >= 1.0 & pvals <= p_lower) =  1;
 
-    % shift p-values above p_thresh onto [0, 1-p_thresh]
-    P(pvals > p_thresh) = 1 - pvals(pvals > p_thresh);
+    % shift p-values above (1 - p_thresh) onto [0, 1-p_thresh]
+    P(pvals >= p_upper) = 1 - pvals(pvals >= p_upper);
 
     % convert p-values to weights
     switch lower(p.Results.weighting)
@@ -217,15 +302,17 @@ else
         case 'unit'
             w = ones(size(P));
     end
+    
+    % remove weightings not within significance threshold
+    w(pvals > p_lower & pvals < p_upper) = 0;
 end
 
-bounds = p.Results.bounds;
-objs = p.Results.objs;
 
 T = check_transition_matrix(p.Results.transition_matrix,ncond,ntrans);
 
 % determine theoretical matches
-if find_theor
+opt_states = [];
+if p.Results.theoretical_match
     if verbose, fprintf('Finding optimal matches...'); end
     opt_states = zeros(ngenes,ncond);
     opt_matched = zeros(ngenes,1);
@@ -236,41 +323,129 @@ if find_theor
     if verbose, fprintf('done\n'); end
 end
 
-% run MADE
-[gene_states,diffadj_sol,diffadj_error,milps] ...
-    = diffadj(tiger,gene_locs,d,w,T,bounds,objs,fracs);
+mip = cmpi.tile_mip(models{:});
+mip.obj(:) = 0;
 
-if diffadj_error
+n_con = count( d(:) == 0 & w(:) >= weight_thresh );
+con_offset = 0;
+con_idx1 = zeros(1,n_con);
+con_idx2 = zeros(1,n_con);
+con_objs = zeros(1,n_con);
+
+for t = 1 : ntrans
+    [cond1,cond2] = find_conditions(t,T);
+    for g = 1 : ngenes
+        idx1 = gene_locs{cond1}(g);
+        idx2 = gene_locs{cond2}(g);
+        switch d(g,t)
+            case {1}
+                % increasing
+                mip.obj(idx1) = mip.obj(idx1) + w(g,t);
+                mip.obj(idx2) = mip.obj(idx2) - w(g,t);
+            case {-1}
+                % decreasing
+                mip.obj(idx1) = mip.obj(idx1) - w(g,t);
+                mip.obj(idx2) = mip.obj(idx2) + w(g,t);
+            case {0}
+                % constant
+                if abs(w(g,t)) >= weight_thresh
+                    con_offset = con_offset + 1;
+                    con_idx1(con_offset) = idx1;
+                    con_idx2(con_offset) = idx2;
+                    con_objs(con_offset) = w(g,t);
+                end
+        end
+    end
+end
+
+% add the constant variables
+[mip,pos_idxs,neg_idxs] = add_nonbinding_diff(mip,con_idx1,con_idx2);
+mip.obj(pos_idxs) = con_objs;
+mip.obj(neg_idxs) = con_objs;
+
+% set the integer feasibility tolerance
+IntFeasTol = p.Results.set_IntFeasTol;
+set_IntFeasTol = isnumeric(IntFeasTol);
+if set_IntFeasTol
+    prev_solver_options = get_solver_options();
+    set_solver_option('IntFeasTol',IntFeasTol);
+end
+
+% run MADE
+mip.sense = 1;
+mip_sol = cmpi.solve_mip(mip);
+
+if isempty(mip_sol.x)
     fprintf('Error:  The model was infeasible.\n\n');
-    sol = diffadj_sol;
+    sol = mip_sol;
     return
 end
 
-sol.output = diffadj_sol;
+% ============ Process the results into states ============
+
+states = zeros(ngenes,ncond);
+for c = 1 : ncond
+    for g = 1 : ngenes
+        states(g,c) = mip_sol.x(gene_locs{c}(g));
+        
+        if p.Results.round_states
+            if mip.vartypes(gene_locs{c}(g)) == 'b'
+                states(g,c) = round(states(g,c));
+            end
+        end
+    end
+end
+
+% create the models
+models = orig_models;
+for i = 1 : ncond
+    % fix the gene states
+    models{i}.ub(unshifted_locs{i}) = states(:,i);
+    models{i}.lb(unshifted_locs{i}) = states(:,i);
+end
+
+if p.Results.verify
+    sol.adj_vals = zeros(1,ncond);
+    sol.obj_vals = zeros(1,ncond);
+    
+    for i = 1 : ncond
+        fba_sol = fba(orig_models{i});
+        if ~isempty(fba_sol.x)
+            sol.obj_vals(i) = fba_sol.val;
+        end
+        ko_sol = fba(models{i});
+        if ~isempty(ko_sol.x)
+            sol.adj_vals(i) = ko_sol.val;
+        end
+    end
+    sol.verified = sol.adj_vals ./ sol.obj_vals >= frac(:)';
+end
+    
+% ============ Create the solution structure ============
+
+sol.output = mip_sol;
 
 sol.genes = genes;
-sol.gene_states = gene_states;
+sol.gene_states = states;
 sol.opt_states = opt_states;
 
 sol.condition = cell(1,ncond);
 for i = 1 : ncond
-    sol.condition{i}.max_obj_flux = diffadj_sol.obj_vals(i);
-    sol.condition{i}.adj_obj_flux = diffadj_sol.adj_vals(i);
-    sol.condition{i}.flux_ratio = diffadj_sol.adj_vals(i) ...
-                                      / diffadj_sol.obj_vals(i);
+    sol.condition{i}.max_obj_flux = sol.obj_vals(i);
+    sol.condition{i}.adj_obj_flux = sol.adj_vals(i);
+    sol.condition{i}.flux_ratio = sol.adj_vals(i) / sol.obj_vals(i);
 end
 
-T = diffadj_sol.T;
 D = zeros(size(d));
-if find_theor
+if p.Results.theoretical_match
     Dopt = zeros(size(d));
 end
 sol.transition = cell(1,ntrans);
 for i = 1 : ntrans
+    t = struct();
     [t.condition1,t.condition2] = find_conditions(i,T);
-    D(:,i) = round(gene_states(:,t.condition2) ...
-                       - gene_states(:,t.condition1));
-    if find_theor
+    D(:,i) = round(states(:,t.condition2) - states(:,t.condition1));
+    if p.Results.theoretical_match
         Dopt(:,i) = opt_states(:,t.condition2) ...
                         - opt_states(:,t.condition1);
     end
@@ -289,25 +464,29 @@ end
     
 sol.D_data = d;
 sol.D_matched = D;
-sol.D_optimal = Dopt;
+if p.Results.theoretical_match
+    sol.D_optimal = Dopt;
+end
 
 sol.total_transitions = numel(d);
 sol.matches = count(D(:) - d(:) == 0);
-sol.theoretical_matches = count(Dopt(:) - d(:) == 0);
 sol.match_percent = sol.matches / sol.total_transitions * 100;
-sol.adjusted_match_percent = sol.matches / sol.theoretical_matches * 100;
+
+if p.Results.theoretical_match
+    sol.theoretical_matches = count(Dopt(:) - d(:) == 0);
+    sol.adjusted_match_percent = sol.matches / sol.theoretical_matches ...
+                                    * 100;
+end
 
 if p.Results.return_models
-    sol.models = milps;
-    for i = 1 : ncond
-        % remove the growth constraint
-        sol.models{i}.A(end,:) = 0;
-        sol.models{i}.b(end) = 0;
-    end
+    sol.models = models;
 end
-sol.verified = diffadj_sol.verified;
 
-sol.variables = diffadj_sol.variables;
+% return the solution vectors for each model
+sol.variables = cell(1,ncond);
+for i = 1 : ncond
+    sol.variables{i} = mip_sol.x((1:nvars(i))+offsets(i)-nvars(i));
+end
 
 if verbose
     show_made_results(sol);
@@ -319,3 +498,34 @@ if set_IntFeasTol
 end
 
 
+% =============================================
+% ============ Accessory Functions ============
+% =============================================
+
+function [mip,pos_idxs,neg_idxs] = add_nonbinding_diff(mip,idxs1,idxs2)
+    N = length(idxs1);
+    
+    [m,n] = size(mip.A);
+    
+    pos_idxs = n + (1:N);
+    neg_idxs = n + N + (1:N);
+    
+    plb = zeros(N,1);
+    pub = zeros(N,1);
+    nlb = zeros(N,1);
+    nub = zeros(N,1);
+    varnames = [array2names('nbd_diff_pos%i',pos_idxs); ...
+                array2names('nbd_diff_neg%i',neg_idxs)];
+    
+    for i = 1 : N
+        pub(i) = mip.ub(idxs1(i)) - mip.lb(idxs2(i));
+        nub(i) = mip.ub(idxs2(i)) - mip.lb(idxs1(i));
+    end
+    mip = add_column(mip,varnames,'c',[plb;nlb],[pub;nub]);
+    
+    mip = add_row(mip,N);
+    for i = 1 : N
+        % add constraint var1 - var2 + p_slack - n_slack = 0
+        mip.A(m+i,[idxs1(i) idxs2(i) pos_idxs(i) neg_idxs(i)]) ...
+            = [1 -1 1 -1];
+    end

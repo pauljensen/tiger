@@ -17,6 +17,8 @@ SUMMARY = 1;
 DEBUG = 2;
 GENES = 3;
 
+show_theoretical = isfield(sol,'D_optimal');
+
 to_show = false(1,3);
 to_show(SUMMARY) = ismember('summary',varargin) || isempty(varargin);
 to_show(DEBUG)   = ismember('debug',varargin);
@@ -61,10 +63,11 @@ if to_show(SUMMARY)
             sol.matches,sol.total_transitions, ...
             sol.match_percent);
 
-    % TODO  don't compute theoretical matches when opt_match is off
-    fprintf('Adjusted match:  %i / %i (%3.1f%%)\n\n', ...
-            sol.matches,sol.theoretical_matches, ...
-            sol.adjusted_match_percent);
+    if show_theoretical
+        fprintf('Adjusted match:  %i / %i (%3.1f%%)\n\n', ...
+                sol.matches,sol.theoretical_matches, ...
+                sol.adjusted_match_percent);
+    end
 end
 
 if to_show(DEBUG)

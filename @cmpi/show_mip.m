@@ -160,6 +160,28 @@ if isfield(mip,'ind') && any(mip.ind)
     end
 end
 
+% show bindings
+if isfield(mip,'bounds') && any(mip.bounds.var)
+    vars = convert_ids(mip.varnames,mip.bounds.var);
+    inds = convert_ids(mip.varnames,mip.bounds.ind);
+    fprintf('\n\n----- Binding Constraints -----\n');
+    for i = 1 : length(vars)
+        if mip.bounds.type(i) == 'b'
+            fprintf('   %s <= %s <= %s\n', ...
+                    make_coef_name_pair(mip.lb(mip.bounds.var(i)), ...
+                                        inds{i},true), ...
+                    vars{i}, ...
+                    make_coef_name_pair(mip.ub(mip.bounds.var(i)), ...
+                                        inds{i},true));
+        else
+            fprintf('   %s <= %s\n', ...
+                    vars{i}, ...
+                    make_coef_name_pair(mip.ub(mip.bounds.var(i)), ...
+                                        inds{i},true));
+        end
+    end
+end
+
 if showvars
     % show variable bounds
     maxlength = max(cellfun(@(x) length(x), varnames));

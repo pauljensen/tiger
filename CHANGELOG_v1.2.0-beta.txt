@@ -44,6 +44,8 @@
 * PARSE_STRING allows the 'matlab_levels' parameter for compatibility with
   Matlab's operator order of operators ('and' binds tighter than 'or').
 
+* Solving MIP problems with CMPI has been separated into two phases.  CMPI.PREPARE_MIP preprocesses the MIP to convert indicators, delayed bindings, and quadratic differences (Qd and Qc) into constraints in the standard form.  This MIP is then solved by CMPI.RUN_SOLVER.  CMPI.SOLVER_MIP calls both of these functions as needed, and SOLVER_TIGER is unaffected.  This feature is useful for solving a sequence of MIPs (e.g. during FVA) when repeated preprocessing is unnecessary.
+
 ===== Bug Fixes =====
 
 * Documentation fixes for COBRA_TO_TIGER. (issue #17)
@@ -58,3 +60,4 @@
 
 * EXTRACT_TIGER now updates S to reflect changes made to the corresponding
   entries in A. (issue #16)
+

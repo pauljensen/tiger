@@ -20,9 +20,9 @@ function [exp] = parse_string(str,varargin)
 %   If 'as_expr' is true (default), an EXPR object is returned.  If false,
 %   the expression structure is returned.
 %
-%   The parameter 'matlab_levels' is true (default), the 'and' operator is
-%   given higher precedence than 'or', consisting with Matlab's parsing
-%   rules (and the GPRs of some Cobra models).
+%   If 'matlab_levels' is true (default), the 'and' operator is given 
+%   higher precedence than 'or', consisting with Matlab's parsing rules 
+%   (and the GPRs of some Cobra models).
 
 p = inputParser;
 p.addParamValue('numeric',true);

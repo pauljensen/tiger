@@ -1,3 +1,4 @@
-function [tf] = is_atom(e)
+function [tf] = is_atom(expr)
+% IS_ATOM  Returns true if EXPR is an atom (not an operator junction)
 
-tf = ~isempty(e) && ~isempty(e.id);
+tf = ~isempty(expr) && ~isempty(expr.id);

@@ -1,3 +1,4 @@
-function [tf] = is_junc(e)
+function [tf] = is_junc(expr)
+% IS_JUNC  Returns true if EXPR is a junction
 
-tf = strcmp(e.op,'and') || strcmp(e.op,'or');
+tf = strcmp(expr.op,'and') || strcmp(expr.op,'or');

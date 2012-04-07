@@ -35,8 +35,9 @@ sol = fba(tiger);
 grRateWT = sol.val;
 
 statbar.start('Single Gene Deletion status');
+m = cmpi.prepare_mip(tiger);
 for i = 1 : N
-    m = tiger;
+    prev_ub = m.ub(idxs(i));
     m.ub(idxs(i)) = 0;
     sol = fba(m);
     if isempty(sol.val)
@@ -44,6 +45,7 @@ for i = 1 : N
         sol.val = 0;
     end
     grRateKO(i) = sol.val;
+    m.ub(idxs(i)) = prev_ub;
     statbar.update(i);
 end
 

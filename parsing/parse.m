@@ -1,7 +1,5 @@
 function [tree] = parse(str,levels,unary,op_subs,varargin)
 
-% TODO: support for numerics
-
 p = inputParser;
 p.addParamValue('fold_nots',true);
 p.addParamValue('numeric',true);

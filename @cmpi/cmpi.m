@@ -189,6 +189,8 @@ methods (Static)
     [inf_rows,sol] = find_infeasible_rows(mip,varargin)
     [mip] = bounds_to_constraints(mip,varargin)
     [mip] = convert_var_bindings(mip)
+    [mip] = prepare_mip(mip)
+    [sol] = run_solver(mip)
 end
 
 end % class

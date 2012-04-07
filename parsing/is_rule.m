@@ -1,3 +1,4 @@
-function [tf] = is_rule(e)
+function [tf] = is_rule(expr)
+% IS_RULE  Returns true if EXPR is a rule (IF or IFF)
 
-tf = e.IFF || e.IF;
+tf = expr.IFF || expr.IF;
