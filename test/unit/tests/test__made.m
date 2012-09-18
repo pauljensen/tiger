@@ -19,4 +19,4 @@ tiger = cobra_to_tiger(cobra,'fast_gpr',true);
              'gene_names',gene_names, ...
              'verbose',false);
 
-clear cobra fc gene_names m n pvals sol tiger
+%clear cobra fc gene_names m n pvals sol tiger

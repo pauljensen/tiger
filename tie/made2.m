@@ -1,4 +1,4 @@
-function [sol] = made(tiger,fold_change,pvals,varargin)
+function [sol] = made2(tiger,fold_change,pvals,varargin)
 % MADE  Metabolic Adjustment by Differential Expression
 %
 %   [SOL] = MADE(TIGER,FOLD_CHANGE,PVALS,...parameters...)
@@ -8,8 +8,7 @@ function [sol] = made(tiger,fold_change,pvals,varargin)
 %
 %   Inputs
 %   TIGER       TIGER model.  COBRA models will be converted to TIGER 
-%               models with a warning.  MADE also accepts a cell array of
-%               models for each condition.
+%               models with a warning.
 %   FOLD_CHANGE Measured fold change from expression data.  Columns
 %               correspond to conditions, rows correspond to genes.
 %   PVALS       P-values for changes.  Format is the same as for
@@ -24,7 +23,7 @@ function [sol] = made(tiger,fold_change,pvals,varargin)
 %                can also be a vector giving a separate fraction for each 
 %                condition.
 %   'weighting'  Method to convert PVALS to weights.  Options include:
-%                   'log'     w(p) = -log(p)    (default)
+%                   'log'     w(p) = -log(p)
 %                   'linear'  w(p) = 1 - p
 %                   'unit'    w(p) = 1
 %                   'none'    No transformation -- PVALS are weights and
@@ -114,7 +113,8 @@ function [sol] = made(tiger,fold_change,pvals,varargin)
 %   adjusted_match_percent  'matched' / 'theoretical_matches' * 100
 %   verified    Logical array indicating if the model for each condition
 %               can carry the minimum objective flux.
-%   variables   Cell array of the solution vectors for each model.
+%   variables   Variable cell array returned by DIFFADJ.
+%               See 'help diffadj' for more details.
 
 % TODO  don't compute theoretical matches when opt_match is off
 
@@ -480,12 +480,6 @@ end
 
 if p.Results.return_models
     sol.models = models;
-end
-
-% return the solution vectors for each model
-sol.variables = cell(1,ncond);
-for i = 1 : ncond
-    sol.variables{i} = mip_sol.x((1:nvars(i))+offsets(i)-nvars(i));
 end
 
 if verbose

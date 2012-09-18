@@ -2,13 +2,15 @@ function [vars,xs,samples] = sample_vars(model,vars,varargin)
 
 p = inputParser;
 p.addParamValue('samples',100);
-p.addParamValue('seed',[]);
+p.addParamValue('seed',1985);
 p.addParamValue('status',true);
 p.addParamValue('use_fva_scaling',true);
+p.addParamValue('return_all_vars',false);
 p.parse(varargin{:});
 
 n_samples = p.Results.samples;
 seed = p.Results.seed;
+return_all = p.Results.return_all_vars;
 
 if ~isempty(seed)
     % save the random number stream for later restoration
@@ -58,7 +60,11 @@ for i = 1 : n_samples
     statbar.update(i);
 end
 
-vars = xs(:,vars);
+if return_all
+    vars = xs;
+else
+    vars = xs(:,vars);
+end
 
 if ~isempty(seed)
     % restore the random number stream

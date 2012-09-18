@@ -75,16 +75,17 @@ if to_show(DEBUG)
     
     % debuging reactions
     vars = sol.variables{1};
-    off_rxns = round(vars.rxn) == 0 & vars.flux ~= 0.0;
+    raw_fluxes = vars(1:size(sol.models{1}.S,2));
+    off_rxns = round(raw_fluxes) == 0 & raw_fluxes ~= 0.0;
     if any(off_rxns)
-        fluxes = vars.flux;
+        fluxes = raw_fluxes;
         fluxes(~off_rxns) = 0;
         [~,I] = sort(abs(fluxes(:)),1,'descend');
         fprintf('\nOff reactions with highest flux:\n');
         fprintf('  Rxn             Flux        Indicator\n');
         for i = 1 : min([N_RXNS_SHOW,count(off_rxns)])
             fprintf('%5i  %15f  %15f\n', ...
-                    I(i),fluxes(I(i)),vars.rxn(I(i)));
+                    I(i),fluxes(I(i)),raw_fluxes(I(i)));
         end
     else
         fprintf('\nNo flux found through non-integral reactions.\n');

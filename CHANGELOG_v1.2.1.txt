@@ -1,0 +1,12 @@
+
+===== New Features =====
+
+
+===== Bug Fixes =====
+
+* IS_NULL returned incorrectly for some expressions.  (issue #27)
+
+* SHOW_MADE_RESULTS is not compatible with new solution structure.  (issue #26)
+
+* Docs correction to MADE; now lists 'log' as default weighting.  (issue #24)
+
