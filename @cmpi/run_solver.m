@@ -23,7 +23,10 @@ if any(solver == '@')
 end
 
 switch solver
-    case 'gurobi'
+    case 'gurobi_mex'
+        % Gurobi Mex interface; this is deprecated, use the native
+        % Gurobi Matlab interface instead (Gurobi v. 5 or greater).
+        
         % Gurobi does not like problems without constraints;
         % add a dummy constraint: x(1) <= ub(x(1))
         if nnz(mip.A) == 0
@@ -48,6 +51,31 @@ switch solver
                        mip.ub, ...
                        upper(mip.vartypes), ...
                        opts);
+    
+    case 'gurobi'
+        % Gurobi version 5 or later with native Matlab interface
+        param = cmpi.set_gurobi_param(mip.options);
+        
+        mip.vtype = mip.vartypes;
+        mip.rhs = mip.b;
+        mip.sense = mip.ctypes;
+        if mip.sense == 1
+            mip.modelsense = 'min';
+        else
+            mip.modelsense = 'max';
+        end
+        
+        gsol = gurobi(mip,param);
+        
+        sol.val = get_default(gsol,'objval');
+        sol.x = get_default(gsol,'x');
+        sol.output = gsol.status;
+        
+        gurobi_status = {'LOADED','OPTIMAL','INFEASIBLE','INF_OR_UNBD', ...
+                         'UNBOUNDED','CUTOFF','ITERATION_LIMIT', ...
+                         'NODE_LIMIT','TIME_LIMIT','SOLUTION_LIMIT', ...
+                         'INTERRUPTED','NUMERIC','SUBOPTIMAL'};
+        [~,sol.flag] = ismember(gsol.status,gurobi_status);
                    
     case 'cplex'        
         opts = cmpi.set_cplex_opts(mip.options);

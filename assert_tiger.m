@@ -1,5 +1,5 @@
 function [tiger] = assert_tiger(model)
-% ASSERT_TIGER  Assert that a structure is an TIGER model.
+% ASSERT_TIGER  Assert that a structure is a TIGER model.
 %
 %   [TIGER] = ASSERT_TIGER(MODEL)
 %
@@ -7,9 +7,7 @@ function [tiger] = assert_tiger(model)
 %   MODEL to a TIGER model and warns that this procedure is not efficient
 %   for repeated calls to the parent function.
 
-fields = {'A','b','vartypes','ctypes','rownames','varnames','obj'};
-
-if ~all(isfield(model,fields))
+if ~is_tiger(model)
     % convert model
     fprintf('This model is not a TIGER model.  It will automatically\n');
     fprintf('be converted.  For repeated calls to this function, it\n');

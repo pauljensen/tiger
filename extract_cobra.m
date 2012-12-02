@@ -5,6 +5,12 @@ function [cobra] = extract_cobra(tiger)
 %
 %   Returns the original COBRA model structure from a TIGER model.
 
+if ~is_tiger(tiger)
+    % not a TIGER model; return the original model
+    cobra = tiger;
+    return
+end
+
 [m,n] = size(tiger.S);
 tiger.S = tiger.A(1:m,1:n);
 

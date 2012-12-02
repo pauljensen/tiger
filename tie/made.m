@@ -243,7 +243,11 @@ common_vars = models{1}.varnames;
 for i = 2 : ncond
     common_vars = intersect(common_vars,models{i}.varnames);
 end
-genes = p.Results.gene_names;
+if isempty(p.Results.gene_names)
+    genes = models{1}.genes;
+else
+    genes = p.Results.gene_names;
+end
 tf = ismember(genes,common_vars);
 genes = genes(tf);
 fold_change = fold_change(tf,:);

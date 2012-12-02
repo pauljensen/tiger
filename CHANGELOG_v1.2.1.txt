@@ -10,3 +10,6 @@
 
 * Docs correction to MADE; now lists 'log' as default weighting.  (issue #24)
 
+* EXTRACT_TIGER returns the original model if given a non-TIGER structure.
+
+* MADE correctly chooses default gene names when none are given.

@@ -156,6 +156,8 @@ methods (Static)
         CMPI_IND_EPS = cmpi.init_IND_EPS;
         
         CMPI_INITIALIZED = true;
+        
+        cmpi.set_option('Display','off');
     end
 
     function assert_init()
@@ -175,6 +177,7 @@ methods (Static)
     [tf,violators] = check_bounded_rxns(model,sol,tol)
     show_mip(mip,rowidxs,colidxs,rownames,colnames,showvars)
     [opts,cplex] = set_cplex_opts(options,cplex)
+    [param] = set_gurobi_param(options)
     [opts] = set_gurobi_opts(options)
     [flag] = get_cplex_flag(status)
     [flag] = get_glpk_flag(cmpi_flag)
