@@ -53,6 +53,11 @@ end
 
 tiger.A = tiger.S;
 
+% some Cobra models do not have the RHS vector b; add it
+if ~isfield(tiger,'b')
+    tiger.b = zeros(size(m,1));
+end
+
 tiger.obj = cobra.c(:);
 tiger.ctypes = repmat('=',m,1);
 tiger.vartypes = repmat('c',n,1);
