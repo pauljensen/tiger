@@ -1,0 +1,35 @@
+
+===== New Features =====
+
+* Support for Gurobi 5 through the native Matlab interface.  
+  Support for older versions of Gurobi through Gurobi MEX is
+  deprecated, although still available as the 'gurobi_mex' 
+  solver name.
+
+* CPLEX 12.5 support was added.  The 'cplex' solver name 
+  supports all version 12.x releases.
+
+* Improved conversion methods for indicator constraints.
+
+* The solver parameter 'Display' now defaults to 'off'.
+
+
+===== Bug Fixes =====
+
+* Fixed incorrect return from IS_NULL for some expressions.  
+  (issue #27)
+
+* SHOW_MADE_RESULTS is now compatible with the MADE new solution 
+  structure.  (issue #26)
+
+* Docs correction to MADE; now lists 'log' as default weighting.  
+  (issue #24)
+
+* EXTRACT_TIGER returns the original model if given a non-TIGER 
+  structure.
+
+* MADE correctly chooses default gene names when none are given.
+
+* ADD_ROW works correctly when called as ADD_ROW(MODEL,0).
+
+* REMOVE_RULE changes CTYPES to '=' for deleted rules.

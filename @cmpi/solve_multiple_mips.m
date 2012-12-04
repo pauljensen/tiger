@@ -59,7 +59,10 @@ switch solver
         mip.A(mip.ctypes == '>',:) = -mip.A(mip.ctypes == '>',:);
         mip.b(mip.ctypes == '>') = -mip.b(mip.ctypes == '>');
         cplex.Model.A = mip.A;
-        cplex.Model.ctype = upper(mip.vartypes);
+        
+        % starting with CPLEX 12.5, ctype must be a row vector (string)
+        cplex.Model.ctype = upper(mip.vartypes');
+        
         cplex.Model.lb = mip.lb(:);
         cplex.Model.ub = mip.ub(:);
         cplex.Model.rhs = mip.b(:);

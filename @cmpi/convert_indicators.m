@@ -68,13 +68,14 @@ for i = 1 : length(rows)
     mip.A(row,ind) = mip.b(row) - lb(i);
     
     if indtype == 'b'
+        roff = roff + 1;
         if mip.ctypes(row) == 'l'
-            mip.b(roff+i) = mip.b(roff+i) - IND_EPS;
+            mip.b(roff) = mip.b(roff) - IND_EPS;
         end
-        alpha = ub(i) - mip.b(roff+i);
-        mip.A(roff+i,ind) = alpha;
-        mip.b(roff+i) = mip.b(roff+i) + alpha;
-        mip.ctypes(roff+i) = '<';
+        alpha = ub(i) - mip.b(roff);
+        mip.A(roff,ind) = alpha;
+        mip.b(roff) = mip.b(roff) + alpha;
+        mip.ctypes(roff) = '<';
     end
     
     mip.ctypes(row) = '>';
