@@ -7,9 +7,9 @@ mip.b = [2;2;3];
 mip.lb = [0 0]';
 mip.ub = [100 100]';
 
-mip.ctypes = '<<<';
-mip.vartypes = 'cc';
-mip.varnames = {'var1','var2'};
+mip.ctypes = ['<';'<';'<'];
+mip.vartypes = ['c';'c'];
+mip.varnames = {'var1';'var2'};
 
 mip.Q = [0.5 0; 0 1];
 

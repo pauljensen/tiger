@@ -32,6 +32,7 @@ for i = 1 : N
     tiger.b(to_zero) = 0;
     tiger.ind(to_zero) = 0;
     tiger.indtypes(to_zero) = ' ';
+    tiger.ctypes(to_zero) = '=';
     % replace the removed rule with the null expression
     for j = 1 : length(matched)
         tiger.param.rules{matched(j)} = null_expr;

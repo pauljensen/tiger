@@ -140,6 +140,10 @@ for r = 1 : length(rowidxs)
             fprintf(' >= ');
         case '='
             fprintf(' = ');
+        case 'l'
+            fprintf(' < ');
+        case 'g'
+            fprintf(' > ');
     end
     fprintf('%g\n',mip.b(row));
     pb.stop_wrap;

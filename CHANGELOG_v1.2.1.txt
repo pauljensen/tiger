@@ -1,15 +1,20 @@
 
 ===== New Features =====
 
+* Solver parameter 'Display' defaults to 'off'.
 
 ===== Bug Fixes =====
 
-* IS_NULL returned incorrectly for some expressions.  (issue #27)
+* Fixed incorrect return from IS_NULL for some expressions.  (issue #27)
 
-* SHOW_MADE_RESULTS is not compatible with new solution structure.  (issue #26)
+* SHOW_MADE_RESULTS is now compatible with new solution structure.  (issue #26)
 
 * Docs correction to MADE; now lists 'log' as default weighting.  (issue #24)
 
 * EXTRACT_TIGER returns the original model if given a non-TIGER structure.
 
 * MADE correctly chooses default gene names when none are given.
+
+* ADD_ROW works correctly when called as ADD_ROW(MODEL,0).
+
+* REMOVE_RULE changes CTYPES to '=' for deleted rules.

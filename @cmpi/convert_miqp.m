@@ -75,4 +75,5 @@ end
 % make Q symmetric
 mip.Q = tril(mip.Q) + tril(mip.Q,-1)';
 
-    
+% ensure that Q is sparse
+mip.Q = sparse(mip.Q);

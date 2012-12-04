@@ -56,14 +56,18 @@ switch solver
         % Gurobi version 5 or later with native Matlab interface
         param = cmpi.set_gurobi_param(mip.options);
         
-        mip.vtype = mip.vartypes;
+        % logging can be turned on for debugging by uncommenting the
+        % following line
+        %param.resultfile = 'gurobi.lp';
+        
+        mip.vtype = upper(mip.vartypes);
         mip.rhs = mip.b;
-        mip.sense = mip.ctypes;
         if mip.sense == 1
             mip.modelsense = 'min';
         else
             mip.modelsense = 'max';
         end
+        mip.sense = mip.ctypes;
         
         gsol = gurobi(mip,param);
         

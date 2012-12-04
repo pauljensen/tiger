@@ -23,7 +23,11 @@ loc = m+1;
 if nargin < 2 || isempty(A)
     A = [];
 elseif length(A) == 1
-    A = zeros(A,n);
+    if nargin == 2 && A == 0
+        return
+    else
+        A = zeros(A,n);
+    end
 end
 
 if nargin < 3 || isempty(ctype), ctype = '='; end

@@ -160,20 +160,11 @@ tiger.param.ind = ind_counter;
 tiger = check_tiger(tiger);
 
 function [cond] = prepare_conditional(cond)
-    % Remove '>', '<', and '~=' operators
-    switch cond.op
-        case '>'
-            cond.op = '<=';
-            cond.negated = ~cond.negated;
-        case '<'
-            cond.op = '>=';
-            cond.negated = ~cond.negated;
-        case '~='
-            cond.op = '=';
-            cond.negated = ~cond.negated;
-    end
-    
-    if strcmp(cond.op,'=')
+    % Remove '~=' and '=' operators
+    if strcmp(cond.op,'~=')
+        cond.op = '=';
+        cond.negated = ~cond.negated;
+    elseif strcmp(cond.op,'=')
         % switch (a = b) to (a >= b) AND (a <= b) to avoid indicators
         % on equality constraints
         lexpr = cond;
@@ -389,17 +380,22 @@ function simple_rule_to_ineqs(r)
     end
     
     if is_cond(e)
-        assert(ismember(e.op,{'<=','=','>='}), ...
-               'Operator %s should have been removed.',e.op);
         lname = e.lexpr.id;
         lloc = whereis(lname,tiger.varnames);
         rname = e.rexpr.id;
         rloc = whereis(rname,tiger.varnames);
         op = e.op;
-        if e.rexpr.is_numeric
-            addrow(1,op(1),str2double(rname),lloc);
+        if strcmp(op,'<')
+            op = 'l';
+        elseif strcmp(op,'>')
+            op = 'g';
         else
-            addrow([1 -1],op(1),0,[lloc rloc]);
+            op = op(1);
+        end
+        if e.rexpr.is_numeric
+            addrow(1,op,str2double(rname),lloc);
+        else
+            addrow([1 -1],op,0,[lloc rloc]);
         end
         ind(roff) = Iloc;
         if strcmp(r.op,'iff')

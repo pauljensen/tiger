@@ -4,7 +4,14 @@ if ~issparse(mip.A)
     mip.A = sparse(mip.A);
 end
 
-if ~isfield(mip,'sense') || isempty(mip.sense)
+if isfield(mip,'sense') && isa(mip.sense,'char')
+    switch mip.sense
+        case {'max','maximize'}
+            mip.sense = -1;
+        otherwise
+            mip.sense = 1;
+    end
+elseif ~isfield(mip,'sense') || isempty(mip.sense)
     mip.sense = 1;
 end
 

@@ -27,65 +27,58 @@ if isempty(IND_EPS)
     IND_EPS = 1e-8;
 end
 
+% assert that ind and indtypes fields are present
 mip.ind = cmpi.check_field('ind',mip);
 mip.indtypes = cmpi.check_field('indtypes',mip);
-
-idx_p = find((mip.ind > 0) & (mip.indtypes == 'p'));
-idx_b = find((mip.ind > 0) & (mip.indtypes == 'b'));
-
-np = length(idx_p);
-nb = length(idx_b);
-N = np + nb;
-
-if N == 0
-    return;
+if isempty(mip.ind)
+    mip.ind = zeros(size(mip.b));
+end
+if isempty(mip.indtypes)
+    mip.indtypes = repmat(' ',size(mip.ctypes));
 end
 
-% ctypes '=' and '<' should have been removed in add_rule
-if any(mip.ctypes([idx_p idx_b]) == '=')
-    warning('Indicators Ax = b not supported.');
+% change Ax > b to -Ax < -b and Ax >= b to -Ax <= -b
+to_flip = mip.ind > 0 & (mip.ctypes == 'g' | mip.ctypes == '>');
+mip.A(to_flip,:) = -mip.A(to_flip,:);
+mip.b(to_flip) = -mip.b(to_flip);
+mip.ctypes(to_flip & mip.ctypes == 'g') = 'l';
+mip.ctypes(to_flip & mip.ctypes == '>') = '<';
+
+rows = find(mip.ind);
+inds = mip.ind(rows);
+indtypes = mip.indtypes(rows);
+[lb,ub] = bound_lhs(mip,rows);
+
+% add extra rows for the <=> indicators
+roff = size(mip.A,1);
+b_rows = rows(indtypes == 'b');
+if ~isempty(b_rows)
+    mip = add_row(mip,mip.A(b_rows,:),'<',mip.b(b_rows));
 end
 
-% switch Ax <= b to -Ax >= -b
-leq_rows = intersect(find(mip.ctypes == '<'),[idx_p idx_b]);
-mip.A(leq_rows,:) = -mip.A(leq_rows,:);
-mip.b(leq_rows) = -mip.b(leq_rows);
-mip.ctypes(leq_rows) = '>';
+for i = 1 : length(rows)
+    row = rows(i);
+    ind = inds(i);
+    indtype = indtypes(i);
     
-[m,n] = size(mip.A);
-
-i = [idx_b idx_p];
-j = 1:N;
-s = ones(1,N);
-IA = sparse(i,j,s,m,N,N);
-
-s_ub = zeros(1,N);
-s_lb = zeros(1,N);
-
-% find bounds for each slack variable
-for k = 1 : N
-    Aup = mip.A(i(k),:) .* mip.ub';
-    Adn = mip.A(i(k),:) .* mip.lb';
-
-    s_ub(k) = mip.b(i(k)) - sum(min(Aup,Adn));
-    s_lb(k) = mip.b(i(k)) - sum(max(Aup,Adn));
-end
-mip = add_column(mip,[],'c',s_lb,s_ub,[],IA);
-
-mip = add_row(mip,np+2*nb);
-roff = m;
-for k = 1 : N
-    % I + s > 0
-    roff = roff + 1;
-    mip.A(roff,[mip.ind(i(k)) n+k]) = [1 1];
-    mip.b(roff) = IND_EPS;
-    mip.ctypes(roff) = '>';
-end
-
-for k = 1 : nb
-    % s <= ub(s)*(1 - I)
-    roff = roff + 1;
-    mip.A(roff,[mip.ind(idx_b(k)) n+k]) = [s_ub(k) 1];
-    mip.b(roff) = s_ub(k);
-    mip.ctypes(roff) = '<';
+    if mip.ctypes(row) == '<'
+        mip.b(row) = mip.b(row) + IND_EPS;
+    end
+    
+    mip.A(row,ind) = mip.b(row) - lb(i);
+    
+    if indtype == 'b'
+        if mip.ctypes(row) == 'l'
+            mip.b(roff+i) = mip.b(roff+i) - IND_EPS;
+        end
+        alpha = ub(i) - mip.b(roff+i);
+        mip.A(roff+i,ind) = alpha;
+        mip.b(roff+i) = mip.b(roff+i) + alpha;
+        mip.ctypes(roff+i) = '<';
+    end
+    
+    mip.ctypes(row) = '>';
+    
+    mip.ind(row) = 0;
+    mip.indtypes(row) = ' ';
 end
