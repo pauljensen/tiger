@@ -210,6 +210,18 @@ function add_not_con(not_var,not_ind)
     end
 end
 
+function [e] = remove_doubles(e)
+    % Special case: junctions with two identical atoms.  (g1 and g1)
+    % These are generated in some SEED models and do not convert to
+    % inequalities correctly.  They are removed by replacing the
+    % junction with the atom.
+    if is_atom(e.lexpr) && is_atom(e.rexpr)
+        if strcmp(e.lexpr.id,e.rexpr.id)
+            e = e.lexpr;
+        end
+    end
+end
+
 function simplify_rule(r)
     % Simplify a rule.  The resulting
     % rules are of the form:
@@ -237,7 +249,11 @@ function simplify_rule(r)
     end
     
     r = switch_nots(r);
-        
+    
+    if is_junc(r.lexpr)
+        r.lexpr = remove_doubles(r.lexpr);
+    end
+    
     % convert to ineqs
     simple_rule_to_ineqs(r);
 end
