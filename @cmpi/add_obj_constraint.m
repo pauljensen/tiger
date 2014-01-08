@@ -16,7 +16,7 @@ function [milp] = add_obj_constraint(milp,frac)
 
 if nargin < 2,  frac = 1.0; end
 
-sol = cmpi.solve_milp(milp);
+sol = cmpi.solve_mip(milp);
 
 milp.A = [milp.A; -milp.obj(:)'];
 milp.b(end+1) = -frac*sol.val;

@@ -9,7 +9,7 @@ function [qtype] = miqp_type(mip)
 %       'Qc'  Quadratic constant (x_i - c)^2
 %       []    Not quadratic
 
-if isfield(mip,'Q') && ~isempty(mip.Q) && ~all(mip.Q(:) == 0)
+if isfield(mip,'Q') && ~isempty(mip.Q) && nnz(mip.Q) > 0
     qtype = 'Q';
 elseif isfield(mip,'Qd') && ~isempty(mip.Qd)
     qtype = 'Qd';

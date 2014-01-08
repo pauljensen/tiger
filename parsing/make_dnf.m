@@ -21,6 +21,11 @@ if nargin < 2
     names_only = false;
 end
 
+if isempty(ex) || ex.NULL
+    and_lists = [];
+    return
+end
+
 ex_list = {ex};
 
 while any(cellfun(@has_or,ex_list))

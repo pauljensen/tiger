@@ -32,11 +32,11 @@ assert(sum([has_Q has_Qd has_Qc]) <= 1, ...
  
 if has_Q
     % move all nonzero elements in Q to the lower half
-    mip.Q  = tril(mip.Q) + triu(mip.Q)'.*double(tril(mip.Q) == 0);
+    mip.Q  = tril(mip.Q,-1) + triu(mip.Q)';
 elseif has_Qd
     % move all nonzero elements in Q to the lower half
     Qd = mip.Qd;
-    Qd = tril(Qd) + triu(Qd)'.*double(tril(Qd) == 0);
+    Qd = tril(Qd,-1) + triu(Qd)';
     
     mip.Q = spalloc(n,n,nnz(Qd));
     [I,J,w] = find(Qd);

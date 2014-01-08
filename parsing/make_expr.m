@@ -1,0 +1,40 @@
+function [ex] = make_expr(e1,op,e2)
+% MAKE_EXPR  Make an EXPR cons object from tokens
+%
+%   [EX] = MAKE_EXPR(E1)
+%   [EX] = MAKE_EXPR(E1,OP,E2)
+%
+%   If one object (E1) is given, an atom is created and returned.  If E1
+%   is already an expression, it is returned unchanged.
+%
+%   If two tokens (E1 and E2) are given, they are cons-ed with the
+%   operator string OP; the resulting compound expression is returned.
+
+if nargin == 1
+    if isa(e1,'token')
+        ex = expr();
+        ex.id = e1.value;
+        ex.was_quoted = e1.quoted;
+    elseif isa(e1,'expr')
+        ex = e1;
+    else
+        error('Expr cannot be formed from class ''%s''',class(e1));
+    end
+else
+    % make operator cons
+    ex = expr();
+    ex.lexpr = make_expr(e1);
+    ex.rexpr = make_expr(e2);
+    switch op
+        case 'and'
+            ex.AND = true;
+        case 'or'
+            ex.OR = true;
+        case 'iff'
+            ex.IFF = true;
+        case 'if'
+            ex.IF = true;
+        otherwise
+            ex.cond_op = op;
+    end
+end

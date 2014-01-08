@@ -37,3 +37,5 @@ cobra.grRules = {'';
 
 cobra.rules = convert_grRules(cobra);
 cobra.rxnGeneMat = make_rxnGeneMat(cobra);
+
+clear m n
