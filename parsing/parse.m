@@ -30,7 +30,7 @@ catch ME
 end
 
 if p.Results.numeric
-    tree = expr_mapif(tree,@(e) is_cond(e),@parse_numerics);
+    tree = expr_mapif(tree,@is_cond,@parse_numerics);
 end
 
 tree.str = str;
@@ -151,9 +151,10 @@ function [tree] = parse_aux(tokens)
 end
 
 function show_parse_error(index,msg)
-    pointer = [repmat(' ',1,index-1+3) '|'];
-    error('\nTIGER parsing error:  %s\n   %s\n%s\n', ...
-          msg,str,pointer);
+    pointer1 = [repmat(' ',1,index-1+3) '|'];
+    pointer2 = [repmat(' ',1,index-1+3) '?'];
+    error('\nTIGER parsing error:  %s\n\n   %s\n%s\n%s\n', ...
+          msg,str,pointer1,pointer2);
 end
 
 function check_parentheses()
