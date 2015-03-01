@@ -28,14 +28,26 @@ cobra.grRules = {'';
                  '';
                  '';
                  'g4';
-                 'g5a and g5b';
+                 'g5a & g5b';
                  'g6';
-                 'g7a and g7b';
-                 'g8a or g8b';
+                 'g7a & g7b';
+                 'g8a | g8b';
                  '';
                  ''};
 
-cobra.rules = convert_grRules(cobra);
+cobra.rules = {'';
+               '';
+               '';
+               'x(1)';
+               'x(2) & x(3)';
+               'x(4)';
+               'x(5) & x(6)';
+               'x(7) | x(8)';
+               '';
+               ''};
+
+             
+%cobra.rules = convert_grRules(cobra);
 cobra.rxnGeneMat = make_rxnGeneMat(cobra);
 
 clear m n

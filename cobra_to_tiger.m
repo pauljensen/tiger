@@ -77,7 +77,11 @@ if add_gpr
     tiger.lb(:) = min(tiger.lb);
     tiger.ub(:) = max(tiger.ub);
 
-    tiger = convert_gpr(tiger,convert_gpr_params{:});
+    if isa(add_gpr,'char') && strcmp(add_gpr,'v1.3')
+        tiger = convert_gpr(tiger,convert_gpr_params{:});
+    else
+        tiger = convert_simpl_gpr(tiger,convert_gpr_params{:});
+    end
 
     tiger.lb(1:orig_N) = orig_lb;
     tiger.ub(1:orig_N) = orig_ub;

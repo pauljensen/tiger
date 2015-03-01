@@ -1,0 +1,4 @@
+*.m~
+*.txt~
+doc/*
+simpl/html/*
