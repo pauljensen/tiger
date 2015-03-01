@@ -1,4 +1,4 @@
-function tiger = add_simpl_gpr(tiger,varargin)
+function tiger = convert_simpl_gpr(tiger,varargin)
 
 % begin parameter checking
 p = inputParser;
