@@ -12,9 +12,9 @@ classdef Junction
         
         function new = combine(obj,op,a)
             if strcmp(op,obj.operator)
-                new = Junction(op,[obj.operands,{a}]);
+                new = simpl.Junction(op,[obj.operands,{a}]);
             else
-                new = Junction(op,{obj,a});
+                new = simpl.Junction(op,{obj,a});
             end
         end
         
@@ -40,7 +40,7 @@ classdef Junction
         end
         
         function disp(obj)
-            defaultDisplay(obj);
+            simpl.defaultDisplay(obj);
         end
     end
 end

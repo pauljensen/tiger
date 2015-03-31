@@ -1,5 +1,7 @@
 function tiger = convert_simpl_gpr(tiger,varargin)
 
+import simpl.*
+
 % begin parameter checking
 p = inputParser;
 
@@ -37,7 +39,7 @@ for i = 1 : nrxns
     end
     
     rule = eval(tiger.rules{i});
-    if isa(rule,'Variable')
+    if isa(rule,'simpl.Variable')
         rxn_idx_names{i} = rule.id;
     else
         parsed(i).lhs = rxn_idx_names{i};
@@ -51,11 +53,11 @@ parsed = parsed(~arrayfun(isnull,parsed));
 i = 0;
 while i < length(parsed)
     i = i + 1;
-    if isa(parsed(i).rhs,'Variable')
+    if isa(parsed(i).rhs,'simpl.Variable')
         continue
     end
     for j = 1 : length(parsed(i).rhs.operands)
-        if ~isa(parsed(i).rhs.operands{j},'Variable')
+        if ~isa(parsed(i).rhs.operands{j},'simpl.Variable')
             ind = get_next_ind_name();
             s.lhs = ind;
             s.rhs = parsed(i).rhs.operands{j};
@@ -108,7 +110,7 @@ end
 
 get_vars = @(junc) cellfun(@(x) x.id,junc.operands,'Uniform',false);
 
-if isa(rule.lhs,'Junction')
+if isa(rule.lhs,'simpl.Junction')
     vars = get_vars(rule.lhs);
     k = length(vars);
     I = rule.rhs;
@@ -134,7 +136,7 @@ if isa(rule.lhs,'Junction')
         ineqs.op = '<';
         ineqs.rhs = k - 1;
     end
-elseif isa(rule.rhs,'Junction')
+elseif isa(rule.rhs,'simpl.Junction')
     vars = get_vars(rule.rhs);
     k = length(vars);
     I = rule.lhs;

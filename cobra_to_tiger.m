@@ -80,7 +80,7 @@ if add_gpr
     if isa(add_gpr,'char') && strcmp(add_gpr,'v1.3')
         tiger = convert_gpr(tiger,convert_gpr_params{:});
     else
-        tiger = convert_simpl_gpr(tiger,convert_gpr_params{:});
+        tiger = simpl.convert_simpl_gpr(tiger,convert_gpr_params{:});
     end
 
     tiger.lb(1:orig_N) = orig_lb;

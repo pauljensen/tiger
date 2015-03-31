@@ -29,10 +29,10 @@ classdef Variable
             elseif isa(ids,'cell')
                 % multiple names given; return array
                 [m,n] = size(ids);
-                obj(m,n) = Variable;
+                obj(m,n) = simpl.Variable;
                 for i = 1:m
                     for j = 1:n
-                        obj(i,j) = Variable(ids{i,j});
+                        obj(i,j) = simpl.Variable(ids{i,j});
                     end
                 end
             end
@@ -49,14 +49,14 @@ classdef Variable
         end
         
         function new = plus(a,b)
-            new = LQSum([LQTerm(a) LQTerm(b)]);
+            new = simpl.LQTerm(a) + simpl.LQTerm(b);
         end
         
         function new = times(a,b)
-            if isa(a,'Variable')
-                new = times(LQTerm(a),b);
+            if isa(a,'simpl.Variable')
+                new = times(simpl.LQTerm(a),b);
             else
-                new = times(a,LQTerm(b));
+                new = times(a,simpl.LQTerm(b));
             end
         end
         
@@ -65,11 +65,11 @@ classdef Variable
         end
         
         function new = and(a,b)
-            new = Junction('&',{a,b});
+            new = simpl.Junction('&',{a,b});
         end
         
         function new = or(a,b)
-            new = Junction('|',{a,b});
+            new = simpl.Junction('|',{a,b});
         end
         
         function str = toString(obj)
@@ -77,7 +77,7 @@ classdef Variable
         end
         
         function disp(obj)
-            defaultDisplay(obj);
+            simpl.defaultDisplay(obj);
         end
     end
     
@@ -90,7 +90,7 @@ classdef Variable
                     names{i,j} = '';
                 end
             end
-            obj = Variable(names);
+            obj = simpl.Variable(names);
         end
     end
             

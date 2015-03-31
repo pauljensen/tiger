@@ -7,4 +7,4 @@ else
     fprintf(' %ix%i %s array\n\n',m,n,class(obj));
 end
 
-fprintf('%s\n\n',objMatrixToString(obj));
+fprintf('%s\n\n',simpl.objMatrixToString(obj));
