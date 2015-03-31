@@ -26,7 +26,7 @@ default_lb = p.Results.default_lb;
 default_ub = p.Results.default_ub;
 
 nrxns = length(tiger.rxns);
-parsed(nrxns) = struct();
+parsed(nrxns) = struct('op',[]);
 % convert string rules to junctions
 rxn_idx_names = map(@(x) ['RXN__' x], tiger.rxns);
 x = Variable(tiger.genes);

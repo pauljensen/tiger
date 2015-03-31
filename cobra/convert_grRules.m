@@ -19,7 +19,7 @@ cobra.rules = rules;
 function [rule] = convert_aux(str)
     e = parse_string(str);
     e = expr_mapif(e,@(x) is_atom(x),@(x) switch_atom(x));
-    rule = expr_to_string(e);
+    rule = regexprep(expr_to_string(e), {' or ',' and '}, {' | ',' & '});
 end
 
 function [e] = switch_atom(e)
