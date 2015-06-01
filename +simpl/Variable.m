@@ -1,4 +1,4 @@
-classdef Variable
+classdef Variable < simpl.Comparable
     properties
         id
     end
@@ -41,18 +41,32 @@ classdef Variable
         function tf = isequal(v1,v2)
             % two variables are equal if and only if they have 
             % identical IDs
-            tf = isequal(v1.id,v2.id);
+            tf = isa(v1,'simpl.Variable') && ...
+                    isa(v2,'simpl.Variable') && ...
+                    isequal(v1.id,v2.id);
         end
         
+        function vars = variableIDs(obj)
+            vars = obj.id;
+        end
+        
+        % =============== dynamic properties ===============
         function ordr = order(obj)
             ordr = ones(size(obj));
         end
         
+        % =============== arithmetic operators ===============
         function new = plus(a,b)
-            new = simpl.LQTerm(a) + simpl.LQTerm(b);
+            fprintf('Calling Variable.plus\n');
+            if isequal(a,b)
+                new = 2*a;
+            else
+                new = simpl.LQSum(a) + b;
+            end
         end
         
         function new = times(a,b)
+            fprintf('Calling Variable.times\n');
             if isa(a,'simpl.Variable')
                 new = times(simpl.LQTerm(a),b);
             else
@@ -72,6 +86,20 @@ classdef Variable
             new = simpl.Junction('|',{a,b});
         end
         
+        % =============== conversion functions ===============
+        function new = LQTerm(obj)
+            fprintf('using convertor\n');
+            [m,n] = size(obj);
+            new(m,n) = LQTerm;
+            for j = 1:n
+                for i = 1:m
+                    new(i,j).c = 1;
+                    new(i,j).v1 = obj(i,j);
+                end
+            end
+        end
+        
+        % =============== display functions ===============
         function str = toString(obj)
             str = obj.id;
         end

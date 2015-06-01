@@ -10,14 +10,6 @@ classdef Junction
             obj.operands = operands;
         end
         
-        function new = combine(obj,op,a)
-            if strcmp(op,obj.operator)
-                new = simpl.Junction(op,[obj.operands,{a}]);
-            else
-                new = simpl.Junction(op,{obj,a});
-            end
-        end
-        
         function tf = isOr(obj)
             tf = strcmp(obj.operator,'|');
         end
@@ -34,6 +26,11 @@ classdef Junction
             new = obj.combine('|',a);
         end
         
+        function vars = variableIDs(obj)
+            vars = uniqueflatmap(@variableIDs,obj.operands);
+            vars = cellfilter(@isempty,vars,true);
+        end
+        
         function str = toString(obj)
             ops = cellfun(@toString, obj.operands, 'Uniform', false);
             str = ['(' strjoin(ops,[' ' obj.operator ' ']) ')'];
@@ -41,6 +38,16 @@ classdef Junction
         
         function disp(obj)
             simpl.defaultDisplay(obj);
+        end
+    end
+    
+    methods (Access=private)
+        function new = combine(obj,op,a)
+            if strcmp(op,obj.operator)
+                new = simpl.Junction(op,[obj.operands,{a}]);
+            else
+                new = simpl.Junction(op,{obj,a});
+            end
         end
     end
 end

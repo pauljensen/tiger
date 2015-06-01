@@ -1,4 +1,4 @@
-classdef LQTerm
+classdef (InferiorClasses = {?simpl.Variable}) LQTerm < simpl.Comparable
     properties
         c
         v1
@@ -30,6 +30,7 @@ classdef LQTerm
             end
         end
         
+        % =============== dynamic properties ===============
         function tf = isConstant(obj)
             f = @(x) isempty(x.v1) && isempty(x.v2);
             tf = simpl.vectorize(f,obj,@false);
@@ -58,7 +59,19 @@ classdef LQTerm
             ordr = simpl.vectorize(@f,obj);
         end
         
+        function key = keyName(obj)
+            if isLinear(obj)
+                key = obj.v1.id;
+            elseif isQuadratic(obj)
+                key = strjoin(sort({obj.v1.id,obj.v2.id}),'^^^');
+            else
+                key = '';
+            end
+        end
+        
+        % =============== arithmetic operators ===============
         function new = times(A,B)
+            fprintf('Calling LQTerm.times\n');
             function y = aux(a,b)
                 [a,b] = simpl.ordered(simpl.LQTerm(a),simpl.LQTerm(b));
                 y = simpl.LQTerm(a);
@@ -80,11 +93,11 @@ classdef LQTerm
         end
         
         function new = plus(A,B)
-            %f = @(a,b) simpl.LQSum([simpl.LQTerm(a) simpl.LQTerm(b)]);
-            %new = simpl.vectorizeBinary(f,A,B,@simpl.LQSum);
+            fprintf('Calling LQTerm.plus\n');
             new = simpl.LQSum(A) + simpl.LQSum(B);
         end
         
+        % =============== display functions ===============
         function str = toString(obj)
             if isConstant(obj)
                 str = num2str(obj.c);

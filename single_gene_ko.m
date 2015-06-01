@@ -8,6 +8,7 @@ function [grRatio,grRateKO,grRateWT] = single_gene_ko(tiger,genes,varargin)
 %
 %   Parameters
 %   'status'  If true (default), display a status bar.
+%   'table'   If true (default=false), return a table of results.
 %
 %   Outputs
 %   grRatio   Ratio of knockout and wild-type growth rates.
@@ -22,6 +23,7 @@ genes = assert_cell(genes);
 
 p = inputParser;
 p.addParamValue('status',true);
+p.addParamValue('table',false);
 p.parse(varargin{:});
 
 idxs = convert_ids(tiger.varnames,genes,'index');
@@ -50,3 +52,9 @@ for i = 1 : N
 end
 
 grRatio = grRateKO / grRateWT;
+
+if p.Results.table
+    grRateWT = repmat(grRateWT,size(grRateKO));
+    grRatio = table(grRatio,grRateWT,grRateKO,'RowNames',genes);
+end
+
