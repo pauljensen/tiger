@@ -33,6 +33,9 @@ if ~isempty(args.Results.objectiveName)
     cobra.c(ismember(cobra.rxns,args.Results.objectiveName)) = 1;
 end
 
+cobra.genes = sort(uniqueflatmap('genes',rxns));
+cobra.grRules = map(@(x) toString(x.gpr), rxns);
+
 end
 
 

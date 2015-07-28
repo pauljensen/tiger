@@ -12,7 +12,8 @@ classdef Empty
         end
         
         function str = toString(obj)
-            str = '<SIMPL.EMPTY>';
+            %str = '<SIMPL.EMPTY>';
+            str = '';
         end
         
         function disp(obj)
