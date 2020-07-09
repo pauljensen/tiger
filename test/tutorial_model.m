@@ -16,3 +16,4 @@ cobra.mets = {'A';'B';'C';'D'};
 
 cobra.genes = {'AB1';'AB2';'BCD1';'BCD2'};
 cobra.grRules = {'';'AB1 or AB2';'';'BCD1 and BCD2';''};
+cobra.rules = {'';'x(1) | x(2)';'';'x(3) & x(4)';''};

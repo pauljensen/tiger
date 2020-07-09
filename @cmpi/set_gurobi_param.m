@@ -4,6 +4,8 @@ function [param] = set_gurobi_param(options)
 if isempty(options)
     param = struct;
     return
+else
+    param = options;
 end
 
 if isfield(options,'MaxTime')
