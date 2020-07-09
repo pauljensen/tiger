@@ -1,0 +1,7 @@
+
+# simple rules
+a => b
+b <=> c
+
+c => d  
+
