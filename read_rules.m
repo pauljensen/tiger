@@ -1,20 +1,15 @@
-function [tiger] = read_rules(tiger,filename,varargin)
-% READ_RULES  Add rules from a text file
+function [rules] = read_rules(filename)
+% READ_RULES  Read rules from a text file
 %
-%   [TIGER] = READ_RULES(TIGER,FILENAME,...params...)
+%   [TIGER] = READ_RULES(FILENAME)
 %
 %
 %   Inputs
-%   TIGER     TIGER model structure.  If empty, a new TIGER structure will
-%             be created.
 %   FILENAME  Name of a text file of rules to be added.
 %
 %   Outputs
-%   TIGER   TIGER model structure with rules added.
+%   RULES     Cell array of rules as strings.
 %
-%   Parameters
-%   ...params...    See ADD_RULE for parameter documentation. All
-%                   parameters are passed to ADD_RULE for each rule.
 %
 %   File Format
 %   - Each rule appears on its own line.
@@ -26,11 +21,6 @@ function [tiger] = read_rules(tiger,filename,varargin)
 
 assert(ischar(filename), 'FILENAME must be a character string');
 
-% if there is no starting model, start with a blank model
-if isempty(tiger)
-    tiger = create_empty_tiger();
-end
-
 fid = fopen(filename);
 lines = textscan(fid,'%s', ...
                  'Delimiter','\n', ...
@@ -39,10 +29,9 @@ lines = textscan(fid,'%s', ...
 fclose(fid);
 
 % textscan return a cell array containing the cell array of the lines
-lines = lines{1};
+rules = lines{1};
 
-for i = 1 : length(lines)
-    lines{i} = strip(lines{i});
+for i = 1 : length(rules)
+    rules{i} = strip(rules{i});
 end
 
-tiger = add_rule(tiger,lines,varargin{:});
